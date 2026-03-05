@@ -13,9 +13,13 @@ export const meta: MetaFunction = () => [
 export async function loader(_: LoaderFunctionArgs) {
   try {
     const settings = await getContactSettings();
-    return json({ topics: settings.topics ?? [] });
+    return json({
+      topics:         settings.topics ?? [],
+      heroImageUrl:   settings.heroImage?.url ?? null,
+      heroImageAlt:   settings.heroImage?.alt ?? "Contact Us",
+    });
   } catch {
-    return json({ topics: [] });
+    return json({ topics: [], heroImageUrl: null, heroImageAlt: "Contact Us" });
   }
 }
 
@@ -60,7 +64,7 @@ export async function action({ request }: ActionFunctionArgs) {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function Contact() {
-  const { topics }   = useLoaderData<typeof loader>();
+  const { topics, heroImageUrl, heroImageAlt } = useLoaderData<typeof loader>();
   const actionData   = useActionData<typeof action>();
   const navigation   = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -80,9 +84,18 @@ export default function Contact() {
 
   return (
     <section className="contact-page">
-      <div className="contact-page__header">
-        <h1 className="contact-page__title">Contact Us</h1>
-        <p className="contact-page__subtitle">We&rsquo;re here to help.</p>
+      <div className="contact-page__hero">
+        {heroImageUrl && (
+          <img
+            src={heroImageUrl}
+            alt={heroImageAlt}
+            className="contact-page__hero-img"
+          />
+        )}
+        <div className="contact-page__hero-content">
+          <h1 className="contact-page__title">Contact Us</h1>
+          <p className="contact-page__subtitle">We&rsquo;re here to help.</p>
+        </div>
       </div>
 
       <div className="container">

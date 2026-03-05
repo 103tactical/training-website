@@ -33,7 +33,7 @@ export async function getHomePage() {
 }
 
 export async function getContactSettings() {
-  return fetchPayload<ContactSettings>("/globals/contact-settings");
+  return fetchPayload<ContactSettings>("/globals/contact-settings?depth=1");
 }
 
 export async function getCourses() {
@@ -47,6 +47,7 @@ export interface Utility {
 }
 
 export interface ContactSettings {
+  heroImage?: { url: string; alt?: string };
   topics?: { label: string }[];
 }
 

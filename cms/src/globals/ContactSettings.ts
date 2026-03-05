@@ -11,6 +11,15 @@ export const ContactSettings: GlobalConfig = {
   },
   fields: [
     {
+      name: "heroImage",
+      type: "upload",
+      relationTo: "media",
+      label: "Hero Image",
+      admin: {
+        description: "Background image displayed behind the Contact Us header. Recommended: wide landscape, at least 1400px wide.",
+      },
+    },
+    {
       name: "topics",
       type: "array",
       label: "Contact Form Topics",

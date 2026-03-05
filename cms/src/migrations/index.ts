@@ -11,6 +11,7 @@ import * as migration_20260305_fix_site_settings_logos from './20260305_fix_site
 import * as migration_20260305_why_choose_items_icon from './20260305_why_choose_items_icon';
 import * as migration_20260305_contact_settings from './20260305_contact_settings';
 import * as migration_20260305_contact_submissions_topic_status from './20260305_contact_submissions_topic_status';
+import * as migration_20260305_contact_settings_hero_image from './20260305_contact_settings_hero_image';
 
 export const migrations = [
   {
@@ -77,5 +78,10 @@ export const migrations = [
     up: migration_20260305_contact_submissions_topic_status.up,
     down: migration_20260305_contact_submissions_topic_status.down,
     name: '20260305_contact_submissions_topic_status'
+  },
+  {
+    up: migration_20260305_contact_settings_hero_image.up,
+    down: migration_20260305_contact_settings_hero_image.down,
+    name: '20260305_contact_settings_hero_image'
   },
 ];
