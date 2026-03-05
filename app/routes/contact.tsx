@@ -187,6 +187,10 @@ export default function Contact() {
               </div>
 
               <div className="contact-form__footer">
+                <p className="contact-form__legend">
+                  <span className="contact-form__legend-star">*</span>
+                  required fields
+                </p>
                 <button
                   type="submit"
                   className="btn btn--outline contact-form__submit"
