@@ -11,19 +11,26 @@ export const SiteSettings: GlobalConfig = {
   },
   fields: [
     {
-      name: "logo",
-      type: "upload",
-      relationTo: "media",
-      label: "Logo — Header",
-    },
-    {
-      name: "logoFooter",
-      type: "upload",
-      relationTo: "media",
-      label: "Logo — Footer",
-      admin: {
-        description: "Displayed in the site footer. Falls back to the Header logo if not set.",
-      },
+      name: "logos",
+      type: "group",
+      label: "Logo",
+      fields: [
+        {
+          name: "header",
+          type: "upload",
+          relationTo: "media",
+          label: "Header",
+        },
+        {
+          name: "footer",
+          type: "upload",
+          relationTo: "media",
+          label: "Footer",
+          admin: {
+            description: "Displayed in the site footer. Falls back to the Header logo if not set.",
+          },
+        },
+      ],
     },
     {
       name: "nav",

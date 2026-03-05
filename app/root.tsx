@@ -89,21 +89,21 @@ export async function loader(_: LoaderFunctionArgs) {
 
     const settings = await res.json();
 
-    const rawLogoUrl = settings.logo?.url ?? null;
+    const rawLogoUrl = settings.logos?.header?.url ?? null;
     const logoUrl = rawLogoUrl
       ? rawLogoUrl.startsWith("http") ? rawLogoUrl : `${apiUrl}${rawLogoUrl}`
       : null;
 
-    const rawFooterLogoUrl = settings.logoFooter?.url ?? null;
+    const rawFooterLogoUrl = settings.logos?.footer?.url ?? null;
     const footerLogoUrl = rawFooterLogoUrl
       ? rawFooterLogoUrl.startsWith("http") ? rawFooterLogoUrl : `${apiUrl}${rawFooterLogoUrl}`
       : logoUrl;
 
     return json<LoaderData>({
       logoUrl,
-      logoAlt: settings.logo?.alt ?? null,
+      logoAlt: settings.logos?.header?.alt ?? null,
       footerLogoUrl,
-      footerLogoAlt: settings.logoFooter?.alt ?? settings.logo?.alt ?? null,
+      footerLogoAlt: settings.logos?.footer?.alt ?? settings.logos?.header?.alt ?? null,
       nav: Array.isArray(settings.nav) && settings.nav.length > 0
         ? settings.nav
         : FALLBACK_NAV,
