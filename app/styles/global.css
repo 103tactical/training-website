@@ -745,6 +745,46 @@ body.layout-overlay .app-content {
   }
 }
 
+/* ── Mobile overlay: header + logo float over hero ───────────────────────── */
+/*    mobile-header is already transparent + fixed.
+      mobile-logo: pull out of flow so hero slides behind it.
+      Combined offset = --mobile-header-height (60px) + logo+padding (166px) = 226px */
+@media (max-width: 767px) {
+  body.layout-overlay {
+    --mobile-overlay-nav-height: 226px;
+  }
+
+  /* Hero starts at top:0 — no offset for fixed header */
+  body.layout-overlay .app-content {
+    padding-top: 0;
+  }
+
+  /* Logo floats transparently below the fixed header bar */
+  body.layout-overlay .mobile-logo {
+    position: absolute;
+    top: var(--mobile-header-height);
+    left: 0;
+    right: 0;
+    background: transparent;
+    z-index: 99;
+  }
+
+  /* Home page: push headline below the combined mobile overlay nav */
+  body.layout-overlay .site-headline {
+    margin-top: var(--mobile-overlay-nav-height);
+    padding-top: calc(var(--spacing-8) / 2);
+  }
+
+  /* Contact hero: taller on mobile overlay + push text content below nav */
+  body.layout-overlay .contact-page__hero {
+    height: 420px;
+  }
+
+  body.layout-overlay .contact-page__hero-content {
+    padding-top: calc(var(--mobile-overlay-nav-height) + var(--spacing-4));
+  }
+}
+
 /* Home page: push headline below the floating navbar, halve its top padding */
 @media (min-width: 768px) {
   body.layout-overlay .site-headline {
@@ -1400,7 +1440,7 @@ body.layout-overlay .app-content {
 }
 
 body.layout-overlay .contact-page__hero-img {
-  object-position: center calc(50% + 200px);
+  object-position: center;
 }
 
 .contact-page__hero::after {

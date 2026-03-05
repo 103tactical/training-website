@@ -119,8 +119,8 @@ export default function Navbar({ logoUrl, logoAlt, overlayLogoUrl, overlayLogoAl
 
         {/* Mobile logo — centered below the header bar, hidden on desktop */}
         <div className="mobile-logo">
-          {logoUrl
-            ? <img src={logoUrl} alt={logoAlt ?? "103 Tactical"} className="mobile-logo__img" />
+          {activeLogoUrl
+            ? <img src={activeLogoUrl} alt={activeLogoAlt ?? "103 Tactical"} className="mobile-logo__img" />
             : <span className="mobile-logo__text">103 Tactical</span>
           }
         </div>
