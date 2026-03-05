@@ -741,7 +741,13 @@ body.layout-overlay .app-content {
   }
 
   body.layout-overlay .contact-page__hero {
-    height: 740px;
+    height: 520px;
+  }
+}
+
+@media (min-width: 768px) {
+  body.layout-overlay .contact-page__hero {
+    height: 520px;
   }
 }
 
