@@ -722,6 +722,10 @@ body.layout-overlay .app-content {
     color: var(--color-white);
   }
 
+  body.layout-overlay .navbar-desktop__link--active::after {
+    background-color: var(--color-white);
+  }
+
   /* Push hero text content below the floating navbar */
   body.layout-overlay .contact-page__hero-content {
     padding-top: calc(var(--overlay-nav-height) + var(--spacing-6));
