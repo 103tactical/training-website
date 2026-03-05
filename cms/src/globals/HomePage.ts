@@ -208,6 +208,7 @@ export const HomePage: GlobalConfig = {
                 { label: "Gun",    value: "gun"     },
                 { label: "Course", value: "course"  },
                 { label: "Shield", value: "shield"  },
+                { label: "Badge",  value: "badge"   },
               ],
             },
             {
