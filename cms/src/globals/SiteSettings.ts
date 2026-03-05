@@ -15,7 +15,6 @@ export const SiteSettings: GlobalConfig = {
       type: "upload",
       relationTo: "media",
       label: "Logo",
-      required: true,
     },
     {
       name: "nav",
