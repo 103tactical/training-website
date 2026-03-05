@@ -3,7 +3,7 @@ import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
 import { useState } from "react";
 import { getContactSettings, getSiteSettings, PAYLOAD_API_URL } from "~/lib/payload";
-import { PhoneIcon, EmailIcon, LocationIcon, MapPinIcon } from "~/components/Icons";
+import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 
 export const meta: MetaFunction = () => [
   { title: "Contact | 103 Tactical Training" },
@@ -155,7 +155,6 @@ export default function Contact() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
-              <MapPinIcon className="contact-map__pin" />
             </div>
           )}
         </div>
