@@ -44,6 +44,7 @@
   --text-5xl:   3rem;
 
   --site-headline-fs-mobile:  1rem;
+  --site-headline-fs-sm:      1.425rem;
   --site-headline-fs-tablet:  1.925rem;
   --site-headline-fs-desktop: 2.825rem;
 
@@ -840,6 +841,12 @@ body.menu-open .app-content {
 @media (max-width: 991px) {
   .site-headline__text {
     font-size: var(--site-headline-fs-tablet);
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+  .site-headline__text {
+    font-size: var(--site-headline-fs-sm);
   }
 }
 
