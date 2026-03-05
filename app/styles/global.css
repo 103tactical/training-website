@@ -429,7 +429,12 @@ body.menu-open .app-content {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: var(--navbar-height-tablet);
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .navbar-desktop {
+    height: var(--navbar-height-tablet);
+  }
 }
 
 @media (min-width: 992px) {
