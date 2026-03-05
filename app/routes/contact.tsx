@@ -2,7 +2,8 @@ import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remi
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
 import { useState } from "react";
-import { getContactSettings, PAYLOAD_API_URL } from "~/lib/payload";
+import { getContactSettings, getSiteSettings, PAYLOAD_API_URL } from "~/lib/payload";
+import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 
 export const meta: MetaFunction = () => [
   { title: "Contact | 103 Tactical Training" },
@@ -11,16 +12,23 @@ export const meta: MetaFunction = () => [
 /* ── Loader — fetch topics from CMS ─────────────────────────────────────── */
 
 export async function loader(_: LoaderFunctionArgs) {
-  try {
-    const settings = await getContactSettings();
-    return json({
-      topics:         settings.topics ?? [],
-      heroImageUrl:   settings.heroImage?.url ?? null,
-      heroImageAlt:   settings.heroImage?.alt ?? "Contact Us",
-    });
-  } catch {
-    return json({ topics: [], heroImageUrl: null, heroImageAlt: "Contact Us" });
-  }
+  const [contactSettings, siteSettings] = await Promise.allSettled([
+    getContactSettings(),
+    getSiteSettings(),
+  ]);
+
+  const cs = contactSettings.status === "fulfilled" ? contactSettings.value : null;
+  const ss = siteSettings.status   === "fulfilled" ? siteSettings.value   : null;
+
+  return json({
+    topics:       cs?.topics       ?? [],
+    heroImageUrl: cs?.heroImage?.url ?? null,
+    heroImageAlt: cs?.heroImage?.alt ?? "Contact Us",
+    phone:        ss?.contact?.phone   ?? null,
+    email:        ss?.contact?.email   ?? null,
+    address:      ss?.contact?.address ?? null,
+    city:         ss?.contact?.city    ?? null,
+  });
 }
 
 /* ── Action — validate + submit to Payload ──────────────────────────────── */
@@ -64,7 +72,8 @@ export async function action({ request }: ActionFunctionArgs) {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function Contact() {
-  const { topics, heroImageUrl, heroImageAlt } = useLoaderData<typeof loader>();
+  const { topics, heroImageUrl, heroImageAlt, phone, email, address, city } =
+    useLoaderData<typeof loader>();
   const actionData   = useActionData<typeof action>();
   const navigation   = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -98,7 +107,46 @@ export default function Contact() {
         </div>
       </div>
 
-      <div className="container">
+      <div className="contact-page__body">
+
+        {/* ── Left: contact info ─────────────────────────────────────────── */}
+        <div className="contact-info">
+          {phone && (
+            <div className="contact-info__item">
+              <p className="contact-info__label">Call Us</p>
+              <a
+                href={(() => { const d = phone.replace(/\D/g, ""); return `tel:${d.length === 10 ? `+1${d}` : `+${d}`}`; })()}
+                className="contact-info__value"
+              >
+                <PhoneIcon className="contact-info__icon" />
+                {phone}
+              </a>
+            </div>
+          )}
+          {email && (
+            <div className="contact-info__item">
+              <p className="contact-info__label">Email Us</p>
+              <a href={`mailto:${email}`} className="contact-info__value">
+                <EmailIcon className="contact-info__icon" />
+                {email}
+              </a>
+            </div>
+          )}
+          {(address || city) && (
+            <div className="contact-info__item">
+              <p className="contact-info__label">Location</p>
+              <div className="contact-info__value contact-info__value--address">
+                <LocationIcon className="contact-info__icon contact-info__icon--top" />
+                <span>
+                  {address && <span className="contact-info__address-line">{address}</span>}
+                  {city    && <span className="contact-info__address-line">{city}</span>}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Right: form ────────────────────────────────────────────────── */}
         <div className="contact-form-wrap">
           {success ? (
             <div className="contact-form__success">
@@ -215,7 +263,8 @@ export default function Contact() {
             </Form>
           )}
         </div>
-      </div>
+
+      </div>{/* contact-page__body */}
     </section>
   );
 }
