@@ -22,6 +22,10 @@ export default function FeaturedCarousel({ slides }: FeaturedCarouselProps) {
 
   const active = slides[activeIndex];
   const hasMultiple = slides.length > 1;
+  const activeHasVertical = !!(
+    (active.slideType === "video" && active.verticalVideo?.url) ||
+    (active.slideType !== "video" && active.verticalImage?.url)
+  );
 
   const goPrev = () => setActiveIndex((i) => (i === 0 ? slides.length - 1 : i - 1));
   const goNext = () => setActiveIndex((i) => (i === slides.length - 1 ? 0 : i + 1));
@@ -36,7 +40,7 @@ export default function FeaturedCarousel({ slides }: FeaturedCarouselProps) {
 
   return (
     <section className="featured-carousel">
-      <div className="featured-carousel__inner">
+      <div className={`featured-carousel__inner${activeHasVertical ? " has-active-vertical" : ""}`}>
         {slides.map((slide, i) => (
           <CarouselSlide
             key={i}
@@ -95,7 +99,9 @@ function CarouselSlide({
   const isImage = slide.slideType === "image" || slide.slideType === "image-text";
 
   const wideVideoUrl = resolveMediaUrl(slide.wideVideo?.url);
+  const wideVideoPreviewUrl = resolveMediaUrl(slide.wideVideoPreview?.url);
   const verticalVideoUrl = resolveMediaUrl(slide.verticalVideo?.url);
+  const verticalVideoPreviewUrl = resolveMediaUrl(slide.verticalVideoPreview?.url);
   const wideImageUrl = resolveMediaUrl(slide.wideImage?.url);
   const verticalImageUrl = resolveMediaUrl(slide.verticalImage?.url);
 
@@ -110,7 +116,7 @@ function CarouselSlide({
         <div className="featured-carousel__media featured-carousel__media--wide">
           <VideoPlayer
             src={wideVideoUrl}
-            poster={undefined}
+            preview={wideVideoPreviewUrl}
             isActive={isActive}
             onPauseChange={onPauseChange}
           />
@@ -119,7 +125,7 @@ function CarouselSlide({
           <div className="featured-carousel__media featured-carousel__media--vertical">
             <VideoPlayer
               src={verticalVideoUrl}
-              poster={undefined}
+              preview={verticalVideoPreviewUrl}
               isActive={isActive}
               onPauseChange={onPauseChange}
             />
@@ -152,16 +158,17 @@ function CarouselSlide({
 
 function VideoPlayer({
   src,
-  poster,
+  preview,
   isActive,
   onPauseChange,
 }: {
   src: string;
-  poster?: string;
+  preview?: string;
   isActive: boolean;
   onPauseChange: (paused: boolean) => void;
 }) {
   const [playing, setPlaying] = useState(false);
+  const [hasEverPlayed, setHasEverPlayed] = useState(false);
   const [muted, setMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -181,6 +188,7 @@ function VideoPlayer({
       onPauseChange(false);
     } else {
       videoRef.current.play();
+      if (!hasEverPlayed) setHasEverPlayed(true);
       onPauseChange(true);
     }
     setPlaying(!playing);
@@ -208,13 +216,19 @@ function VideoPlayer({
       <video
         ref={videoRef}
         src={src}
-        poster={poster}
         playsInline
         loop
         muted={muted}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
       />
+      {!hasEverPlayed && preview && (
+        <img
+          className="featured-video__preview"
+          src={preview}
+          alt=""
+        />
+      )}
       {!playing && (
         <button className="featured-video__play" aria-label="Play video" type="button" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
           <PlayIcon className="featured-video__play-icon" />

@@ -89,8 +89,10 @@ export interface FeaturedSlide {
   slideType: "image" | "image-text" | "video";
   wideImage?: { url: string; alt: string };
   wideVideo?: { url: string };
+  wideVideoPreview?: { url: string; alt?: string };
   verticalImage?: { url: string; alt: string };
   verticalVideo?: { url: string };
+  verticalVideoPreview?: { url: string; alt?: string };
   heading?: string;
   subtext?: string;
   button?: { label?: string; url?: string; openInNewTab?: boolean };

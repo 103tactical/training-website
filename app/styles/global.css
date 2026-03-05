@@ -774,6 +774,10 @@ body.menu-open .app-content {
   .featured-carousel__inner {
     aspect-ratio: 16 / 9;
   }
+
+  .featured-carousel__inner.has-active-vertical {
+    aspect-ratio: 9 / 16;
+  }
 }
 
 .featured-carousel__slide {
@@ -899,6 +903,17 @@ body.menu-open .app-content {
   height: 100%;
   object-fit: cover;
   display: block;
+  pointer-events: none;
+}
+
+.featured-video__preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: 1;
   pointer-events: none;
 }
 

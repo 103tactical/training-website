@@ -63,6 +63,16 @@ export const HomePage: GlobalConfig = {
             description: "Required. Used on desktop and as mobile fallback if no vertical video is set.",
           },
         },
+        {
+          name: "wideVideoPreview",
+          type: "upload",
+          relationTo: "media",
+          label: "Wide Video — Preview Image",
+          admin: {
+            condition: (_, siblingData) => siblingData?.slideType === "video",
+            description: "Optional. Shown before the user starts playback on desktop/wide view. Once playback begins, this image will not reappear on pause.",
+          },
+        },
         // Vertical (mobile) assets — optional
         {
           name: "verticalImage",
@@ -83,6 +93,16 @@ export const HomePage: GlobalConfig = {
           admin: {
             condition: (_, siblingData) => siblingData?.slideType === "video",
             description: "Optional. If provided, shown instead of the wide video on mobile.",
+          },
+        },
+        {
+          name: "verticalVideoPreview",
+          type: "upload",
+          relationTo: "media",
+          label: "Vertical Video — Preview Image (mobile) — optional",
+          admin: {
+            condition: (_, siblingData) => siblingData?.slideType === "video",
+            description: "Optional. Shown before the user starts playback on mobile/vertical view. Once playback begins, this image will not reappear on pause.",
           },
         },
         // Text overlay (image-text slides only)
