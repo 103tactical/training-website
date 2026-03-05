@@ -78,8 +78,15 @@ export async function loader(_: LoaderFunctionArgs) {
 
     const settings = await res.json();
 
+    const rawLogoUrl = settings.logo?.url ?? null;
+    const logoUrl = rawLogoUrl
+      ? rawLogoUrl.startsWith("http")
+        ? rawLogoUrl
+        : `${apiUrl}${rawLogoUrl}`
+      : null;
+
     return json<LoaderData>({
-      logoUrl: settings.logo?.url ?? null,
+      logoUrl,
       logoAlt: settings.logo?.alt ?? null,
       nav: Array.isArray(settings.nav) && settings.nav.length > 0
         ? settings.nav
