@@ -66,6 +66,7 @@ export interface HomePage {
   whyChoose: {
     heading: string;
     items: {
+      icon?: string;
       title: string;
       description?: string;
       bullets?: { item: string }[];

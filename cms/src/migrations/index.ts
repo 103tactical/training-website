@@ -8,6 +8,7 @@ import * as migration_20260305_utility_carousel_delay from './20260305_utility_c
 import * as migration_20260305_site_settings_logo_footer from './20260305_site_settings_logo_footer';
 import * as migration_20260305_site_settings_logos_group from './20260305_site_settings_logos_group';
 import * as migration_20260305_fix_site_settings_logos from './20260305_fix_site_settings_logos';
+import * as migration_20260305_why_choose_items_icon from './20260305_why_choose_items_icon';
 
 export const migrations = [
   {
@@ -59,5 +60,10 @@ export const migrations = [
     up: migration_20260305_fix_site_settings_logos.up,
     down: migration_20260305_fix_site_settings_logos.down,
     name: '20260305_fix_site_settings_logos'
+  },
+  {
+    up: migration_20260305_why_choose_items_icon.up,
+    down: migration_20260305_why_choose_items_icon.down,
+    name: '20260305_why_choose_items_icon'
   },
 ];

@@ -750,6 +750,17 @@ body.menu-open .app-content {
   padding: var(--spacing-8);
 }
 
+.why-choose__item-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.why-choose__item-icon {
+  flex-shrink: 0;
+  color: var(--color-white);
+}
+
 .why-choose__item-title {
   color: var(--color-white);
   font-size: var(--text-xl);

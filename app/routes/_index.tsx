@@ -3,7 +3,8 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { getHomePage, getUtility } from "~/lib/payload";
 import type { HomePage } from "~/lib/payload";
-import { BulletIcon } from "~/components/Icons";
+import { BulletIcon, cmsIcons } from "~/components/Icons";
+import type { CmsIconKey } from "~/components/Icons";
 import FeaturedCarousel from "~/components/FeaturedCarousel";
 
 export const meta: MetaFunction = () => [
@@ -53,7 +54,13 @@ function WhyChooseSection({ data }: { data: HomePage["whyChoose"] }) {
         <div className="why-choose__grid">
           {items.map((item, i) => (
             <div key={i} className="why-choose__item">
-              <h3 className="why-choose__item-title">{item.title}</h3>
+              <div className="why-choose__item-title-row">
+                {item.icon && (() => {
+                  const Icon = cmsIcons[item.icon as CmsIconKey];
+                  return Icon ? <Icon className="icon why-choose__item-icon" /> : null;
+                })()}
+                <h3 className="why-choose__item-title">{item.title}</h3>
+              </div>
 
               {item.description && (
                 <p className="why-choose__item-desc">{item.description}</p>

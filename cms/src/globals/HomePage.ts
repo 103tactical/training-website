@@ -179,11 +179,11 @@ export const HomePage: GlobalConfig = {
       ],
     },
 
-    // ── Why Choose 103 Tactical ───────────────────────────────────────────
+    // ── Details Section ───────────────────────────────────────────────────
     {
       name: "whyChoose",
       type: "group",
-      label: "Why Choose 103 Tactical",
+      label: "Details Section",
       fields: [
         {
           name: "heading",
@@ -196,6 +196,20 @@ export const HomePage: GlobalConfig = {
           type: "array",
           label: "Items",
           fields: [
+            {
+              name: "icon",
+              type: "select",
+              label: "Icon",
+              admin: {
+                description: "Icon displayed to the left of the item title.",
+              },
+              options: [
+                { label: "Staff",  value: "staff"  },
+                { label: "Gun",    value: "gun"     },
+                { label: "Course", value: "course"  },
+                { label: "Shield", value: "shield"  },
+              ],
+            },
             {
               name: "title",
               type: "text",
