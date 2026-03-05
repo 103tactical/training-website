@@ -5,6 +5,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useLocation,
 } from "@remix-run/react";
 import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
@@ -135,6 +136,8 @@ export async function loader(_: LoaderFunctionArgs) {
 export default function App() {
   const { logoUrl, logoAlt, footerLogoUrl, footerLogoAlt, nav, contact, social, copyright, tagline } =
     useLoaderData<typeof loader>();
+  const { pathname } = useLocation();
+  const bodyClass = pathname === "/contact" ? "theme-contact" : undefined;
 
   return (
     <html lang="en">
@@ -145,7 +148,7 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className={bodyClass}>
         <Navbar
           logoUrl={logoUrl ?? undefined}
           logoAlt={logoAlt ?? undefined}
