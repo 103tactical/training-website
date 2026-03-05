@@ -172,6 +172,9 @@ function CarouselSlide({
 
   if (isImage && wideImageUrl) {
     const alt = slide.wideImage?.alt ?? "";
+    const hasOverlay = slide.slideType === "image-text" &&
+      (slide.heading || slide.subtext || slide.button?.label);
+
     return (
       <div
         className={`featured-carousel__slide${isActive ? " is-active" : ""}${hasVerticalImage ? " has-vertical" : ""}`}
@@ -182,6 +185,30 @@ function CarouselSlide({
         {hasVerticalImage && (
           <div className="featured-carousel__media featured-carousel__media--vertical">
             <img src={verticalImageUrl} alt={slide.verticalImage?.alt ?? alt} />
+          </div>
+        )}
+
+        {hasOverlay && (
+          <div className="featured-carousel__overlay">
+            <div className="featured-carousel__overlay-tint" />
+            <div className="featured-carousel__overlay-content">
+              {slide.heading && (
+                <h2 className="featured-carousel__overlay-heading">{slide.heading}</h2>
+              )}
+              {slide.subtext && (
+                <p className="featured-carousel__overlay-subtext">{slide.subtext}</p>
+              )}
+              {slide.button?.label && slide.button?.url && (
+                <a
+                  href={slide.button.url}
+                  className="btn btn--outline btn--lg"
+                  target={slide.button.openInNewTab ? "_blank" : undefined}
+                  rel={slide.button.openInNewTab ? "noopener noreferrer" : undefined}
+                >
+                  {slide.button.label}
+                </a>
+              )}
+            </div>
           </div>
         )}
       </div>
