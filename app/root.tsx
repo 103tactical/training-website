@@ -44,9 +44,18 @@ export const meta: MetaFunction = () => {
 
 /* ── Links ──────────────────────────────────────────────────────────────── */
 
+// Replace ADOBE_PROJECT_ID with your Typekit project ID (e.g. "oft5qah")
+// Replace font family name in global.css --font-primary once you have it
+const ADOBE_PROJECT_ID = "";
+
 export const links: LinksFunction = () => [
+  ...(ADOBE_PROJECT_ID
+    ? [
+        { rel: "preconnect" as const, href: "https://use.typekit.net", crossOrigin: "anonymous" as const },
+        { rel: "stylesheet" as const, href: `https://use.typekit.net/${ADOBE_PROJECT_ID}.css` },
+      ]
+    : []),
   { rel: "stylesheet", href: globalStyles },
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
 ];
 
 /* ── Loader — fetch SiteSettings from Payload ───────────────────────────── */
