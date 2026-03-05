@@ -381,6 +381,11 @@ body.menu-open .app-content {
   .nav-logo {
     height: 110px;
   }
+
+  .navbar-desktop {
+    height: auto;
+    padding-block: 20px;
+  }
 }
 
 .mobile-header .nav-logo,
