@@ -18,6 +18,11 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   serverURL: process.env.PAYLOAD_SERVER_URL || 'https://training-cms.onrender.com',
+  bodyParser: {
+    limits: {
+      fileSize: 500 * 1024 * 1024, // 500MB (busboy multipart parser)
+    },
+  },
   admin: {
     user: Users.slug,
     importMap: {
