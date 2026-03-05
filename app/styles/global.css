@@ -216,7 +216,7 @@ h6 { font-size: var(--text-base); }
   font-size: var(--btn-fs);
   font-weight: var(--font-bold);
   text-transform: var(--heading-transform);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
