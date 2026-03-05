@@ -64,6 +64,8 @@
 
   /* Nav dimensions */
   --navbar-height:        130px;
+  --navbar-height-tablet: 130px;
+  --navbar-height-desktop: 150px;
   --mobile-header-height: 60px;
   --sidenav-width:        280px;
 
@@ -380,6 +382,10 @@ body.menu-open .app-content {
 @media (min-width: 992px) {
   .nav-logo {
     height: 110px;
+  }
+
+  .navbar-desktop {
+    height: var(--navbar-height-desktop);
   }
 }
 
