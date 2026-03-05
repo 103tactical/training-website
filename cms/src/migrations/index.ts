@@ -4,6 +4,7 @@ import * as migration_20260305_media_alt_nullable from './20260305_media_alt_nul
 import * as migration_20260305_badges_group from './20260305_badges_group';
 import * as migration_20260305_website_headline from './20260305_website_headline';
 import * as migration_20260305_video_preview_images from './20260305_video_preview_images';
+import * as migration_20260305_utility_carousel_delay from './20260305_utility_carousel_delay';
 
 export const migrations = [
   {
@@ -35,5 +36,10 @@ export const migrations = [
     up: migration_20260305_video_preview_images.up,
     down: migration_20260305_video_preview_images.down,
     name: '20260305_video_preview_images'
+  },
+  {
+    up: migration_20260305_utility_carousel_delay.up,
+    down: migration_20260305_utility_carousel_delay.down,
+    name: '20260305_utility_carousel_delay'
   },
 ];

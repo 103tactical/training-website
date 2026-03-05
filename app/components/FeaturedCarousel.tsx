@@ -12,9 +12,10 @@ import type { FeaturedSlide } from "~/lib/payload";
 
 interface FeaturedCarouselProps {
   slides: FeaturedSlide[];
+  delay?: string;
 }
 
-export default function FeaturedCarousel({ slides }: FeaturedCarouselProps) {
+export default function FeaturedCarousel({ slides, delay = "6" }: FeaturedCarouselProps) {
   if (!slides || slides.length === 0) return null;
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -27,16 +28,18 @@ export default function FeaturedCarousel({ slides }: FeaturedCarouselProps) {
     (active.slideType !== "video" && active.verticalImage?.url)
   );
 
-  const goPrev = () => setActiveIndex((i) => (i === 0 ? slides.length - 1 : i - 1));
-  const goNext = () => setActiveIndex((i) => (i === slides.length - 1 ? 0 : i + 1));
+  const goPrev = () => { setIsPaused(true); setActiveIndex((i) => (i === 0 ? slides.length - 1 : i - 1)); };
+  const goNext = () => { setIsPaused(true); setActiveIndex((i) => (i === slides.length - 1 ? 0 : i + 1)); };
+
+  const delayMs = delay === "off" ? null : parseInt(delay, 10) * 1000;
 
   useEffect(() => {
-    if (!hasMultiple || isPaused) return;
+    if (!hasMultiple || isPaused || delayMs === null) return;
     const id = setInterval(() => {
       setActiveIndex((i) => (i === slides.length - 1 ? 0 : i + 1));
-    }, 6000);
+    }, delayMs);
     return () => clearInterval(id);
-  }, [hasMultiple, isPaused, slides.length]);
+  }, [hasMultiple, isPaused, delayMs, slides.length]);
 
   return (
     <section className="featured-carousel">
@@ -66,7 +69,7 @@ export default function FeaturedCarousel({ slides }: FeaturedCarouselProps) {
               <button
                 key={i}
                 className={`featured-carousel__dot${i === activeIndex ? " is-active" : ""}`}
-                onClick={() => setActiveIndex(i)}
+                onClick={() => { setIsPaused(true); setActiveIndex(i); }}
                 aria-label={`Go to slide ${i + 1}`}
                 type="button"
               />

@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { getHomePage } from "~/lib/payload";
+import { getHomePage, getUtility } from "~/lib/payload";
 import type { HomePage } from "~/lib/payload";
 import { BulletIcon } from "~/components/Icons";
 import FeaturedCarousel from "~/components/FeaturedCarousel";
@@ -12,15 +12,15 @@ export const meta: MetaFunction = () => [
 
 export async function loader(_: LoaderFunctionArgs) {
   try {
-    const homePage = await getHomePage();
-    return json({ homePage });
+    const [homePage, utility] = await Promise.all([getHomePage(), getUtility()]);
+    return json({ homePage, carouselDelay: utility.carouselDelay ?? "6" });
   } catch {
-    return json({ homePage: null });
+    return json({ homePage: null, carouselDelay: "6" as const });
   }
 }
 
 export default function Index() {
-  const { homePage } = useLoaderData<typeof loader>();
+  const { homePage, carouselDelay } = useLoaderData<typeof loader>();
 
   return (
     <>
@@ -30,7 +30,7 @@ export default function Index() {
         </div>
       )}
       {homePage?.featured && homePage.featured.length > 0 && (
-        <FeaturedCarousel slides={homePage.featured} />
+        <FeaturedCarousel slides={homePage.featured} delay={carouselDelay} />
       )}
       {homePage?.whyChoose && (
         <WhyChooseSection data={homePage.whyChoose} />

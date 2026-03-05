@@ -24,6 +24,10 @@ export async function getSiteSettings() {
   return fetchPayload<SiteSettings>("/globals/site-settings");
 }
 
+export async function getUtility() {
+  return fetchPayload<Utility>("/globals/utility");
+}
+
 export async function getHomePage() {
   return fetchPayload<HomePage>("/globals/home-page?depth=2");
 }
@@ -33,6 +37,10 @@ export async function getCourses() {
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
+
+export interface Utility {
+  carouselDelay?: "off" | "4" | "6" | "8" | "10";
+}
 
 export interface SiteSettings {
   logo?: { url: string; alt: string };

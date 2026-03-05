@@ -12,6 +12,7 @@ import { Badges } from './collections/Badges'
 import { ContactSubmissions } from './collections/ContactSubmissions'
 import { SiteSettings } from './globals/SiteSettings'
 import { HomePage } from './globals/HomePage'
+import { Utility } from './globals/Utility'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -30,7 +31,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media, Courses, Badges, ContactSubmissions],
-  globals: [SiteSettings, HomePage],
+  globals: [SiteSettings, HomePage, Utility],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
