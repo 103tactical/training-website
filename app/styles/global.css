@@ -40,6 +40,10 @@
   --text-4xl:   2.25rem;
   --text-5xl:   3rem;
 
+  --site-headline-fs-mobile:  1rem;
+  --site-headline-fs-tablet:  1.925rem;
+  --site-headline-fs-desktop: 2.825rem;
+
   --font-normal:   400;
   --font-medium:   500;
   --font-semibold: 600;
@@ -821,7 +825,7 @@ body.menu-open .app-content {
 }
 
 .site-headline__text {
-  font-size: 2.5rem;
+  font-size: var(--site-headline-fs-desktop);
   font-weight: var(--font-bold);
   color: var(--color-white);
   line-height: 1.1;
@@ -830,7 +834,7 @@ body.menu-open .app-content {
 
 @media (max-width: 991px) {
   .site-headline__text {
-    font-size: 1.75rem;
+    font-size: var(--site-headline-fs-tablet);
   }
 }
 
@@ -839,7 +843,7 @@ body.menu-open .app-content {
     padding-top: var(--spacing-8);
   }
   .site-headline__text {
-    font-size: 0.875rem;
+    font-size: var(--site-headline-fs-mobile);
   }
 }
 
