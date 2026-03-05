@@ -741,13 +741,7 @@ body.layout-overlay .app-content {
   }
 
   body.layout-overlay .contact-page__hero {
-    height: 520px;
-  }
-}
-
-@media (min-width: 768px) {
-  body.layout-overlay .contact-page__hero {
-    height: 520px;
+    height: 740px;
   }
 }
 
@@ -783,7 +777,7 @@ body.layout-overlay .app-content {
 
   /* Contact hero: taller on mobile overlay + push text content below nav */
   body.layout-overlay .contact-page__hero {
-    height: 420px;
+    height: 520px;
   }
 
   body.layout-overlay .contact-page__hero-content {
