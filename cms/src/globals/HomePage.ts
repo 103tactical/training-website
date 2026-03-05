@@ -3,6 +3,9 @@ import type { GlobalConfig } from "payload";
 export const HomePage: GlobalConfig = {
   slug: "home-page",
   label: "Home Page",
+  access: {
+    read: () => true,
+  },
   admin: {
     description: "Content for the home page: featured carousel, courses, Why Choose section, and badges.",
   },

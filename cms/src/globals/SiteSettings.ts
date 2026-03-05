@@ -3,6 +3,9 @@ import type { GlobalConfig } from "payload";
 export const SiteSettings: GlobalConfig = {
   slug: "site-settings",
   label: "Site Settings",
+  access: {
+    read: () => true,
+  },
   admin: {
     description: "Global site configuration: navigation, footer content, and contact info.",
   },
