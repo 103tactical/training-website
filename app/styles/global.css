@@ -23,6 +23,8 @@
 
   --color-red:            #B22234;
   --color-red-hover:      #cc2a3e;
+  --color-red-dark:       #6e0d1a;
+  --color-red-dark-hover: #8a1122;
   --color-red-tint:       #f0bec4;
 
   --color-white:          #ffffff;
@@ -301,6 +303,14 @@ h6 { font-size: var(--text-base); }
 }
 .btn--outline:hover {
   background-color: rgba(255, 255, 255, 0.88);
+}
+
+.btn--dark-red {
+  background-color: var(--color-red-dark);
+  color: var(--color-white);
+}
+.btn--dark-red:hover {
+  background-color: var(--color-red-dark-hover);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

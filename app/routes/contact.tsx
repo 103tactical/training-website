@@ -189,7 +189,7 @@ export default function Contact() {
               <div className="contact-form__footer">
                 <button
                   type="submit"
-                  className="btn btn--outline contact-form__submit"
+                  className="btn btn--dark-red contact-form__submit"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Sending…" : "Send Message"}
