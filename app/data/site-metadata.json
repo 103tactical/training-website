@@ -1,0 +1,57 @@
+{
+  "site": {
+    "name": "103 Tactical Training",
+    "tagline": "NYC Concealed Carry Classes with LIVE FIRE TRAINING",
+    "description": "103 Tactical Training provides NYC concealed carry classes, NRA-certified firearm training, private lessons, and application assistance for New York City firearms licenses. NY State DCJS certified instructors.",
+    "url": "https://103tacticaltraining.com",
+    "locale": "en_US",
+    "copyright": "© 103 Tactical",
+    "poweredBy": "ProMark Systems"
+  },
+  "seo": {
+    "defaultTitle": "103 Tactical Training | NYC Concealed Carry Classes & Firearm Training",
+    "titleTemplate": "%s | 103 Tactical Training",
+    "defaultDescription": "NYC concealed carry classes with 16 hours classroom + 2 hours live fire. NRA classes, private lessons, and full-service application assistance for NYC firearms licenses.",
+    "defaultKeywords": [
+      "NYC concealed carry",
+      "concealed carry class New York",
+      "CCW training NYC",
+      "firearm training New York",
+      "NRA pistol course",
+      "NYC pistol permit",
+      "firearms license assistance NYC"
+    ],
+    "ogImage": "",
+    "twitterCard": "summary_large_image"
+  },
+  "pages": {
+    "home": {
+      "title": "103 Tactical Training",
+      "description": "NYC Concealed Carry Classes with LIVE FIRE TRAINING. 16 hours classroom + 2 hours live fire. CCW Beginner & Renewal packages."
+    },
+    "ccwPackages": {
+      "title": "CCW Packages",
+      "description": "NYC Concealed Carry Classes. CCW Beginner $600 and CCW Renewal $550. 16 hours classroom, 2 hours live fire, application assistance."
+    },
+    "nraClasses": {
+      "title": "NRA Classes",
+      "description": "NRA Basic Pistol, Basic Rifle, Personal Protection, Instructor courses. Live fire training with certified instructors."
+    },
+    "privateLessons": {
+      "title": "Private Lessons / Classes",
+      "description": "1-on-1 and private group firearm training. Corporate and security training. Group sponsors of 10+ train FREE."
+    },
+    "applicationAssistance": {
+      "title": "Application Assistance",
+      "description": "Full-service NYC firearms license assistance. Rifle/Shotgun permit, pistol permit, concealed carry. NYPD Portal submission, documents, notary."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "Contact 103 Tactical Training for NRA classes, private lessons, application assistance, or gift certificates."
+    },
+    "book": {
+      "title": "Book Your NYC CCW Class",
+      "description": "Reserve your NYC CCW class online. Select CCW Beginner, CCW Renewal, or NYC CCW. Deposit required."
+    }
+  }
+}
