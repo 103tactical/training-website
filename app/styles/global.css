@@ -1441,7 +1441,7 @@ body.layout-overlay .app-content {
   text-transform: uppercase;
   font-size: 2.25rem;
   line-height: 1.1;
-  margin: 0 0 var(--spacing-2);
+  margin: 0;
 }
 
 .featured-carousel__overlay-subtext {
