@@ -220,7 +220,8 @@ h6 { font-size: var(--text-base); }
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: none;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.18));
   transition: background-color var(--transition-fast), color var(--transition-fast),
               filter var(--transition-fast), transform var(--transition-fast);
   /* Angled corners — top-left and bottom-right cut at 45° */
@@ -232,6 +233,15 @@ h6 { font-size: var(--text-base); }
     0% 100%,
     0% var(--btn-cut)
   );
+}
+
+.btn:hover {
+  filter: drop-shadow(0 2px 7px rgba(0, 0, 0, 0.28));
+}
+
+.btn:active {
+  transform: translateY(3px);
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.15));
 }
 
 /* ── Size variants ───────────────────────────────────────────────────────── */
@@ -261,7 +271,6 @@ h6 { font-size: var(--text-base); }
 
 /* ── Corner variants ─────────────────────────────────────────────────────── */
 
-/* Fully rounded — overrides the clip-path */
 .btn--rounded {
   clip-path: none;
   border-radius: var(--radius-full);
@@ -272,34 +281,26 @@ h6 { font-size: var(--text-base); }
 .btn--primary {
   background-color: var(--color-blue);
   color: var(--color-white);
-  border-color: var(--color-blue);
 }
 .btn--primary:hover {
   background-color: var(--color-blue-hover);
-  border-color: var(--color-blue-hover);
-  transform: translateY(-1px);
 }
 
 .btn--accent {
   background-color: var(--color-red);
   color: var(--color-white);
-  border-color: var(--color-red);
 }
 .btn--accent:hover {
   background-color: var(--color-red-hover);
-  border-color: var(--color-red-hover);
-  transform: translateY(-1px);
 }
 
+/* Solid white — for use on coloured backgrounds */
 .btn--outline {
-  background-color: transparent;
-  color: var(--color-white);
-  border-color: var(--color-white);
-}
-.btn--outline:hover {
   background-color: var(--color-white);
   color: var(--color-bg-dark);
-  transform: translateY(-1px);
+}
+.btn--outline:hover {
+  background-color: rgba(255, 255, 255, 0.88);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -1323,14 +1324,14 @@ body.menu-open .app-content {
 .contact-form__select,
 .contact-form__textarea {
   background-color: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: none;
   border-radius: var(--radius-sm);
   color: var(--color-white);
   font-family: var(--font-primary);
   font-size: var(--text-base);
   padding: var(--spacing-3) var(--spacing-4);
   width: 100%;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  transition: background-color var(--transition-fast);
 }
 
 .contact-form__input::placeholder,
@@ -1342,14 +1343,13 @@ body.menu-open .app-content {
 .contact-form__select:focus,
 .contact-form__textarea:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.55);
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: rgba(0, 0, 0, 0.38);
 }
 
 .contact-form__input.is-error,
 .contact-form__select.is-error,
 .contact-form__textarea.is-error {
-  border-color: var(--color-red-tint);
+  background-color: rgba(180, 20, 30, 0.28);
 }
 
 /* Custom select — hide OS arrow, add our own */
