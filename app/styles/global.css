@@ -1413,7 +1413,12 @@ body.menu-open .app-content {
   flex-direction: column;
   gap: var(--spacing-10);
   padding-top: var(--spacing-4);
-  padding-right: var(--spacing-4);
+}
+
+@media (min-width: 768px) {
+  .contact-info {
+    padding-right: var(--spacing-4);
+  }
 }
 
 @media (min-width: 992px) {
