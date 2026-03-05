@@ -122,21 +122,21 @@ export default function App() {
           logoAlt={logoAlt ?? undefined}
           nav={nav}
           social={social}
-        />
+        >
+          <main className="site-main">
+            <Outlet />
+          </main>
 
-        <main className="site-main">
-          <Outlet />
-        </main>
-
-        <Footer
-          logoUrl={logoUrl ?? undefined}
-          logoAlt={logoAlt ?? undefined}
-          tagline={tagline ?? undefined}
-          nav={nav}
-          contact={contact}
-          social={social}
-          copyright={copyright ?? undefined}
-        />
+          <Footer
+            logoUrl={logoUrl ?? undefined}
+            logoAlt={logoAlt ?? undefined}
+            tagline={tagline ?? undefined}
+            nav={nav}
+            contact={contact}
+            social={social}
+            copyright={copyright ?? undefined}
+          />
+        </Navbar>
 
         <ScrollRestoration />
         <Scripts />

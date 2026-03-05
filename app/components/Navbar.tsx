@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "@remix-run/react";
 import { HamburgerIcon, CloseIcon, SocialIcon } from "./Icons";
 
@@ -13,61 +13,45 @@ export interface NavbarProps {
   logoAlt?: string;
   nav: NavItem[];
   social?: { platform: string; url: string }[];
+  children?: React.ReactNode;
 }
 
-export default function Navbar({ logoUrl, logoAlt, nav, social }: NavbarProps) {
+export default function Navbar({ logoUrl, logoAlt, nav, social, children }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const sidenavRef = useRef<HTMLElement>(null);
 
-  /* Close menu on route change */
+  /* Close on route change */
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  /* Prevent body scroll when sidenav is open */
+  /* Add body class for push + overflow lock */
   useEffect(() => {
     if (menuOpen) {
-      document.body.classList.add("sidenav-open");
+      document.body.classList.add("menu-open");
     } else {
-      document.body.classList.remove("sidenav-open");
+      document.body.classList.remove("menu-open");
     }
-    return () => document.body.classList.remove("sidenav-open");
-  }, [menuOpen]);
-
-  /* Close on outside click */
-  useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      if (menuOpen && sidenavRef.current && !sidenavRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
+    return () => document.body.classList.remove("menu-open");
   }, [menuOpen]);
 
   function toggleMenu() {
     setMenuOpen((prev) => !prev);
   }
 
+  const logoNode = logoUrl ? (
+    <img src={logoUrl} alt={logoAlt ?? "103 Tactical"} className="nav-logo" />
+  ) : (
+    <span className="nav-logo-text">103 Tactical</span>
+  );
+
   return (
     <>
-      {/* ── Mobile Sidenav ───────────────────────────────────── */}
+      {/* ── Mobile Sidenav (outside app-content so it stays fixed) ── */}
       <aside
-        ref={sidenavRef}
         className={menuOpen ? "sidenav sidenav--open" : "sidenav"}
         aria-hidden={!menuOpen}
       >
-        <div className="sidenav__header">
-          <button
-            className="sidenav__close"
-            onClick={toggleMenu}
-            aria-label="Close menu"
-          >
-            <CloseIcon className="icon" />
-          </button>
-        </div>
-
         <nav className="sidenav__nav" aria-label="Mobile navigation">
           {nav.map((item) => (
             <NavLink
@@ -102,68 +86,60 @@ export default function Navbar({ logoUrl, logoAlt, nav, social }: NavbarProps) {
         )}
       </aside>
 
-      {/* Sidenav overlay */}
-      {menuOpen && (
-        <div className="sidenav-overlay" onClick={toggleMenu} aria-hidden="true" />
-      )}
+      {/* ── App content — slides right when menu opens ────────────── */}
+      <div className="app-content">
 
-      {/* ── Mobile Header ────────────────────────────────────── */}
-      <header className="mobile-header">
-        <button
-          className="mobile-header__hamburger"
-          onClick={toggleMenu}
-          aria-label="Open menu"
-          aria-expanded={menuOpen}
-        >
-          <HamburgerIcon className="icon" />
-        </button>
+        {/* Mobile header */}
+        <header className="mobile-header">
+          <button
+            className="mobile-header__hamburger"
+            onClick={toggleMenu}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen
+              ? <CloseIcon className="icon" />
+              : <HamburgerIcon className="icon" />}
+          </button>
 
-        <Link to="/" className="mobile-header__logo-link" aria-label="103 Tactical — home">
-          {logoUrl ? (
-            <img src={logoUrl} alt={logoAlt ?? "103 Tactical"} className="mobile-header__logo" />
-          ) : (
-            <span className="mobile-header__logo-text">103 Tactical</span>
-          )}
-        </Link>
-
-        {/* Right slot — reserved for future icon link */}
-        <div className="mobile-header__right" aria-hidden="true" />
-      </header>
-
-      {/* ── Desktop Navbar ───────────────────────────────────── */}
-      <header className="navbar-desktop">
-        <div className="navbar-desktop__inner">
-          <Link to="/" className="navbar-desktop__logo-link" aria-label="103 Tactical — home">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={logoAlt ?? "103 Tactical"}
-                className="navbar-desktop__logo"
-              />
-            ) : (
-              <span className="navbar-desktop__logo-text">103 Tactical</span>
-            )}
+          <Link to="/" className="mobile-header__logo-link" aria-label="103 Tactical — home">
+            {logoNode}
           </Link>
 
-          <nav className="navbar-desktop__nav" aria-label="Primary navigation">
-            {nav.map((item) => (
-              <NavLink
-                key={item.url}
-                to={item.url}
-                className={({ isActive }) =>
-                  isActive
-                    ? "navbar-desktop__link navbar-desktop__link--active"
-                    : "navbar-desktop__link"
-                }
-                target={item.openInNewTab ? "_blank" : undefined}
-                rel={item.openInNewTab ? "noopener noreferrer" : undefined}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-      </header>
+          {/* Right slot — reserved for future icon */}
+          <div className="mobile-header__right" aria-hidden="true" />
+        </header>
+
+        {/* Desktop navbar */}
+        <header className="navbar-desktop">
+          <div className="navbar-desktop__inner">
+            <Link to="/" className="navbar-desktop__logo-link" aria-label="103 Tactical — home">
+              {logoNode}
+            </Link>
+
+            <nav className="navbar-desktop__nav" aria-label="Primary navigation">
+              {nav.map((item) => (
+                <NavLink
+                  key={item.url}
+                  to={item.url}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "navbar-desktop__link navbar-desktop__link--active"
+                      : "navbar-desktop__link"
+                  }
+                  target={item.openInNewTab ? "_blank" : undefined}
+                  rel={item.openInNewTab ? "noopener noreferrer" : undefined}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        </header>
+
+        {/* Page content + footer */}
+        {children}
+      </div>
     </>
   );
 }
