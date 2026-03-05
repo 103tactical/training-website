@@ -1273,23 +1273,23 @@ body.menu-open .app-content {
 .contact-page__hero {
   position: relative;
   width: 100%;
-  max-height: 740px;
+  height: 300px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 220px;
+  margin-bottom: var(--spacing-12);
 }
 
 @media (min-width: 768px) {
   .contact-page__hero {
-    min-height: 320px;
+    height: 480px;
   }
 }
 
 @media (min-width: 992px) {
   .contact-page__hero {
-    min-height: 420px;
+    height: 740px;
   }
 }
 
