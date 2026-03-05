@@ -383,12 +383,7 @@ body.menu-open .app-content {
   }
 
   .navbar-desktop {
-    height: auto;
-    padding-block: 20px;
-  }
-
-  .navbar-desktop__inner {
-    height: auto;
+    height: 150px;
   }
 }
 
