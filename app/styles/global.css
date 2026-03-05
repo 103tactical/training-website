@@ -53,6 +53,7 @@
 
   --font-normal:   400;
   --font-medium:   500;
+  --font-light:    300;
   --font-semibold: 600;
   --font-bold:     700;
 
@@ -1290,8 +1291,9 @@ body.menu-open .app-content {
 }
 
 .contact-page__subtitle {
-  color: var(--color-red-tint);
+  color: var(--color-white);
   font-size: var(--text-base);
+  font-weight: var(--font-light);
   margin: 0;
 }
 
@@ -1441,8 +1443,9 @@ body.menu-open .app-content {
 /* ── Errors ──────────────────────────────────────────────────────────────── */
 
 .contact-form__field-error {
-  color: var(--color-red-tint);
+  color: var(--color-white);
   font-size: var(--text-sm);
+  font-style: italic;
   line-height: 1.3;
 }
 
