@@ -410,7 +410,7 @@ body.menu-open .app-content {
 }
 
 .mobile-logo__img {
-  height: 124px;
+  height: 134px;
   width: auto;
   object-fit: contain;
 }
@@ -821,7 +821,7 @@ body.menu-open .app-content {
 }
 
 .site-headline__text {
-  font-size: var(--text-5xl);
+  font-size: 2.5rem;
   font-weight: var(--font-bold);
   color: var(--color-white);
   line-height: 1.1;
@@ -830,7 +830,7 @@ body.menu-open .app-content {
 
 @media (max-width: 991px) {
   .site-headline__text {
-    font-size: var(--text-4xl);
+    font-size: 1.75rem;
   }
 }
 
@@ -839,7 +839,7 @@ body.menu-open .app-content {
     padding-top: var(--spacing-8);
   }
   .site-headline__text {
-    font-size: 1.375rem;
+    font-size: 0.875rem;
   }
 }
 
