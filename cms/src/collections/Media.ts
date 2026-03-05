@@ -20,5 +20,8 @@ export const Media: CollectionConfig = {
     // On Render: set MEDIA_STATIC_DIR=/var/data/media (persistent disk)
     // Locally: falls back to cms/public/media
     staticDir: process.env.MEDIA_STATIC_DIR ?? path.resolve(dirname, "../../public/media"),
+    limits: {
+      fileSize: 500 * 1024 * 1024, // 500MB
+    },
   },
 };
