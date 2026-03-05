@@ -196,22 +196,29 @@ export const HomePage: GlobalConfig = {
 
     // ── Badges ────────────────────────────────────────────────────────────
     {
-      name: "badgesHeading",
-      type: "text",
-      label: "Badges Section Heading",
-      admin: {
-        description: "Optional heading above the badges row. Leave blank to show no heading.",
-      },
-    },
-    {
-      name: "badges",
-      type: "relationship",
-      relationTo: "badges",
-      hasMany: true,
+      name: "badgesSection",
+      type: "group",
       label: "Badges",
-      admin: {
-        description: "Select and order the badges to display on the home page.",
-      },
+      fields: [
+        {
+          name: "heading",
+          type: "text",
+          label: "Section Heading",
+          admin: {
+            description: "Optional heading above the badges row. Leave blank to show no heading.",
+          },
+        },
+        {
+          name: "badges",
+          type: "relationship",
+          relationTo: "badges",
+          hasMany: true,
+          label: "Badges",
+          admin: {
+            description: "Select and order the badges to display on the home page.",
+          },
+        },
+      ],
     },
   ],
 };

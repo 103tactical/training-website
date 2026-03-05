@@ -54,8 +54,10 @@ export interface HomePage {
       bullets?: { item: string }[];
     }[];
   };
-  badgesHeading?: string;
-  badges: Badge[];
+  badgesSection?: {
+    heading?: string;
+    badges: Badge[];
+  };
 }
 
 export interface Course {
