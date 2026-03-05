@@ -350,7 +350,7 @@ h6 { font-size: var(--text-base); }
   width: var(--sidenav-width);
   height: 100vh;
   height: 100dvh;
-  background-color: var(--color-blue);
+  background-color: var(--color-bg-dark);
   z-index: 90;
   transform: translateX(calc(-1 * var(--sidenav-width)));
   transition: transform var(--transition-slow);
@@ -380,7 +380,7 @@ h6 { font-size: var(--text-base); }
   padding: var(--spacing-4) var(--spacing-6);
   font-size: var(--text-base);
   font-weight: 500;
-  color: var(--color-blue-tint);
+  color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.01em;
   transition: color var(--transition-fast);
 }
@@ -409,7 +409,7 @@ h6 { font-size: var(--text-base); }
 
 .sidenav__social-link:hover,
 .sidenav__social-link:active {
-  color: var(--color-blue-tint);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ── App content wrapper ─────────────────────────────────────────────────── */
@@ -731,6 +731,23 @@ body.layout-overlay .app-content {
 @media (min-width: 992px) {
   body.layout-overlay .contact-page__hero-content {
     padding-top: calc(var(--overlay-nav-height) + var(--spacing-8));
+  }
+
+  body.layout-overlay .contact-page__hero {
+    height: 740px;
+  }
+}
+
+/* Overlay nav: larger logo at each desktop breakpoint (+30px) */
+@media (min-width: 768px) {
+  body.layout-overlay .navbar-desktop__logo-link .nav-logo {
+    height: 124px;
+  }
+}
+
+@media (min-width: 992px) {
+  body.layout-overlay .navbar-desktop__logo-link .nav-logo {
+    height: 140px;
   }
 }
 
