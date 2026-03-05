@@ -46,7 +46,7 @@ export const meta: MetaFunction = () => {
 
 // Replace ADOBE_PROJECT_ID with your Typekit project ID (e.g. "oft5qah")
 // Replace font family name in global.css --font-primary once you have it
-const ADOBE_PROJECT_ID = "";
+const ADOBE_PROJECT_ID = "ias2acq";
 
 export const links: LinksFunction = () => [
   ...(ADOBE_PROJECT_ID
