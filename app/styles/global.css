@@ -383,10 +383,6 @@ body.menu-open .app-content {
   .nav-logo {
     height: 110px;
   }
-
-  .navbar-desktop {
-    height: var(--navbar-height-desktop);
-  }
 }
 
 .mobile-header .nav-logo,
@@ -434,6 +430,12 @@ body.menu-open .app-content {
   top: 0;
   z-index: 100;
   height: var(--navbar-height-tablet);
+}
+
+@media (min-width: 992px) {
+  .navbar-desktop {
+    height: var(--navbar-height-desktop);
+  }
 }
 
 .navbar-desktop__inner {
