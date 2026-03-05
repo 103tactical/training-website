@@ -1489,11 +1489,69 @@ a.contact-info__value:hover {
   display: block;
 }
 
+/* ── Map embed ───────────────────────────────────────────────────────────── */
+
+.contact-map {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  clip-path: polygon(
+    10px 0%, 100% 0%,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0% 100%, 0% 10px
+  );
+  overflow: hidden;
+}
+
+@media (min-width: 992px) {
+  .contact-map {
+    height: 260px;
+  }
+}
+
+.contact-map__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  filter: grayscale(1) contrast(1.05);
+}
+
+/* Red pin overlaid at visual center (map is centered on the address) */
+.contact-map__pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -90%);
+  width: 28px;
+  height: 28px;
+  color: var(--color-red);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.contact-map__pin span {
+  display: flex;
+}
+
+.contact-map__pin svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
 /* ── Form wrapper (card) ─────────────────────────────────────────────────── */
 
 .contact-form-wrap {
   background-color: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-lg);
+  clip-path: polygon(
+    12px 0%, 100% 0%,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0% 100%, 0% 12px
+  );
   padding: var(--spacing-5) var(--spacing-4);
 }
 
