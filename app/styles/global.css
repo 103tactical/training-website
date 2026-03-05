@@ -1424,7 +1424,6 @@ body.menu-open .app-content {
   letter-spacing: 0.04em;
   color: var(--color-white);
   line-height: 1.1;
-  margin-bottom: var(--spacing-2);
 }
 
 /* Tablet: slightly smaller, right padding to breathe away from the form */
