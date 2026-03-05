@@ -1399,6 +1399,10 @@ body.layout-overlay .app-content {
   object-position: center;
 }
 
+body.layout-overlay .contact-page__hero-img {
+  object-position: center calc(50% + 200px);
+}
+
 .contact-page__hero::after {
   content: "";
   position: absolute;
