@@ -62,7 +62,7 @@ export const links: LinksFunction = () => [
 
 const FALLBACK_NAV = [
   { label: "Courses", url: "/courses", openInNewTab: false },
-  { label: "Applications", url: "/application-assistance", openInNewTab: false },
+  { label: "Applications", url: "/applications", openInNewTab: false },
   { label: "Contact", url: "/contact", openInNewTab: false },
 ];
 
