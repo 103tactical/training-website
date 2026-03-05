@@ -1,1 +1,18 @@
-// Custom admin styles can be added here
+// Larger section header labels
+.array-field > .field-label,
+.array-field__header-wrap .field-label,
+.group-field > .field-label,
+.group-field__wrap > .field-label,
+.relationship-field > .field-label,
+.upload-field > .field-label {
+  font-size: 28px !important;
+}
+
+// Padding between sections
+.array-field,
+.group-field,
+.relationship-field,
+.upload-field {
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
