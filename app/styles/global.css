@@ -107,6 +107,7 @@ html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
+  background-color: var(--color-bg-dark);
 }
 
 body {
@@ -332,7 +333,7 @@ body.menu-open .app-content {
   right: 0;
   z-index: 100;
   height: var(--mobile-header-height);
-  background-color: var(--color-bg-dark);
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -402,7 +403,7 @@ body.menu-open .app-content {
 }
 
 .mobile-logo__img {
-  height: 90px;
+  height: 110px;
   width: auto;
   object-fit: contain;
 }
@@ -571,7 +572,7 @@ body.menu-open .app-content {
 }
 
 .footer__logo {
-  height: 54px;
+  height: 74px;
   width: auto;
   margin-bottom: var(--spacing-4);
 }
@@ -649,11 +650,12 @@ body.menu-open .app-content {
   display: flex;
   align-items: center;
   gap: var(--spacing-5);
+  margin-top: 26px;
 }
 
 .footer__social-link {
   color: var(--color-blue-tint);
-  font-size: 1.1rem;
+  font-size: 1.475rem;
   transition: color var(--transition-fast);
 }
 
@@ -665,7 +667,7 @@ body.menu-open .app-content {
   max-width: var(--container-max-width);
   margin-inline: auto;
   padding-inline: var(--container-padding);
-  padding-top: var(--spacing-8);
+  padding-top: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -824,6 +826,12 @@ body.menu-open .app-content {
   }
 }
 
+@media (max-width: 767px) {
+  .site-headline__text {
+    font-size: var(--text-3xl);
+  }
+}
+
 /* ── Featured Carousel ────────────────────────────────────────────────── */
 
 .featured-carousel {
@@ -930,8 +938,8 @@ body.menu-open .app-content {
 }
 
 .featured-carousel__nav-icon {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
 }
 .featured-carousel__nav-icon svg {
   width: 100%;
@@ -958,8 +966,8 @@ body.menu-open .app-content {
   }
 }
 
-/* ── 768px–1279px: hide chevrons (dots + swipe only) ─────────────────────── */
-@media (min-width: 768px) and (max-width: 1279px) {
+/* ── below 1280px: hide chevrons (dots + swipe only) ─────────────────────── */
+@media (max-width: 1279px) {
   .featured-carousel__nav {
     display: none;
   }

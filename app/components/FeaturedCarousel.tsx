@@ -33,6 +33,22 @@ export default function FeaturedCarousel({ slides, delay = "6" }: FeaturedCarous
 
   const delayMs = delay === "off" ? null : parseInt(delay, 10) * 1000;
 
+  const touchStartX = useRef<number | null>(null);
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      setIsPaused(true);
+      diff > 0 ? goNext() : goPrev();
+    }
+    touchStartX.current = null;
+  }
+
   useEffect(() => {
     if (!hasMultiple || isPaused || delayMs === null) return;
     const id = setInterval(() => {
@@ -43,7 +59,11 @@ export default function FeaturedCarousel({ slides, delay = "6" }: FeaturedCarous
 
   return (
     <section className="featured-carousel">
-      <div className={`featured-carousel__inner${activeHasVertical ? " has-active-vertical" : ""}`}>
+      <div
+        className={`featured-carousel__inner${activeHasVertical ? " has-active-vertical" : ""}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {slides.map((slide, i) => (
           <CarouselSlide
             key={i}
@@ -207,10 +227,17 @@ function VideoPlayer({
   function requestFullscreen(e: React.MouseEvent) {
     e.stopPropagation();
     if (!videoRef.current) return;
-    const el = videoRef.current;
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if ((el as HTMLVideoElement & { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen) {
-      (el as HTMLVideoElement & { webkitRequestFullscreen: () => void }).webkitRequestFullscreen();
+    const el = videoRef.current as HTMLVideoElement & {
+      webkitRequestFullscreen?: () => void;
+      webkitEnterFullscreen?: () => void;
+    };
+    if (el.requestFullscreen) {
+      el.requestFullscreen();
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    } else if (el.webkitEnterFullscreen) {
+      // iOS Safari — only works on <video> elements
+      el.webkitEnterFullscreen();
     }
   }
 

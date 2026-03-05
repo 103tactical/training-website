@@ -40,6 +40,22 @@ export default function Footer({
               <div className="footer__logo-text">103 Tactical</div>
             )}
           </Link>
+          {social && social.length > 0 && (
+            <div className="footer__social">
+              {social.map((s) => (
+                <a
+                  key={s.platform}
+                  href={s.url}
+                  className="footer__social-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.platform}
+                >
+                  <SocialIcon platform={s.platform} className="icon" />
+                </a>
+              ))}
+            </div>
+          )}
           {tagline && <p className="footer__tagline">{tagline}</p>}
         </div>
 
@@ -71,7 +87,7 @@ export default function Footer({
               {contact.phone && (
                 <li className="footer__contact-item footer__contact-item--icon">
                   <PhoneIcon className="footer__contact-icon" />
-                  <a href={`tel:${contact.phone.replace(/\D/g, "")}`}>
+                  <a href={(() => { const d = contact.phone.replace(/\D/g, ""); return `tel:${d.length === 10 ? `+1${d}` : `+${d}`}`; })()}>
                     {contact.phone}
                   </a>
                 </li>
@@ -92,23 +108,6 @@ export default function Footer({
                 </li>
               )}
             </ul>
-
-            {social && social.length > 0 && (
-              <div className="footer__social" style={{ marginTop: "1.5rem" }}>
-                {social.map((s) => (
-                  <a
-                    key={s.platform}
-                    href={s.url}
-                    className="footer__social-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={s.platform}
-                  >
-                    <SocialIcon platform={s.platform} className="icon" />
-                  </a>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
