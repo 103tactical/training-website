@@ -1084,8 +1084,6 @@ body.layout-overlay .app-content {
 .featured-carousel__inner {
   position: relative;
   width: 100%;
-  max-width: 1180px;
-  margin-inline: auto;
   aspect-ratio: 3 / 2;
   max-height: 740px;
   z-index: 0;
@@ -1146,20 +1144,23 @@ body.layout-overlay .app-content {
   }
 }
 
+/* Dots-only controls bar below the slide */
 .featured-carousel__controls {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  justify-content: center;
   align-items: center;
   background: var(--color-bg-dark);
   padding: var(--spacing-3) var(--spacing-2);
-  max-width: 1180px;
-  margin-inline: auto;
   min-height: 64px;
+  margin-bottom: 20px;
 }
 
+/* Chevrons — absolutely positioned overlaying the slide */
 .featured-carousel__nav {
-  width: 40px;
-  height: 40px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1167,20 +1168,28 @@ body.layout-overlay .app-content {
   border: none;
   color: var(--color-white);
   cursor: pointer;
+  padding: var(--spacing-2);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+  transition: filter var(--transition-fast);
+}
+
+.featured-carousel__nav:hover {
+  filter: drop-shadow(0 2px 12px rgba(255, 255, 255, 0.35));
 }
 
 .featured-carousel__nav--prev {
-  justify-self: start;
+  left: var(--spacing-4);
 }
 
 .featured-carousel__nav--next {
-  justify-self: end;
+  right: var(--spacing-4);
 }
 
 .featured-carousel__nav-icon {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
 }
+
 .featured-carousel__nav-icon svg {
   width: 100%;
   height: 100%;
@@ -1191,7 +1200,7 @@ body.layout-overlay .app-content {
 .featured-carousel__dots {
   display: flex;
   gap: var(--spacing-2);
-  justify-self: center;
+  justify-content: center;
 }
 
 /* ── 768px+: larger dots ─────────────────────────────────────────────────── */
@@ -1203,54 +1212,6 @@ body.layout-overlay .app-content {
 
   .featured-carousel__dots {
     gap: 10px;
-  }
-}
-
-/* ── below 1280px: hide chevrons (dots + swipe only) ─────────────────────── */
-@media (max-width: 1279px) {
-  .featured-carousel__nav {
-    display: none;
-  }
-
-  .featured-carousel__controls {
-    display: flex;
-    justify-content: center;
-  }
-}
-
-/* ── 1400px+: larger chevrons ────────────────────────────────────────────── */
-@media (min-width: 1400px) {
-  .featured-carousel__nav {
-    width: 54px;
-    height: 54px;
-  }
-
-  .featured-carousel__nav-icon {
-    width: 38px;
-    height: 38px;
-  }
-}
-
-/* ── 1280px+: nav buttons move outside the slide, dots remain centered ── */
-@media (min-width: 1280px) {
-  .featured-carousel__controls {
-    display: flex;
-    justify-content: center;
-  }
-
-  .featured-carousel__nav {
-    position: absolute;
-    top: calc(740px / 2);
-    transform: translateY(-50%);
-    z-index: 10;
-  }
-
-  .featured-carousel__nav--prev {
-    left: calc(25% - 315px);
-  }
-
-  .featured-carousel__nav--next {
-    right: calc(25% - 315px);
   }
 }
 

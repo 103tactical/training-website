@@ -20,6 +20,7 @@ export default function FeaturedCarousel({ slides, delay = "6" }: FeaturedCarous
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const active = slides[activeIndex];
   const hasMultiple = slides.length > 1;
@@ -70,20 +71,35 @@ export default function FeaturedCarousel({ slides, delay = "6" }: FeaturedCarous
             slide={slide}
             isActive={i === activeIndex}
             onPauseChange={setIsPaused}
+            onVideoPlayingChange={setIsVideoPlaying}
           />
         ))}
+
+        {/* Chevrons overlay the slide — hidden while a video is playing */}
+        {hasMultiple && !isVideoPlaying && (
+          <>
+            <button
+              className="featured-carousel__nav featured-carousel__nav--prev"
+              onClick={goPrev}
+              aria-label="Previous slide"
+              type="button"
+            >
+              <ChevronLeftIcon className="featured-carousel__nav-icon" />
+            </button>
+            <button
+              className="featured-carousel__nav featured-carousel__nav--next"
+              onClick={goNext}
+              aria-label="Next slide"
+              type="button"
+            >
+              <ChevronRightIcon className="featured-carousel__nav-icon" />
+            </button>
+          </>
+        )}
       </div>
 
       {hasMultiple && (
         <div className="featured-carousel__controls">
-          <button
-            className="featured-carousel__nav featured-carousel__nav--prev"
-            onClick={goPrev}
-            aria-label="Previous slide"
-            type="button"
-          >
-            <ChevronLeftIcon className="featured-carousel__nav-icon" />
-          </button>
           <div className="featured-carousel__dots">
             {slides.map((_, i) => (
               <button
@@ -95,14 +111,6 @@ export default function FeaturedCarousel({ slides, delay = "6" }: FeaturedCarous
               />
             ))}
           </div>
-          <button
-            className="featured-carousel__nav featured-carousel__nav--next"
-            onClick={goNext}
-            aria-label="Next slide"
-            type="button"
-          >
-            <ChevronRightIcon className="featured-carousel__nav-icon" />
-          </button>
         </div>
       )}
     </section>
@@ -113,10 +121,12 @@ function CarouselSlide({
   slide,
   isActive,
   onPauseChange,
+  onVideoPlayingChange,
 }: {
   slide: FeaturedSlide;
   isActive: boolean;
   onPauseChange: (paused: boolean) => void;
+  onVideoPlayingChange: (playing: boolean) => void;
 }) {
   const isVideo = slide.slideType === "video";
   const isImage = slide.slideType === "image" || slide.slideType === "image-text";
@@ -142,6 +152,7 @@ function CarouselSlide({
             preview={wideVideoPreviewUrl}
             isActive={isActive}
             onPauseChange={onPauseChange}
+            onVideoPlayingChange={onVideoPlayingChange}
           />
         </div>
         {hasVerticalVideo && (
@@ -151,6 +162,7 @@ function CarouselSlide({
               preview={verticalVideoPreviewUrl}
               isActive={isActive}
               onPauseChange={onPauseChange}
+              onVideoPlayingChange={onVideoPlayingChange}
             />
           </div>
         )}
@@ -184,11 +196,13 @@ function VideoPlayer({
   preview,
   isActive,
   onPauseChange,
+  onVideoPlayingChange,
 }: {
   src: string;
   preview?: string;
   isActive: boolean;
   onPauseChange: (paused: boolean) => void;
+  onVideoPlayingChange: (playing: boolean) => void;
 }) {
   const [playing, setPlaying] = useState(false);
   const [hasEverPlayed, setHasEverPlayed] = useState(false);
@@ -209,10 +223,12 @@ function VideoPlayer({
     if (playing) {
       videoRef.current.pause();
       onPauseChange(false);
+      onVideoPlayingChange(false);
     } else {
       videoRef.current.play();
       if (!hasEverPlayed) setHasEverPlayed(true);
       onPauseChange(true);
+      onVideoPlayingChange(true);
     }
     setPlaying(!playing);
   }
@@ -250,40 +266,40 @@ function VideoPlayer({
         loop
         muted={muted}
         onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
+        onPause={() => { setPlaying(false); onVideoPlayingChange(false); }}
       />
       {!hasEverPlayed && preview && (
-        <img
-          className="featured-video__preview"
-          src={preview}
-          alt=""
-        />
+        <img className="featured-video__preview" src={preview} alt="" />
       )}
       {!playing && (
         <button className="featured-video__play" aria-label="Play video" type="button" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
           <PlayIcon className="featured-video__play-icon" />
         </button>
       )}
-      <button
-        className="featured-video__control featured-video__control--fullscreen"
-        aria-label="Fullscreen"
-        type="button"
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); requestFullscreen(e); }}
-      >
-        <FullscreenIcon className="featured-video__control-icon" />
-      </button>
-      <button
-        className="featured-video__control featured-video__control--mute"
-        aria-label={muted ? "Unmute" : "Mute"}
-        type="button"
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleMute(e); }}
-      >
-        {muted ? (
-          <MuteIcon className="featured-video__control-icon" />
-        ) : (
-          <UnmuteIcon className="featured-video__control-icon" />
-        )}
-      </button>
+      {playing && (
+        <>
+          <button
+            className="featured-video__control featured-video__control--fullscreen"
+            aria-label="Fullscreen"
+            type="button"
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); requestFullscreen(e); }}
+          >
+            <FullscreenIcon className="featured-video__control-icon" />
+          </button>
+          <button
+            className="featured-video__control featured-video__control--mute"
+            aria-label={muted ? "Unmute" : "Mute"}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleMute(e); }}
+          >
+            {muted ? (
+              <MuteIcon className="featured-video__control-icon" />
+            ) : (
+              <UnmuteIcon className="featured-video__control-icon" />
+            )}
+          </button>
+        </>
+      )}
     </div>
   );
 }
