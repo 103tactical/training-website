@@ -1427,7 +1427,18 @@ body.menu-open .app-content {
   margin-bottom: var(--spacing-2);
 }
 
-@media (min-width: 768px) {
+/* Tablet: slightly smaller, right padding to breathe away from the form */
+@media (min-width: 768px) and (max-width: 991px) {
+  .contact-info {
+    padding-right: var(--spacing-6);
+  }
+  .contact-info__label {
+    font-size: var(--text-xl);
+  }
+}
+
+/* Desktop: full size */
+@media (min-width: 992px) {
   .contact-info__label {
     font-size: var(--text-3xl);
   }
@@ -1443,6 +1454,12 @@ body.menu-open .app-content {
   transition: color var(--transition-fast);
 }
 
+@media (min-width: 768px) and (max-width: 991px) {
+  .contact-info__value {
+    font-size: var(--text-sm);
+  }
+}
+
 a.contact-info__value:hover {
   color: var(--color-white);
 }
@@ -1456,6 +1473,13 @@ a.contact-info__value:hover {
   height: 14px;
   flex-shrink: 0;
   color: var(--color-red-tint);
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .contact-info__icon {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .contact-info__icon--top {
