@@ -43,10 +43,8 @@ export interface Utility {
 }
 
 export interface SiteSettings {
-  logos?: {
-    header?: { url: string; alt: string };
-    footer?: { url: string; alt: string };
-  };
+  logo?: { url: string; alt: string };
+  logoFooter?: { url: string; alt: string };
   nav: { label: string; url: string; openInNewTab: boolean }[];
   contact: {
     address?: string;

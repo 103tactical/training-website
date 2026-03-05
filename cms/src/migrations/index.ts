@@ -7,6 +7,7 @@ import * as migration_20260305_video_preview_images from './20260305_video_previ
 import * as migration_20260305_utility_carousel_delay from './20260305_utility_carousel_delay';
 import * as migration_20260305_site_settings_logo_footer from './20260305_site_settings_logo_footer';
 import * as migration_20260305_site_settings_logos_group from './20260305_site_settings_logos_group';
+import * as migration_20260305_fix_site_settings_logos from './20260305_fix_site_settings_logos';
 
 export const migrations = [
   {
@@ -53,5 +54,10 @@ export const migrations = [
     up: migration_20260305_site_settings_logos_group.up,
     down: migration_20260305_site_settings_logos_group.down,
     name: '20260305_site_settings_logos_group'
+  },
+  {
+    up: migration_20260305_fix_site_settings_logos.up,
+    down: migration_20260305_fix_site_settings_logos.down,
+    name: '20260305_fix_site_settings_logos'
   },
 ];
