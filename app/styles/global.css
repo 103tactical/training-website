@@ -662,6 +662,79 @@ body.menu-open .app-content {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   LAYOUT: OVERLAY NAV
+   Nav links centered on top row, logo centered below, transparent bg,
+   hero image extends behind the navbar.
+   Activate by adding a path to overlayNavRoutes in app/config/layouts.ts.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Estimated height of the overlay navbar at each breakpoint (used to push
+   hero text content clear of the floating navbar) */
+body.layout-overlay {
+  --overlay-nav-height: 112px;
+}
+
+@media (min-width: 992px) {
+  body.layout-overlay {
+    --overlay-nav-height: 124px;
+  }
+}
+
+/* app-content must be a positioning context so the absolute navbar anchors to it */
+body.layout-overlay .app-content {
+  position: relative;
+}
+
+/* Navbar floats over the hero — transparent, no fixed height */
+@media (min-width: 768px) {
+  body.layout-overlay .navbar-desktop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: transparent;
+    height: auto;
+    z-index: 100;
+  }
+
+  /* Column layout: links on top (order 1), logo below (order 2), all centered */
+  body.layout-overlay .navbar-desktop__inner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-3);
+    padding-top: var(--spacing-5);
+    padding-bottom: var(--spacing-4);
+    max-width: 100%;
+  }
+
+  body.layout-overlay .navbar-desktop__nav {
+    order: 1;
+    justify-content: center;
+  }
+
+  body.layout-overlay .navbar-desktop__logo-link {
+    order: 2;
+  }
+
+  /* Links are over a dark image — use full white */
+  body.layout-overlay .navbar-desktop__link {
+    color: var(--color-white);
+  }
+
+  /* Push hero text content below the floating navbar */
+  body.layout-overlay .contact-page__hero-content {
+    padding-top: calc(var(--overlay-nav-height) + var(--spacing-6));
+  }
+}
+
+@media (min-width: 992px) {
+  body.layout-overlay .contact-page__hero-content {
+    padding-top: calc(var(--overlay-nav-height) + var(--spacing-8));
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    FOOTER
    ───────────────────────────────────────────────────────────────────────── */
 

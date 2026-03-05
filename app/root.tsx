@@ -11,6 +11,7 @@ import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from "@remix-run
 import { json } from "@remix-run/node";
 
 import siteMetadata from "./data/site-metadata.json";
+import { overlayNavRoutes } from "./config/layouts";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -137,7 +138,10 @@ export default function App() {
   const { logoUrl, logoAlt, footerLogoUrl, footerLogoAlt, nav, contact, social, copyright, tagline } =
     useLoaderData<typeof loader>();
   const { pathname } = useLocation();
-  const bodyClass = pathname === "/contact" ? "theme-contact" : undefined;
+  const bodyClass = [
+    pathname === "/contact" ? "theme-contact" : null,
+    overlayNavRoutes.has(pathname) ? "layout-overlay" : null,
+  ].filter(Boolean).join(" ") || undefined;
 
   return (
     <html lang="en">
