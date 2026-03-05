@@ -89,21 +89,25 @@ export async function loader(_: LoaderFunctionArgs) {
 
     const settings = await res.json();
 
-    const rawLogoUrl = settings.logos?.header?.url ?? null;
+    // Support both new group shape (logos.header) and old flat shape (logo) during migration window
+    const headerLogo = settings.logos?.header ?? (settings as any).logo ?? null;
+    const footerLogo = settings.logos?.footer ?? (settings as any).logoFooter ?? null;
+
+    const rawLogoUrl = headerLogo?.url ?? null;
     const logoUrl = rawLogoUrl
       ? rawLogoUrl.startsWith("http") ? rawLogoUrl : `${apiUrl}${rawLogoUrl}`
       : null;
 
-    const rawFooterLogoUrl = settings.logos?.footer?.url ?? null;
+    const rawFooterLogoUrl = footerLogo?.url ?? null;
     const footerLogoUrl = rawFooterLogoUrl
       ? rawFooterLogoUrl.startsWith("http") ? rawFooterLogoUrl : `${apiUrl}${rawFooterLogoUrl}`
       : logoUrl;
 
     return json<LoaderData>({
       logoUrl,
-      logoAlt: settings.logos?.header?.alt ?? null,
+      logoAlt: headerLogo?.alt ?? null,
       footerLogoUrl,
-      footerLogoAlt: settings.logos?.footer?.alt ?? settings.logos?.header?.alt ?? null,
+      footerLogoAlt: footerLogo?.alt ?? headerLogo?.alt ?? null,
       nav: Array.isArray(settings.nav) && settings.nav.length > 0
         ? settings.nav
         : FALLBACK_NAV,
