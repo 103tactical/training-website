@@ -42,8 +42,10 @@ export interface SiteSettings {
 
 export interface HomePage {
   featured: FeaturedSlide[];
-  featuredCoursesHeading?: string;
-  featuredCourses: Course[];
+  featuredCoursesSection?: {
+    heading?: string;
+    courses: Course[];
+  };
   whyChoose: {
     heading: string;
     items: {
