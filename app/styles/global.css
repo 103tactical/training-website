@@ -722,6 +722,8 @@ body.layout-overlay .app-content {
     color: var(--color-white);
   }
 
+  /* Base color on ::after must also be white so it doesn't flash blue on exit */
+  body.layout-overlay .navbar-desktop__link::after,
   body.layout-overlay .navbar-desktop__link--active::after,
   body.layout-overlay .navbar-desktop__link:hover::after {
     background-color: var(--color-white);
