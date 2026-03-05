@@ -1544,7 +1544,7 @@ a.contact-info__value:hover {
     calc(100% - 12px) 100%,
     0% 100%, 0% 12px
   );
-  padding: var(--spacing-5) var(--spacing-4);
+  padding: calc(var(--spacing-5) + 0.5rem) var(--spacing-4);
   height: 100%;
   box-sizing: border-box;
 }
