@@ -156,6 +156,8 @@ export default function App() {
         <Navbar
           logoUrl={logoUrl ?? undefined}
           logoAlt={logoAlt ?? undefined}
+          overlayLogoUrl={footerLogoUrl ?? undefined}
+          overlayLogoAlt={footerLogoAlt ?? undefined}
           nav={nav}
           social={social}
         >
