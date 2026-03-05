@@ -6,4 +6,4 @@
  * To add a page: add its path string to the Set.
  * To remove a page: delete its path string.
  */
-export const overlayNavRoutes = new Set(["/contact"]);
+export const overlayNavRoutes = new Set(["/contact", "/"]);

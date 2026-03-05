@@ -671,12 +671,12 @@ body.menu-open .app-content {
 /* Estimated height of the overlay navbar at each breakpoint (used to push
    hero text content clear of the floating navbar) */
 body.layout-overlay {
-  --overlay-nav-height: 112px;
+  --overlay-nav-height: 208px;
 }
 
 @media (min-width: 992px) {
   body.layout-overlay {
-    --overlay-nav-height: 124px;
+    --overlay-nav-height: 224px;
   }
 }
 
@@ -735,6 +735,14 @@ body.layout-overlay .app-content {
 
   body.layout-overlay .contact-page__hero {
     height: 740px;
+  }
+}
+
+/* Home page: push headline below the floating navbar, halve its top padding */
+@media (min-width: 768px) {
+  body.layout-overlay .site-headline {
+    margin-top: var(--overlay-nav-height);
+    padding-top: calc(var(--spacing-12) / 2);
   }
 }
 
