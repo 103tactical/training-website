@@ -110,6 +110,14 @@ export default function Navbar({ logoUrl, logoAlt, nav, social, children }: Navb
           <div className="mobile-header__right" aria-hidden="true" />
         </header>
 
+        {/* Mobile logo — centered below the header bar, hidden on desktop */}
+        <div className="mobile-logo">
+          {logoUrl
+            ? <img src={logoUrl} alt={logoAlt ?? "103 Tactical"} className="mobile-logo__img" />
+            : <span className="mobile-logo__text">103 Tactical</span>
+          }
+        </div>
+
         {/* Desktop navbar */}
         <header className="navbar-desktop">
           <div className="navbar-desktop__inner">

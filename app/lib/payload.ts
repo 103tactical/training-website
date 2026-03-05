@@ -1,9 +1,16 @@
-const PAYLOAD_API_URL = process.env.PAYLOAD_API_URL ?? "https://training-cms.onrender.com";
+export const PAYLOAD_API_URL =
+  typeof process !== "undefined" && process.env.PAYLOAD_API_URL
+    ? process.env.PAYLOAD_API_URL
+    : "https://training-cms.onrender.com";
+
+export function resolveMediaUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  return url.startsWith("http") ? url : `${PAYLOAD_API_URL}${url}`;
+}
 
 export async function fetchPayload<T>(path: string): Promise<T> {
   const res = await fetch(`${PAYLOAD_API_URL}/api${path}`, {
     headers: { "Content-Type": "application/json" },
-    next: { revalidate: 60 },
   });
 
   if (!res.ok) {
@@ -41,6 +48,7 @@ export interface SiteSettings {
 }
 
 export interface HomePage {
+  websiteHeadline?: string;
   featured: FeaturedSlide[];
   featuredCoursesSection?: {
     heading?: string;

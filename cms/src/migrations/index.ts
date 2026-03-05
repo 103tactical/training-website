@@ -2,6 +2,7 @@ import * as migration_20260305_050829 from './20260305_050829';
 import * as migration_20260305_featured_courses_group from './20260305_featured_courses_group';
 import * as migration_20260305_media_alt_nullable from './20260305_media_alt_nullable';
 import * as migration_20260305_badges_group from './20260305_badges_group';
+import * as migration_20260305_website_headline from './20260305_website_headline';
 
 export const migrations = [
   {
@@ -23,5 +24,10 @@ export const migrations = [
     up: migration_20260305_badges_group.up,
     down: migration_20260305_badges_group.down,
     name: '20260305_badges_group'
+  },
+  {
+    up: migration_20260305_website_headline.up,
+    down: migration_20260305_website_headline.down,
+    name: '20260305_website_headline'
   },
 ];

@@ -10,6 +10,16 @@ export const HomePage: GlobalConfig = {
     description: "Content for the home page: featured carousel, courses, Why Choose section, and badges.",
   },
   fields: [
+    // ── Website Headline ───────────────────────────────────────────────────
+    {
+      name: "websiteHeadline",
+      type: "text",
+      label: "Website Headline",
+      admin: {
+        description: "Large headline displayed above the featured carousel on the home page.",
+      },
+    },
+
     // ── Featured Carousel ──────────────────────────────────────────────────
     {
       name: "featured",
