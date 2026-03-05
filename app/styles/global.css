@@ -63,9 +63,8 @@
   --container-padding:   1.5rem;
 
   /* Nav dimensions */
-  --navbar-height:        130px;
   --navbar-height-tablet: 130px;
-  --navbar-height-desktop: 150px;
+  --navbar-height-desktop: 160px;
   --mobile-header-height: 60px;
   --sidenav-width:        280px;
 
@@ -795,6 +794,8 @@ body.menu-open .app-content {
 .featured-carousel__inner {
   position: relative;
   width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
   aspect-ratio: 3 / 2;
   max-height: 740px;
   z-index: 0;
