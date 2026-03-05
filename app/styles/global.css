@@ -1524,32 +1524,13 @@ a.contact-info__value:hover {
   }
 }
 
-/* Filter wrapper: greyscales the map+native pin without touching the overlay pin */
-.contact-map__filter {
-  position: absolute;
-  inset: 0;
-  filter: grayscale(1) contrast(1.05);
-}
-
 .contact-map__iframe {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   border: none;
-}
-
-/* Red pin — sibling of .contact-map__filter, not inside it, so it stays red */
-.contact-map__pin {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -90%);
-  width: 32px;
-  height: 32px;
-  color: var(--color-red);
-  pointer-events: none;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+  filter: grayscale(1) contrast(1.05);
 }
 
 

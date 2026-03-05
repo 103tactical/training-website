@@ -3,7 +3,7 @@ import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
 import { useState } from "react";
 import { getContactSettings, getSiteSettings, PAYLOAD_API_URL } from "~/lib/payload";
-import { PhoneIcon, EmailIcon, LocationIcon, MapPinIcon } from "~/components/Icons";
+import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 
 export const meta: MetaFunction = () => [
   { title: "Contact | 103 Tactical Training" },
@@ -148,18 +148,13 @@ export default function Contact() {
           {/* ── Map embed ──────────────────────────────────────────────── */}
           {(address || city) && (
             <div className="contact-map">
-              {/* Grayscale wrapper — filter applied here so pin sibling is unaffected */}
-              <div className="contact-map__filter">
-                <iframe
-                  title="Location map"
-                  className="contact-map__iframe"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent([address, city].filter(Boolean).join(", "))}&output=embed&z=15`}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-              {/* Red pin overlaid at map center — sibling of filter so it stays red */}
-              <MapPinIcon className="contact-map__pin" />
+              <iframe
+                title="Location map"
+                className="contact-map__iframe"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent([address, city].filter(Boolean).join(", "))}&output=embed&z=15`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           )}
         </div>
