@@ -23,6 +23,7 @@
 
   --color-red:            #B22234;
   --color-red-hover:      #cc2a3e;
+  --color-red-tint:       #f0bec4;
 
   --color-white:          #ffffff;
 
@@ -191,28 +192,88 @@ h6 { font-size: var(--text-base); }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 
+/*
+  Size vars — override per modifier.
+  --btn-px  : horizontal padding
+  --btn-py  : vertical padding
+  --btn-fs  : font-size
+  --btn-cut : depth of the diagonal corner cut (angled style only)
+*/
+
 .btn {
+  /* Default (medium) size */
+  --btn-px:  var(--spacing-6);
+  --btn-py:  var(--spacing-3);
+  --btn-fs:  var(--text-sm);
+  --btn-cut: 8px;
+
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-3) var(--spacing-6);
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  letter-spacing: 0.02em;
-  border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast), color var(--transition-fast),
-              box-shadow var(--transition-fast), transform var(--transition-fast);
+  padding: var(--btn-py) var(--btn-px);
+  font-family: var(--font-quantico);
+  font-size: var(--btn-fs);
+  font-weight: var(--font-bold);
+  text-transform: var(--heading-transform);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
   border: 2px solid transparent;
-  white-space: nowrap;
+  transition: background-color var(--transition-fast), color var(--transition-fast),
+              filter var(--transition-fast), transform var(--transition-fast);
+  /* Angled corners — top-left and bottom-right cut at 45° */
+  clip-path: polygon(
+    var(--btn-cut) 0%,
+    100% 0%,
+    100% calc(100% - var(--btn-cut)),
+    calc(100% - var(--btn-cut)) 100%,
+    0% 100%,
+    0% var(--btn-cut)
+  );
 }
+
+/* ── Size variants ───────────────────────────────────────────────────────── */
+
+.btn--sm {
+  --btn-px:  var(--spacing-4);
+  --btn-py:  calc(var(--spacing-2) + 1px);
+  --btn-fs:  var(--text-xs);
+  --btn-cut: 5px;
+}
+
+.btn--lg {
+  --btn-px:  var(--spacing-8);
+  --btn-py:  var(--spacing-4);
+  --btn-fs:  var(--text-base);
+  --btn-cut: 10px;
+}
+
+@media (min-width: 768px) {
+  .btn--lg {
+    --btn-px:  var(--spacing-10);
+    --btn-py:  var(--spacing-5);
+    --btn-fs:  var(--text-lg);
+    --btn-cut: 12px;
+  }
+}
+
+/* ── Corner variants ─────────────────────────────────────────────────────── */
+
+/* Fully rounded — overrides the clip-path */
+.btn--rounded {
+  clip-path: none;
+  border-radius: var(--radius-full);
+}
+
+/* ── Color variants ──────────────────────────────────────────────────────── */
 
 .btn--primary {
   background-color: var(--color-blue);
   color: var(--color-white);
   border-color: var(--color-blue);
 }
-
 .btn--primary:hover {
   background-color: var(--color-blue-hover);
   border-color: var(--color-blue-hover);
@@ -224,7 +285,6 @@ h6 { font-size: var(--text-base); }
   color: var(--color-white);
   border-color: var(--color-red);
 }
-
 .btn--accent:hover {
   background-color: var(--color-red-hover);
   border-color: var(--color-red-hover);
@@ -236,10 +296,10 @@ h6 { font-size: var(--text-base); }
   color: var(--color-white);
   border-color: var(--color-white);
 }
-
 .btn--outline:hover {
   background-color: var(--color-white);
   color: var(--color-bg-dark);
+  transform: translateY(-1px);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -1173,4 +1233,169 @@ body.menu-open .app-content {
   height: 100%;
   fill: currentColor;
   pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CONTACT PAGE
+   ───────────────────────────────────────────────────────────────────────── */
+
+.contact-page {
+  background-color: var(--color-red);
+  padding-bottom: var(--spacing-20);
+}
+
+.contact-page__header {
+  text-align: center;
+  padding: var(--spacing-16) var(--spacing-6) var(--spacing-12);
+}
+
+.contact-page__title {
+  color: var(--color-white);
+  margin: 0 0 var(--spacing-3);
+}
+
+.contact-page__subtitle {
+  color: var(--color-red-tint);
+  font-size: var(--text-lg);
+  margin: 0;
+}
+
+/* ── Form wrapper (card) ─────────────────────────────────────────────────── */
+
+.contact-form-wrap {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-8);
+  max-width: 660px;
+  margin-inline: auto;
+}
+
+/* ── Form layout ─────────────────────────────────────────────────────────── */
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.contact-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (max-width: 575px) {
+  .contact-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contact-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.contact-form__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-2);
+}
+
+/* ── Labels ──────────────────────────────────────────────────────────────── */
+
+.contact-form__label {
+  color: var(--color-white);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contact-form__required {
+  color: var(--color-red-tint);
+  margin-left: 2px;
+}
+
+/* ── Inputs, select, textarea ────────────────────────────────────────────── */
+
+.contact-form__input,
+.contact-form__select,
+.contact-form__textarea {
+  background-color: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--color-white);
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  padding: var(--spacing-3) var(--spacing-4);
+  width: 100%;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.contact-form__input::placeholder,
+.contact-form__textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.contact-form__input:focus,
+.contact-form__select:focus,
+.contact-form__textarea:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.55);
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+.contact-form__input.is-error,
+.contact-form__select.is-error,
+.contact-form__textarea.is-error {
+  border-color: var(--color-red-tint);
+}
+
+/* Custom select — hide OS arrow, add our own */
+.contact-form__select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='rgba(255,255,255,0.6)' d='M8 11L2 5h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-4) center;
+  background-size: 12px 8px;
+  padding-right: var(--spacing-10);
+  cursor: pointer;
+}
+
+.contact-form__select option {
+  background-color: #2a0a0e;
+  color: var(--color-white);
+}
+
+.contact-form__textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* ── Errors ──────────────────────────────────────────────────────────────── */
+
+.contact-form__field-error {
+  color: var(--color-red-tint);
+  font-size: var(--text-sm);
+  line-height: 1.3;
+}
+
+.contact-form__error-banner {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(240, 190, 196, 0.4);
+  border-radius: var(--radius-sm);
+  color: var(--color-red-tint);
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--text-sm);
+}
+
+/* ── Success state ───────────────────────────────────────────────────────── */
+
+.contact-form__success {
+  text-align: center;
+  padding: var(--spacing-12) var(--spacing-6);
+  color: var(--color-white);
+  font-size: var(--text-lg);
+  line-height: 1.6;
 }

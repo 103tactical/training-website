@@ -32,6 +32,10 @@ export async function getHomePage() {
   return fetchPayload<HomePage>("/globals/home-page?depth=2");
 }
 
+export async function getContactSettings() {
+  return fetchPayload<ContactSettings>("/globals/contact-settings");
+}
+
 export async function getCourses() {
   return fetchPayload<{ docs: Course[] }>("/courses?where[isActive][equals]=true&sort=displayOrder");
 }
@@ -40,6 +44,10 @@ export async function getCourses() {
 
 export interface Utility {
   carouselDelay?: "off" | "4" | "6" | "8" | "10";
+}
+
+export interface ContactSettings {
+  topics?: { label: string }[];
 }
 
 export interface SiteSettings {
