@@ -1273,14 +1273,11 @@ body.menu-open .app-content {
 .contact-page__hero {
   position: relative;
   width: 100%;
-  max-width: 1180px;
-  max-height: 580px;
-  margin-inline: auto;
+  max-height: 740px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Fallback height when no image is set */
   min-height: 220px;
 }
 
@@ -1303,6 +1300,15 @@ body.menu-open .app-content {
   height: 100%;
   object-fit: cover;
   object-position: center;
+}
+
+/* 12% black tint over the full image */
+.contact-page__hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.12);
+  pointer-events: none;
 }
 
 .contact-page__hero-content {
