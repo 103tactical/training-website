@@ -371,7 +371,7 @@ body.menu-open .app-content {
 /* ── Logo elements (shared between mobile/desktop) ───────────────────────── */
 
 .nav-logo {
-  height: 110px;
+  height: 94px;
   width: auto;
   object-fit: contain;
   display: block;
@@ -762,7 +762,7 @@ body.menu-open .app-content {
 
 @media (max-width: 767px) {
   .site-headline__text {
-    font-size: var(--text-4xl);
+    font-size: var(--text-3xl);
   }
 }
 
