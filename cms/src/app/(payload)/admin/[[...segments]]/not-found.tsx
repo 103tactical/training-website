@@ -1,4 +1,5 @@
 import { NotFoundPage } from "@payloadcms/next/views";
+import config from "@payload-config";
 import { importMap } from "./importMap";
 
 type Args = {
@@ -7,6 +8,6 @@ type Args = {
 };
 
 const NotFound = ({ params, searchParams }: Args) =>
-  NotFoundPage({ config: import("@payload-config"), params, searchParams, importMap });
+  NotFoundPage({ config, params, searchParams, importMap });
 
 export default NotFound;
