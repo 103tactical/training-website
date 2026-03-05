@@ -29,6 +29,7 @@
   /* Typography */
   --font-primary:   "geom-graphic", sans-serif;
   --font-alt:       "geom-graphic", sans-serif;
+  --font-quantico:  "Quantico", sans-serif;
 
   --text-xs:    0.75rem;
   --text-sm:    0.875rem;
@@ -152,7 +153,7 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
-h1 { font-size: var(--text-4xl); }
+h1 { font-size: var(--text-4xl); font-family: var(--font-quantico); }
 h2 { font-size: var(--text-3xl); }
 h3 { font-size: var(--text-2xl); }
 h4 { font-size: var(--text-xl); }
@@ -727,6 +728,7 @@ body.menu-open .app-content {
 }
 
 .why-choose__heading {
+  font-family: var(--font-quantico);
   color: var(--color-white);
   font-size: var(--text-3xl);
   font-weight: 900;
@@ -825,6 +827,7 @@ body.menu-open .app-content {
 }
 
 .site-headline__text {
+  font-family: var(--font-quantico);
   font-size: var(--site-headline-fs-desktop);
   font-weight: var(--font-bold);
   color: var(--color-white);
