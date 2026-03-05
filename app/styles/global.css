@@ -9,7 +9,7 @@
   --color-bg-dark:        #101010;
   --color-bg-surface:     #1a1a1a;
   --color-bg-light:       #f4f4f4;
-  --color-bg-page:        #ffffff;
+  --color-bg-page:        var(--color-bg-dark);
 
   --color-text-primary:   #d8d8d8;
   --color-text-secondary: #9a9a9a;
@@ -19,6 +19,7 @@
   --color-blue:           #1B4F9E;
   --color-blue-hover:     #2563c8;
   --color-blue-light:     #dbe9ff;
+  --color-blue-tint:      #b8d0ee;
 
   --color-red:            #B22234;
   --color-red-hover:      #cc2a3e;
@@ -26,8 +27,8 @@
   --color-white:          #ffffff;
 
   /* Typography */
-  --font-primary:   "new-science-serif", sans-serif;
-  --font-alt:       "new-science", sans-serif;
+  --font-primary:   "geom-graphic", sans-serif;
+  --font-alt:       "geom-graphic", sans-serif;
 
   --text-xs:    0.75rem;
   --text-sm:    0.875rem;
@@ -245,7 +246,7 @@ h6 { font-size: var(--text-base); }
   width: var(--sidenav-width);
   height: 100vh;
   height: 100dvh;
-  background-color: var(--color-bg-dark);
+  background-color: var(--color-blue);
   z-index: 90;
   transform: translateX(calc(-1 * var(--sidenav-width)));
   transition: transform var(--transition-slow);
@@ -272,7 +273,7 @@ h6 { font-size: var(--text-base); }
   padding: var(--spacing-4) var(--spacing-6);
   font-size: var(--text-base);
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--color-blue-tint);
   letter-spacing: 0.01em;
   transition: color var(--transition-fast);
 }
@@ -283,6 +284,7 @@ h6 { font-size: var(--text-base); }
 
 .sidenav__link--active {
   color: var(--color-white);
+  font-weight: var(--font-bold);
 }
 
 .sidenav__social {
@@ -553,8 +555,8 @@ body.menu-open .app-content {
    ───────────────────────────────────────────────────────────────────────── */
 
 .footer {
-  background-color: var(--color-bg-dark);
-  color: var(--color-text-secondary);
+  background-color: var(--color-blue);
+  color: var(--color-blue-tint);
   padding-block: var(--spacing-12) var(--spacing-8);
   margin-top: auto;
 }
@@ -569,7 +571,7 @@ body.menu-open .app-content {
 }
 
 .footer__logo {
-  height: 40px;
+  height: 54px;
   width: auto;
   margin-bottom: var(--spacing-4);
 }
@@ -605,12 +607,42 @@ body.menu-open .app-content {
   font-size: var(--text-sm);
 }
 
+.footer__contact-item--icon {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.footer__contact-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.footer__contact-item--address {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  line-height: 1.4;
+  margin-top: var(--spacing-4);
+}
+
+.footer__contact-item--address > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer__contact-icon--address {
+  margin-top: 2px;
+}
+
 .footer__contact-item a {
   transition: color var(--transition-fast);
 }
 
 .footer__contact-item a:hover {
-  color: var(--color-text-primary);
+  color: var(--color-white);
 }
 
 .footer__social {
@@ -620,7 +652,7 @@ body.menu-open .app-content {
 }
 
 .footer__social-link {
-  color: var(--color-text-secondary);
+  color: var(--color-blue-tint);
   font-size: 1.1rem;
   transition: color var(--transition-fast);
 }
@@ -781,7 +813,7 @@ body.menu-open .app-content {
 .site-headline__text {
   font-size: var(--text-5xl);
   font-weight: var(--font-bold);
-  color: var(--color-text-primary);
+  color: var(--color-white);
   line-height: 1.1;
   margin: 0;
 }
@@ -798,6 +830,7 @@ body.menu-open .app-content {
   position: relative;
   width: 100%;
   background-color: var(--color-bg-dark);
+  padding-bottom: 50px;
 }
 
 .featured-carousel__inner {
@@ -873,6 +906,7 @@ body.menu-open .app-content {
   padding: var(--spacing-3) var(--spacing-2);
   max-width: 1180px;
   margin-inline: auto;
+  min-height: 64px;
 }
 
 .featured-carousel__nav {
@@ -910,6 +944,30 @@ body.menu-open .app-content {
   display: flex;
   gap: var(--spacing-2);
   justify-self: center;
+}
+
+/* ── 768px+: larger dots ─────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .featured-carousel__dot {
+    width: 18px;
+    height: 18px;
+  }
+
+  .featured-carousel__dots {
+    gap: 10px;
+  }
+}
+
+/* ── 768px–1279px: hide chevrons (dots + swipe only) ─────────────────────── */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .featured-carousel__nav {
+    display: none;
+  }
+
+  .featured-carousel__controls {
+    display: flex;
+    justify-content: center;
+  }
 }
 
 /* ── 1400px+: larger chevrons ────────────────────────────────────────────── */

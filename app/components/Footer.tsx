@@ -1,5 +1,5 @@
 import { Link } from "@remix-run/react";
-import { SocialIcon } from "./Icons";
+import { SocialIcon, PhoneIcon, EmailIcon, LocationIcon } from "./Icons";
 import type { NavbarProps } from "./Navbar";
 
 interface FooterProps {
@@ -68,22 +68,27 @@ export default function Footer({
           <div className="footer__contact">
             <p className="footer__contact-heading">Contact</p>
             <ul className="footer__contact-list">
-              {contact.address && (
-                <li className="footer__contact-item">{contact.address}</li>
-              )}
-              {contact.city && (
-                <li className="footer__contact-item">{contact.city}</li>
-              )}
               {contact.phone && (
-                <li className="footer__contact-item">
+                <li className="footer__contact-item footer__contact-item--icon">
+                  <PhoneIcon className="footer__contact-icon" />
                   <a href={`tel:${contact.phone.replace(/\D/g, "")}`}>
                     {contact.phone}
                   </a>
                 </li>
               )}
               {contact.email && (
-                <li className="footer__contact-item">
+                <li className="footer__contact-item footer__contact-item--icon">
+                  <EmailIcon className="footer__contact-icon" />
                   <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                </li>
+              )}
+              {(contact.address || contact.city) && (
+                <li className="footer__contact-item footer__contact-item--address">
+                  <LocationIcon className="footer__contact-icon footer__contact-icon--address" />
+                  <div>
+                    {contact.address && <span>{contact.address}</span>}
+                    {contact.city && <span>{contact.city}</span>}
+                  </div>
                 </li>
               )}
             </ul>

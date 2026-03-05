@@ -44,6 +44,7 @@ export interface Utility {
 
 export interface SiteSettings {
   logo?: { url: string; alt: string };
+  logoFooter?: { url: string; alt: string };
   nav: { label: string; url: string; openInNewTab: boolean }[];
   contact: {
     address?: string;

@@ -69,6 +69,8 @@ const FALLBACK_NAV = [
 interface LoaderData {
   logoUrl: string | null;
   logoAlt: string | null;
+  footerLogoUrl: string | null;
+  footerLogoAlt: string | null;
   nav: { label: string; url: string; openInNewTab: boolean }[];
   contact: { address?: string; city?: string; phone?: string; email?: string };
   social: { platform: string; url: string }[];
@@ -89,14 +91,19 @@ export async function loader(_: LoaderFunctionArgs) {
 
     const rawLogoUrl = settings.logo?.url ?? null;
     const logoUrl = rawLogoUrl
-      ? rawLogoUrl.startsWith("http")
-        ? rawLogoUrl
-        : `${apiUrl}${rawLogoUrl}`
+      ? rawLogoUrl.startsWith("http") ? rawLogoUrl : `${apiUrl}${rawLogoUrl}`
       : null;
+
+    const rawFooterLogoUrl = settings.logoFooter?.url ?? null;
+    const footerLogoUrl = rawFooterLogoUrl
+      ? rawFooterLogoUrl.startsWith("http") ? rawFooterLogoUrl : `${apiUrl}${rawFooterLogoUrl}`
+      : logoUrl;
 
     return json<LoaderData>({
       logoUrl,
       logoAlt: settings.logo?.alt ?? null,
+      footerLogoUrl,
+      footerLogoAlt: settings.logoFooter?.alt ?? settings.logo?.alt ?? null,
       nav: Array.isArray(settings.nav) && settings.nav.length > 0
         ? settings.nav
         : FALLBACK_NAV,
@@ -109,6 +116,8 @@ export async function loader(_: LoaderFunctionArgs) {
     return json<LoaderData>({
       logoUrl: null,
       logoAlt: null,
+      footerLogoUrl: null,
+      footerLogoAlt: null,
       nav: FALLBACK_NAV,
       contact: {},
       social: [],
@@ -121,7 +130,7 @@ export async function loader(_: LoaderFunctionArgs) {
 /* ── Root component ─────────────────────────────────────────────────────── */
 
 export default function App() {
-  const { logoUrl, logoAlt, nav, contact, social, copyright, tagline } =
+  const { logoUrl, logoAlt, footerLogoUrl, footerLogoAlt, nav, contact, social, copyright, tagline } =
     useLoaderData<typeof loader>();
 
   return (
@@ -144,8 +153,8 @@ export default function App() {
           </main>
 
           <Footer
-            logoUrl={logoUrl ?? undefined}
-            logoAlt={logoAlt ?? undefined}
+            logoUrl={footerLogoUrl ?? undefined}
+            logoAlt={footerLogoAlt ?? undefined}
             tagline={tagline ?? undefined}
             nav={nav}
             contact={contact}
