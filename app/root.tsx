@@ -62,8 +62,8 @@ export const links: LinksFunction = () => [
 
 const FALLBACK_NAV = [
   { label: "Courses", url: "/courses", openInNewTab: false },
-  { label: "Application Assistance", url: "/application-assistance", openInNewTab: false },
-  { label: "Contact Us", url: "/contact", openInNewTab: false },
+  { label: "Applications", url: "/application-assistance", openInNewTab: false },
+  { label: "Contact", url: "/contact", openInNewTab: false },
 ];
 
 interface LoaderData {
