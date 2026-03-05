@@ -31,6 +31,8 @@
   --font-alt:       "geom-graphic", sans-serif;
   --font-quantico:  "Quantico", sans-serif;
 
+  --heading-transform: uppercase;
+
   --text-xs:    0.75rem;
   --text-sm:    0.875rem;
   --text-base:  1rem;
@@ -153,9 +155,9 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
-h1 { font-size: var(--text-4xl); font-family: var(--font-quantico); }
-h2 { font-size: var(--text-3xl); }
-h3 { font-size: var(--text-2xl); }
+h1 { font-size: var(--text-4xl); font-family: var(--font-quantico); font-weight: var(--font-bold); text-transform: var(--heading-transform); }
+h2 { font-size: var(--text-3xl); font-family: var(--font-quantico); font-weight: var(--font-bold); text-transform: var(--heading-transform); }
+h3 { font-size: var(--text-2xl); font-family: var(--font-quantico); font-weight: var(--font-bold); text-transform: var(--heading-transform); }
 h4 { font-size: var(--text-xl); }
 h5 { font-size: var(--text-lg); }
 h6 { font-size: var(--text-base); }
