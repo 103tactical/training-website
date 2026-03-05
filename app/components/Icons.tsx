@@ -195,17 +195,15 @@ export function EmailIcon({ className }: { className?: string }) {
 
 export function CmsStaffIcon({ className }: { className?: string }) {
   return (
-    <span className={className}>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="2" y="2" width="20" height="20" rx="3"/>
-      </svg>
+    <span className={className} data-icon="staff">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M256 128a64 64 0 1 0 0-128 64 64 0 1 0 0 128zm64 384l0-128 32 0 0-112c0-53-43-96-96-96s-96 43-96 96l0 112 32 0 0 128 128 0zM96 144a56 56 0 1 0 0-112 56 56 0 1 0 0 112zM32 480l112.1 0c-.1-1.3-.1-2.7-.1-4l0-44-32 0 0-160c0-26.7 7.3-51.6 19.9-73.1-11.1-4.5-23.2-6.9-35.9-6.9-53 0-96 43-96 96l0 96 32 0 0 96zm448 0l0-96 32 0 0-96c0-53-43-96-96-96-12.7 0-24.8 2.5-35.9 6.9 12.6 21.4 19.9 46.4 19.9 73.1l0 160-32 0 0 44c0 1.3 0 2.7-.1 4L480 480zM416 144a56 56 0 1 0 0-112 56 56 0 1 0 0 112z"/></svg>
     </span>
   );
 }
 
 export function CmsGunIcon({ className }: { className?: string }) {
   return (
-    <span className={className}>
+    <span className={className} data-icon="gun">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor">
         <path d="M528 56c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 8-448 0C14.3 64 0 78.3 0 96L0 208c0 17.7 14.3 32 32 32l10 0c20.8 0 36.1 19.6 31 39.8L33 440.2c-2.4 9.6-.2 19.7 5.8 27.5S54.1 480 64 480l96 0c14.7 0 27.5-10 31-24.2L217 352 321.4 352c23.7 0 44.8-14.9 52.7-37.2l26.7-74.8 31.1 0c8.5 0 16.6-3.4 22.6-9.4l22.6-22.6 66.7 0c17.7 0 32-14.3 32-32l0-80c0-17.7-14.3-32-32-32l-16 0 0-8zM321.4 304l-92.5 0 16-64 105 0-21 58.7c-1.1 3.2-4.2 5.3-7.5 5.3zM80 128l384 0c8.8 0 16 7.2 16 16s-7.2 16-16 16L80 160c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/>
       </svg>
@@ -215,20 +213,16 @@ export function CmsGunIcon({ className }: { className?: string }) {
 
 export function CmsCourseIcon({ className }: { className?: string }) {
   return (
-    <span className={className}>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="2" y="2" width="20" height="20" rx="3"/>
-      </svg>
+    <span className={className} data-icon="course">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor"><path d="M0 528L0 0 384 0 384 528 192 416 0 528z"/></svg>
     </span>
   );
 }
 
 export function CmsShieldIcon({ className }: { className?: string }) {
   return (
-    <span className={className}>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="2" y="2" width="20" height="20" rx="3"/>
-      </svg>
+    <span className={className} data-icon="shield">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M267.6 4.5l207.5 80.5 19.2 7.4 1.2 20.5c2.9 50-4.9 126.3-37.3 200.9-32.7 75.2-91.1 150-189.4 192.6l-12.7 5.5-12.7-5.5C144.9 463.9 86.6 389.2 53.9 313.9 21.5 239.3 13.7 162.9 16.6 113L17.8 92.5 37 85 244.5 4.5 256 0 267.6 4.5zm45.8 165.3L227.8 287.6c-19.3-20-33.7-34.9-43.2-44.7l-34.5 33.3c6.2 6.4 27.2 28.1 63.1 65.2l19.8 20.6 16.8-23.1 102.4-140.8 14.1-19.4-38.8-28.2-14.1 19.4z"/></svg>
     </span>
   );
 }
