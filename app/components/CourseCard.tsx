@@ -49,7 +49,7 @@ export default function CourseCard({ course }: CourseCardProps) {
             </ul>
             <Link
               to={`/courses/${course.slug}`}
-              className="btn btn--outline btn--sm course-card__details-btn"
+              className="btn btn--outline btn--lg course-card__details-btn"
               onClick={(e) => e.stopPropagation()}
             >
               View Details
