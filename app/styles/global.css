@@ -857,12 +857,12 @@ body.layout-overlay .app-content {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.75;
+  opacity: 1;
   transition: opacity 0.2s;
 }
 
 .badges-section__item:hover {
-  opacity: 1;
+  opacity: 0.75;
 }
 
 .badges-section__img {
