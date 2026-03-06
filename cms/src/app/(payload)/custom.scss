@@ -1,1 +1,5 @@
 // Custom admin styles can be added here
+
+.nav-group {
+  margin-bottom: calc(var(--nav-group-margin-bottom, 1rem) * 3) !important;
+}
