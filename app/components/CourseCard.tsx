@@ -75,7 +75,7 @@ export default function CourseCard({ course }: CourseCardProps) {
           <p className="course-card__price">${course.price.toLocaleString()}</p>
         )}
 
-        <button type="button" className="btn btn--accent btn--sm course-card__signup-btn">
+        <button type="button" className="btn btn--outline btn--sm course-card__signup-btn">
           Sign Up
         </button>
       </div>
