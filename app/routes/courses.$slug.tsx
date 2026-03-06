@@ -31,30 +31,25 @@ export default function CourseDetailRoute() {
 
           <h1 className="course-detail__title">{course.title}</h1>
 
-          {/* Duration + price row */}
-          {(hasMeta || course.price != null) && (
+          {/* Duration */}
+          {hasMeta && (
             <div className="course-detail__info-box">
-              {hasMeta && (
-                <dl className="course-detail__meta-grid">
-                  {course.durationHours != null && (
-                    <>
-                      <dt className="course-detail__meta-label">Duration:</dt>
-                      <dd className="course-detail__meta-value">{course.durationHours} Hours</dd>
-                    </>
-                  )}
-                  {course.durationDays != null && (
-                    <>
-                      <dt className="course-detail__meta-label">Days:</dt>
-                      <dd className="course-detail__meta-value">
-                        {course.durationDays} {course.durationDays === 1 ? "Day" : "Days"}
-                      </dd>
-                    </>
-                  )}
-                </dl>
-              )}
-              {course.price != null && (
-                <p className="course-detail__price">${course.price.toLocaleString()}</p>
-              )}
+              <dl className="course-detail__meta-grid">
+                {course.durationHours != null && (
+                  <>
+                    <dt className="course-detail__meta-label">Duration:</dt>
+                    <dd className="course-detail__meta-value">{course.durationHours} Hours</dd>
+                  </>
+                )}
+                {course.durationDays != null && (
+                  <>
+                    <dt className="course-detail__meta-label">Days:</dt>
+                    <dd className="course-detail__meta-value">
+                      {course.durationDays} {course.durationDays === 1 ? "Day" : "Days"}
+                    </dd>
+                  </>
+                )}
+              </dl>
             </div>
           )}
 
@@ -78,6 +73,10 @@ export default function CourseDetailRoute() {
                 ))}
               </ul>
             </div>
+          )}
+
+          {course.price != null && (
+            <p className="course-detail__price">${course.price.toLocaleString()}</p>
           )}
 
           <div className="course-detail__actions">

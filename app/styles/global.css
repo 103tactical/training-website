@@ -1397,9 +1397,10 @@ body.layout-overlay .app-content {
 @media (min-width: 768px) {
   .course-detail__inner {
     display: grid;
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr 410px;
     align-items: start;
     gap: var(--spacing-10);
+    padding-inline: calc(var(--container-padding) / 2);
   }
 }
 
@@ -1463,7 +1464,7 @@ body.layout-overlay .app-content {
   }
 }
 
-/* ── Info box (duration + price) ── */
+/* ── Info box (duration) ── */
 .course-detail__info-box {
   display: flex;
   flex-direction: column;
@@ -1475,7 +1476,7 @@ body.layout-overlay .app-content {
     calc(100% - 10px) 100%,
     0% 100%, 0% 10px
   );
-  padding: var(--spacing-5) var(--spacing-6);
+  padding: var(--spacing-5) 0;
 }
 
 /* Duration grid: label | value pairs */
@@ -1506,9 +1507,15 @@ body.layout-overlay .app-content {
 .course-detail__price {
   font-family: var(--font-quantico);
   font-weight: var(--font-bold);
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   color: var(--color-white);
   margin: 0;
+}
+
+@media (min-width: 768px) {
+  .course-detail__price {
+    font-size: var(--text-4xl);
+  }
 }
 
 /* ── Rich-text description ── */
@@ -1520,7 +1527,7 @@ body.layout-overlay .app-content {
     calc(100% - 10px) 100%,
     0% 100%, 0% 10px
   );
-  padding: var(--spacing-5) var(--spacing-6);
+  padding: var(--spacing-5) 0;
 }
 
 .richtext {
@@ -1572,7 +1579,7 @@ body.layout-overlay .app-content {
     calc(100% - 10px) 100%,
     0% 100%, 0% 10px
   );
-  padding: var(--spacing-5) var(--spacing-6);
+  padding: var(--spacing-5) 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
@@ -1607,11 +1614,20 @@ body.layout-overlay .app-content {
 }
 
 .course-detail__bullet-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 18px;
   height: 18px;
   flex-shrink: 0;
   margin-top: 3px;
-  color: var(--color-blue);
+  color: var(--color-white);
+}
+
+.course-detail__bullet-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 /* ── Actions ── */
