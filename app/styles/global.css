@@ -495,7 +495,7 @@ body.menu-open .app-content {
   display: block;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1024px) {
   .nav-logo {
     height: 110px;
   }
@@ -813,7 +813,7 @@ body.layout-overlay .app-content {
   }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1024px) {
   body.layout-overlay .navbar-desktop__logo-link .nav-logo {
     height: 164px;
   }
