@@ -45,32 +45,32 @@ function WhyChooseSection({ data }: { data: HomePage["whyChoose"] }) {
   if (!items || items.length === 0) return null;
 
   return (
-    <section className="why-choose">
-      <div className="why-choose__header">
-        <h2 className="why-choose__heading">{heading}</h2>
+    <section className="details-section">
+      <div className="details-section__header">
+        <h2 className="details-section__heading">{heading}</h2>
       </div>
 
       <div className="container">
-        <div className="why-choose__grid">
+        <div className="details-section__grid">
           {items.map((item, i) => (
-            <div key={i} className="why-choose__item">
-              <div className="why-choose__item-title-row">
+            <div key={i} className="details-section__item">
+              <div className="details-section__item-title-row">
                 {item.icon && (() => {
                   const Icon = cmsIcons[item.icon as CmsIconKey];
-                  return Icon ? <Icon className="icon why-choose__item-icon" /> : null;
+                  return Icon ? <Icon className="icon details-section__item-icon" /> : null;
                 })()}
-                <h3 className="why-choose__item-title">{item.title}</h3>
+                <h3 className="details-section__item-title">{item.title}</h3>
               </div>
 
               {item.description && (
-                <p className="why-choose__item-desc">{item.description}</p>
+                <p className="details-section__item-desc">{item.description}</p>
               )}
 
               {item.bullets && item.bullets.length > 0 && (
-                <ul className="why-choose__bullets">
+                <ul className="details-section__bullets">
                   {item.bullets.map((b, j) => (
-                    <li key={j} className="why-choose__bullet">
-                      <BulletIcon className="why-choose__bullet-icon" />
+                    <li key={j} className="details-section__bullet">
+                      <BulletIcon className="details-section__bullet-icon" />
                       {b.item}
                     </li>
                   ))}
