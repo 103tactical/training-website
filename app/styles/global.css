@@ -1483,7 +1483,7 @@ body.layout-overlay .app-content {
     calc(100% - 10px) 100%,
     0% 100%, 0% 10px
   );
-  padding: calc(var(--spacing-5) / 2) 0;
+  padding: calc(var(--spacing-5) / 2) var(--spacing-3);
 }
 
 /* Duration grid: label | value pairs */
@@ -1534,7 +1534,7 @@ body.layout-overlay .app-content {
     calc(100% - 10px) 100%,
     0% 100%, 0% 10px
   );
-  padding: calc(var(--spacing-5) / 2) 0;
+  padding: calc(var(--spacing-5) / 2) var(--spacing-3);
 }
 
 .richtext {
@@ -1586,7 +1586,7 @@ body.layout-overlay .app-content {
     calc(100% - 10px) 100%,
     0% 100%, 0% 10px
   );
-  padding: calc(var(--spacing-5) / 2) 0;
+  padding: calc(var(--spacing-5) / 2) var(--spacing-3);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
