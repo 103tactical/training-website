@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { getContactSettings, getSiteSettings, PAYLOAD_API_URL } from "~/lib/payload";
 import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 
@@ -46,6 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
   if (!email)                                         errors.email = "Email is required.";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Please enter a valid email address.";
   if (!phone)                                         errors.phone = "Phone number is required.";
+  else if (phone.replace(/\D/g, "").length !== 10)    errors.phone = "Please enter a valid 10-digit phone number.";
   if (!topic)                                         errors.topic = "Please select a topic.";
 
   if (Object.keys(errors).length > 0) {
@@ -81,6 +82,14 @@ export default function Contact() {
   // Track which fields have been interacted with so we only show
   // errors after the user has touched a field or attempted submit.
   const [attempted, setAttempted] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
+
+  const formatPhone = useCallback((raw: string) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 10);
+    if (digits.length < 4) return digits;
+    if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }, []);
 
   const serverErrors = actionData?.errors ?? {};
   const success      = actionData?.success === true;
@@ -200,11 +209,16 @@ export default function Contact() {
                   </label>
                   <input
                     id="cf-phone"
-                    name="phone"
                     type="tel"
                     autoComplete="tel"
+                    inputMode="numeric"
+                    placeholder="(555) 555-5555"
+                    value={phoneValue}
+                    onChange={(e) => setPhoneValue(formatPhone(e.target.value))}
                     className={`contact-form__input${serverErrors.phone ? " is-error" : ""}`}
                   />
+                  {/* Submit the raw digits so server validation is straightforward */}
+                  <input type="hidden" name="phone" value={phoneValue.replace(/\D/g, "")} />
                   {serverErrors.phone && (
                     <span className="contact-form__field-error" role="alert">{serverErrors.phone}</span>
                   )}
