@@ -824,7 +824,7 @@ body.layout-overlay .app-content {
    ───────────────────────────────────────────────────────────────────────── */
 
 .badges-section {
-  background-color: var(--color-bg-surface);
+  background-color: var(--color-bg-dark);
   padding-block: var(--spacing-8);
 }
 
