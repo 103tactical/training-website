@@ -65,6 +65,7 @@ export default function Navbar({ logoUrl, logoAlt, overlayLogoUrl, overlayLogoAl
             <NavLink
               key={item.url}
               to={item.url}
+              end
               className={({ isActive }) =>
                 isActive ? "sidenav__link sidenav__link--active" : "sidenav__link"
               }
@@ -138,6 +139,7 @@ export default function Navbar({ logoUrl, logoAlt, overlayLogoUrl, overlayLogoAl
                 <NavLink
                   key={item.url}
                   to={item.url}
+                  end
                   className={({ isActive }) =>
                     isActive
                       ? "navbar-desktop__link navbar-desktop__link--active"
