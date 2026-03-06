@@ -907,11 +907,12 @@ body.layout-overlay .app-content {
 }
 
 .footer__contact-item a {
+  color: var(--color-white);
   transition: color var(--transition-fast);
 }
 
 .footer__contact-item a:hover {
-  color: var(--color-white);
+  color: var(--color-blue-tint);
 }
 
 .footer__social {
@@ -928,7 +929,7 @@ body.layout-overlay .app-content {
 }
 
 .footer__social-link:hover {
-  color: var(--color-white);
+  color: var(--color-blue-tint);
 }
 
 .footer__bottom {
