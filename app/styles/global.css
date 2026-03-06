@@ -1525,7 +1525,7 @@ body.layout-overlay .app-content {
 
 /* ── Rich-text description ── */
 .course-detail__description-box {
-  background-color: var(--color-bg-card-alt);
+  background-color: transparent;
   padding: var(--spacing-4) var(--spacing-5);
 }
 
