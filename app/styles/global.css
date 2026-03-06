@@ -995,7 +995,7 @@ body.layout-overlay .app-content {
 }
 
 .why-choose__item {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(0, 0, 0, 0.08);
   clip-path: polygon(
     12px 0%, 100% 0%,
     100% calc(100% - 12px),
@@ -1783,7 +1783,7 @@ a.contact-info__value:hover {
 /* ── Form wrapper (card) ─────────────────────────────────────────────────── */
 
 .contact-form-wrap {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(0, 0, 0, 0.08);
   clip-path: polygon(
     12px 0%, 100% 0%,
     100% calc(100% - 12px),
