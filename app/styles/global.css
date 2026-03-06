@@ -1429,7 +1429,7 @@ body.layout-overlay .app-content {
   align-items: center;
   gap: 0;
   text-align: center;
-  padding: var(--spacing-8) clamp(52px, 12%, 72px);
+  padding: var(--spacing-8) clamp(60px, 12%, 72px);
   /* No pointer-events override — inherits from slide (none when inactive) */
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
   max-width: 780px;
