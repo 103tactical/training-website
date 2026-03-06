@@ -1397,7 +1397,7 @@ body.layout-overlay .app-content {
 @media (min-width: 768px) {
   .course-detail__inner {
     display: grid;
-    grid-template-columns: 1fr 410px;
+    grid-template-columns: 1fr 451px;
     align-items: start;
     gap: var(--spacing-10);
     padding-inline: calc(var(--container-padding) / 2);
@@ -1407,7 +1407,7 @@ body.layout-overlay .app-content {
 .course-detail__content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-6);
+  gap: var(--spacing-4);
   order: 2;
 }
 
@@ -1452,7 +1452,7 @@ body.layout-overlay .app-content {
   font-family: var(--font-quantico);
   font-weight: var(--font-bold);
   text-transform: uppercase;
-  font-size: var(--text-3xl);
+  font-size: var(--text-4xl);
   line-height: 1.1;
   color: var(--color-white);
   margin: 0;
@@ -1460,7 +1460,7 @@ body.layout-overlay .app-content {
 
 @media (min-width: 768px) {
   .course-detail__title {
-    font-size: var(--text-4xl);
+    font-size: var(--text-5xl);
   }
 }
 
