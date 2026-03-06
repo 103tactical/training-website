@@ -824,7 +824,7 @@ body.layout-overlay .app-content {
    ───────────────────────────────────────────────────────────────────────── */
 
 .badges-section {
-  background-color: var(--color-bg-light-grey);
+  background-color: var(--color-bg-card);
   padding-block: var(--spacing-8);
 }
 
@@ -833,7 +833,7 @@ body.layout-overlay .app-content {
   font-weight: var(--font-bold);
   text-transform: uppercase;
   font-size: var(--text-xl);
-  color: var(--color-dark-grey);
+  color: var(--color-white);
   text-align: center;
   margin-bottom: var(--spacing-6);
 }
@@ -865,7 +865,7 @@ body.layout-overlay .app-content {
 }
 
 .badges-section__img {
-  max-height: 80px;
+  max-height: 110px;
   width: auto;
   max-width: 100%;
   object-fit: contain;
