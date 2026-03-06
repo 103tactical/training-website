@@ -98,11 +98,11 @@ export default function CourseSchedulePage() {
 
         {/* ── Right column: slots ── */}
         <div className="schedule-page__slots-col">
-          <h2 className="schedule-page__heading">Available Dates</h2>
+          <h2 className="schedule-page__heading">Available Sessions</h2>
 
           {activeSchedules.length === 0 ? (
             <p className="schedule-page__empty">
-              No upcoming dates are currently available. Check back soon.
+              No sessions are currently available. Check back soon.
             </p>
           ) : (
             <div className="schedule-page__slots">
@@ -145,7 +145,7 @@ export default function CourseSchedulePage() {
                       disabled={full}
                       aria-disabled={full}
                     >
-                      {full ? "Unavailable" : "Select This Date"}
+                      {full ? "Unavailable" : "Book Now"}
                     </button>
                   </div>
                 );
