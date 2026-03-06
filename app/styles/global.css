@@ -1464,7 +1464,7 @@ body.layout-overlay .app-content {
   font-weight: var(--font-bold);
   text-transform: uppercase;
   font-size: 1.35rem;
-  line-height: 1.1;
+  line-height: 1;
   margin: 0;
 }
 
