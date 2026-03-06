@@ -79,7 +79,7 @@ export default function CourseSchedulePage() {
                   )}
                   {course.durationDays != null && (
                     <span className="schedule-page__meta-item">
-                      {course.durationDays} {course.durationDays === 1 ? "Day" : "Days"}
+                      {course.durationDays} {course.durationDays === 1 ? "Session" : "Sessions"}
                     </span>
                   )}
                   {course.price != null && (
