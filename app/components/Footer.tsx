@@ -101,10 +101,14 @@ export default function Footer({
               {(contact.address || contact.city) && (
                 <li className="footer__contact-item footer__contact-item--address">
                   <LocationIcon className="footer__contact-icon footer__contact-icon--address" />
-                  <div>
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent([contact.address, contact.city].filter(Boolean).join(", "))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {contact.address && <span>{contact.address}</span>}
                     {contact.city && <span>{contact.city}</span>}
-                  </div>
+                  </a>
                 </li>
               )}
             </ul>
