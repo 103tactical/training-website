@@ -1,4 +1,13 @@
 import type { CollectionConfig } from "payload";
+import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import {
+  BoldFeature,
+  ItalicFeature,
+  UnderlineFeature,
+  LinkFeature,
+  UnorderedListFeature,
+  ParagraphFeature,
+} from "@payloadcms/richtext-lexical";
 
 export const Courses: CollectionConfig = {
   slug: "courses",
@@ -50,6 +59,42 @@ export const Courses: CollectionConfig = {
           required: true,
         },
       ],
+    },
+    {
+      name: "description",
+      type: "richText",
+      label: "Description",
+      admin: {
+        description: "Full course description. Supports bold, italic, underline, links, and bullet lists.",
+      },
+      editor: lexicalEditor({
+        features: [
+          ParagraphFeature(),
+          BoldFeature(),
+          ItalicFeature(),
+          UnderlineFeature(),
+          UnorderedListFeature(),
+          LinkFeature(),
+        ],
+      }),
+    },
+    {
+      name: "durationHours",
+      type: "number",
+      label: "Total Hours",
+      min: 0,
+      admin: {
+        description: "Total number of hours required to complete this course (e.g. 18).",
+      },
+    },
+    {
+      name: "durationDays",
+      type: "number",
+      label: "Total Days",
+      min: 1,
+      admin: {
+        description: "Number of calendar days required to complete this course (e.g. 3).",
+      },
     },
     {
       name: "price",
