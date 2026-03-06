@@ -26,6 +26,7 @@ export default function HighlightCallouts({ items, oddItemPlacement = "first" }:
           const imageUrl = resolveMediaUrl(item.backgroundImage?.url);
           const isLight = item.backgroundColor === "white" && !imageUrl;
           const bgColor = item.backgroundColor ? BG_COLORS[item.backgroundColor] : BG_COLORS.grey;
+          const hasButton = !!(item.button?.label && item.button?.url);
 
           return (
             <div
@@ -45,28 +46,34 @@ export default function HighlightCallouts({ items, oddItemPlacement = "first" }:
                 </>
               )}
 
-              <div className="highlight-callout__content">
+              {/* Row 1 — title (equalised across siblings via subgrid) */}
+              <div className="highlight-callout__header">
                 <h3 className="highlight-callout__title">{item.title}</h3>
-                <p className="highlight-callout__subtext">{item.subtext}</p>
+              </div>
 
-                {item.button?.label && item.button?.url && (
-                  item.button.url.startsWith("http") ? (
+              {/* Row 2 — subtext (grows to fill space) */}
+              <p className="highlight-callout__subtext">{item.subtext}</p>
+
+              {/* Row 3 — button pinned to bottom */}
+              <div className="highlight-callout__footer">
+                {hasButton && (
+                  item.button!.url!.startsWith("http") ? (
                     <a
-                      href={item.button.url}
+                      href={item.button!.url}
                       className="btn btn--outline btn--sm highlight-callout__btn"
-                      target={item.button.openInNewTab ? "_blank" : undefined}
-                      rel={item.button.openInNewTab ? "noopener noreferrer" : undefined}
+                      target={item.button!.openInNewTab ? "_blank" : undefined}
+                      rel={item.button!.openInNewTab ? "noopener noreferrer" : undefined}
                     >
-                      {item.button.label}
+                      {item.button!.label}
                     </a>
                   ) : (
                     <Link
-                      to={item.button.url}
+                      to={item.button!.url!}
                       className="btn btn--outline btn--sm highlight-callout__btn"
-                      target={item.button.openInNewTab ? "_blank" : undefined}
-                      rel={item.button.openInNewTab ? "noopener noreferrer" : undefined}
+                      target={item.button!.openInNewTab ? "_blank" : undefined}
+                      rel={item.button!.openInNewTab ? "noopener noreferrer" : undefined}
                     >
-                      {item.button.label}
+                      {item.button!.label}
                     </Link>
                   )
                 )}

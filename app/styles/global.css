@@ -1186,6 +1186,13 @@ body.layout-overlay .app-content {
 @media (min-width: 992px) {
   .highlight-callouts__grid {
     grid-template-columns: repeat(2, 1fr);
+    /* Each callout spans 3 rows; subgrid equalises title height across siblings */
+    grid-auto-rows: auto 1fr auto;
+  }
+
+  .highlight-callout {
+    grid-row: span 3;
+    grid-template-rows: subgrid;
   }
 
   /* Odd total, "first" mode: first item full-width, pairs below */
@@ -1208,8 +1215,8 @@ body.layout-overlay .app-content {
     calc(100% - 12px) 100%,
     0% 100%, 0% 12px
   );
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   min-height: 280px;
   background-color: var(--color-bg-card-alt);
 }
@@ -1236,17 +1243,15 @@ body.layout-overlay .app-content {
   pointer-events: none;
 }
 
-.highlight-callout__content {
+/* Row 1 — title zone, vertically centred */
+.highlight-callout__header {
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-10) var(--spacing-8);
-  height: 100%;
+  padding: var(--spacing-8) var(--spacing-8) var(--spacing-3);
 }
 
 .highlight-callout__title {
@@ -1272,12 +1277,17 @@ body.layout-overlay .app-content {
   }
 }
 
+/* Row 2 — subtext (fills remaining space) */
 .highlight-callout__subtext {
+  position: relative;
+  z-index: 1;
   color: var(--color-white);
   font-weight: var(--font-light);
   font-size: var(--text-base);
   line-height: 1.4;
   margin: 0;
+  padding: 0 var(--spacing-8) var(--spacing-3);
+  text-align: center;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
 }
 
@@ -1287,8 +1297,16 @@ body.layout-overlay .app-content {
   }
 }
 
+/* Row 3 — button pinned to bottom */
+.highlight-callout__footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-2) var(--spacing-8) var(--spacing-8);
+}
+
 .highlight-callout__btn {
-  margin-top: var(--spacing-2);
   --btn-px: var(--spacing-5);
   --btn-py: calc(var(--spacing-2) + 2px);
   --btn-fs: var(--text-xs);
