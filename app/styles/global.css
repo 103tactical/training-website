@@ -8,6 +8,8 @@
   /* Color palette */
   --color-bg-dark:        #101010;
   --color-bg-surface:     #1a1a1a;
+  --color-bg-card:        #2e2e2e;
+  --color-bg-card-alt:    #404040;
   --color-bg-light:       #f4f4f4;
   --color-bg-page:        var(--color-bg-dark);
 
@@ -1163,7 +1165,7 @@ body.layout-overlay .app-content {
 /* ── Course Card ──────────────────────────────────────────────────────────── */
 
 .course-card {
-  background-color: #2e2e2e;
+  background-color: var(--color-bg-card);
   clip-path: polygon(
     12px 0%, 100% 0%,
     100% calc(100% - 12px),
@@ -1220,7 +1222,7 @@ body.layout-overlay .app-content {
   justify-content: center;
   gap: var(--spacing-5);
   padding: var(--spacing-5);
-  background-color: #2e2e2e;
+  background-color: var(--color-bg-card-alt);
   overflow-y: auto;
 }
 
