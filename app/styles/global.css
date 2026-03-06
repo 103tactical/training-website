@@ -859,8 +859,10 @@ body.layout-overlay .app-content {
 }
 
 .footer__contact-heading {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: var(--heading-transform);
   font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
   color: var(--color-white);
   letter-spacing: 0.01em;
   margin-bottom: var(--spacing-4);
