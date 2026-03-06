@@ -2163,6 +2163,11 @@ body.layout-overlay .app-content {
 
 .mini-cal__nav:hover { color: var(--color-white); }
 
+.mini-cal__nav-placeholder {
+  width: 28px;
+  display: inline-block;
+}
+
 .mini-cal__month-label {
   font-family: var(--font-quantico);
   font-weight: var(--font-bold);

@@ -37,6 +37,10 @@ export default function MiniCalendar({ dates }: MiniCalendarProps) {
   const [year, setYear] = useState(earliest.year);
   const [month, setMonth] = useState(earliest.month);
 
+  // Only show nav arrows when dates span more than one month
+  const uniqueMonths = new Set(parsed.map((d) => `${d.year}-${d.month}`));
+  const showNav = uniqueMonths.size > 1;
+
   const highlightedDays = new Set(
     parsed
       .filter((d) => d.year === year && d.month === month)
@@ -65,13 +69,17 @@ export default function MiniCalendar({ dates }: MiniCalendarProps) {
   return (
     <div className="mini-cal">
       <div className="mini-cal__header">
-        <button type="button" className="mini-cal__nav" onClick={prev} aria-label="Previous month">
-          ‹
-        </button>
+        {showNav ? (
+          <button type="button" className="mini-cal__nav" onClick={prev} aria-label="Previous month">‹</button>
+        ) : (
+          <span className="mini-cal__nav-placeholder" />
+        )}
         <span className="mini-cal__month-label">{MONTH_NAMES[month]} {year}</span>
-        <button type="button" className="mini-cal__nav" onClick={next} aria-label="Next month">
-          ›
-        </button>
+        {showNav ? (
+          <button type="button" className="mini-cal__nav" onClick={next} aria-label="Next month">›</button>
+        ) : (
+          <span className="mini-cal__nav-placeholder" />
+        )}
       </div>
 
       <div className="mini-cal__grid">
