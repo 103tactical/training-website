@@ -1159,11 +1159,6 @@ body.layout-overlay .app-content {
   }
 }
 
-@media (min-width: 1200px) {
-  .courses-section__grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
 
 /* ── Course Card ──────────────────────────────────────────────────────────── */
 
@@ -1184,7 +1179,7 @@ body.layout-overlay .app-content {
 
 .course-card__media {
   position: relative;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   cursor: pointer;
   flex-shrink: 0;
