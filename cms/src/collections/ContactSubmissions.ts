@@ -15,9 +15,11 @@ export const ContactSubmissions: CollectionConfig = {
   },
   hooks: {
     afterRead: [
-      async ({ doc, req, context }) => {
+      async ({ doc, req, context, findMany }) => {
         // Only auto-mark as read for authenticated admin requests
         if (!req.user) return doc;
+        // Don't mark as read from the list view — only when opened individually
+        if (findMany) return doc;
         // Break the infinite loop — if we triggered this read ourselves, skip
         if (context.skipStatusUpdate) return doc;
         // Only act when the current status is 'new'
