@@ -52,11 +52,11 @@ export default function Index() {
           oddItemPlacement={homePage.highlightCallouts.oddItemPlacement ?? "first"}
         />
       )}
-      {homePage?.whyChoose && (
-        <WhyChooseSection data={homePage.whyChoose} />
-      )}
       {homePage?.badgesSection?.badges && homePage.badgesSection.badges.length > 0 && (
         <BadgesSection data={homePage.badgesSection} />
+      )}
+      {homePage?.whyChoose && (
+        <WhyChooseSection data={homePage.whyChoose} />
       )}
     </>
   );
