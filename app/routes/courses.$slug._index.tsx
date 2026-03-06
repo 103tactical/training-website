@@ -84,7 +84,7 @@ export default function CourseDetailRoute() {
               to={`/courses/${course.slug}/schedule`}
               className="btn btn--outline btn--lg"
             >
-              View Available Dates
+              View Available Sessions
             </Link>
             <Link to="/courses" className="course-detail__back-link">
               ← Back to Courses
