@@ -1492,13 +1492,13 @@ body.layout-overlay .app-content {
   font-family: var(--font-quantico);
   font-weight: var(--font-bold);
   text-transform: uppercase;
-  font-size: calc(var(--text-sm) + 0.5rem);
+  font-size: calc(var(--text-sm) + 0.25rem);
   color: rgba(255, 255, 255, 0.6);
   letter-spacing: 0.04em;
 }
 
 .course-detail__meta-value {
-  font-size: calc(var(--text-sm) + 0.5rem);
+  font-size: calc(var(--text-sm) + 0.25rem);
   font-weight: var(--font-light);
   color: var(--color-white);
   margin: 0;
