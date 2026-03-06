@@ -44,6 +44,14 @@ export async function getCourseGroup(id: string) {
   return fetchPayload<CourseGroup>(`/course-groups/${id}?depth=2`);
 }
 
+export async function getCoursesPage() {
+  return fetchPayload<CoursesPage>("/globals/courses-page?depth=2");
+}
+
+export async function getAllCourses() {
+  return fetchPayload<{ docs: Course[] }>("/courses?limit=100&depth=1&sort=title");
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Utility {
@@ -98,6 +106,15 @@ export interface Course {
   durationDays?: number;
   price?: number;
   isActive: boolean;
+}
+
+export interface CoursesPage {
+  heroImage?: { url: string; alt?: string };
+  header?: { title?: string; subtext?: string };
+  courseGroups?: {
+    id: string;
+    group: CourseGroup;
+  }[];
 }
 
 export interface CourseGroup {
