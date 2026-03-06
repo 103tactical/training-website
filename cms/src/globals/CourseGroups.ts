@@ -4,7 +4,7 @@ export const CourseGroups: GlobalConfig = {
   slug: "course-groups",
   label: "Course Groups",
   admin: {
-    group: "Pages",
+    group: "Courses Management",
     description: "Define groups of courses for display on the website. Drag to reorder groups and courses within each group.",
   },
   access: {
