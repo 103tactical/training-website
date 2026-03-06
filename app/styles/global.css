@@ -872,6 +872,12 @@ body.layout-overlay .app-content {
   object-fit: contain;
 }
 
+@media (min-width: 1280px) {
+  .badges-section__img {
+    max-height: 160px;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    FOOTER
    ───────────────────────────────────────────────────────────────────────── */
