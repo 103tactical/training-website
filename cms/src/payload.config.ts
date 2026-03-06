@@ -31,8 +31,8 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Courses, Badges, ContactSubmissions],
-  globals: [SiteSettings, ContactSettings, Utility, HomePage],
+  collections: [ContactSubmissions, Users, Media, Courses, Badges],
+  globals: [HomePage, SiteSettings, ContactSettings, Utility],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
