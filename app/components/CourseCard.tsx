@@ -66,14 +66,22 @@ export default function CourseCard({ course }: CourseCardProps) {
           <h3 className="course-card__title">{course.title}</h3>
         </Link>
 
-        <div className="course-card__meta">
-          {course.durationHours != null && (
-            <p className="course-card__meta-item">{course.durationHours} Hours</p>
-          )}
-          {course.durationDays != null && (
-            <p className="course-card__meta-item">{course.durationDays} {course.durationDays === 1 ? "Day" : "Days"}</p>
-          )}
-        </div>
+        {(course.durationHours != null || course.durationDays != null) && (
+          <dl className="course-card__meta-grid">
+            {course.durationHours != null && (
+              <>
+                <dt className="course-card__meta-label">Duration:</dt>
+                <dd className="course-card__meta-value">{course.durationHours} Hours</dd>
+              </>
+            )}
+            {course.durationDays != null && (
+              <>
+                <dt className="course-card__meta-label">Days:</dt>
+                <dd className="course-card__meta-value">{course.durationDays} {course.durationDays === 1 ? "Day" : "Days"}</dd>
+              </>
+            )}
+          </dl>
+        )}
 
         {course.price != null && (
           <p className="course-card__price">${course.price.toLocaleString()}</p>
