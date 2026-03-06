@@ -17,7 +17,7 @@ export default function CourseCard({ course }: CourseCardProps) {
     <div className="course-card">
       {/* Image / Summary toggle area */}
       <div
-        className={`course-card__media${flipped ? " course-card__media--flipped" : ""}`}
+        className="course-card__media"
         onClick={() => hasSummary && setFlipped((f) => !f)}
         role={hasSummary ? "button" : undefined}
         aria-label={hasSummary ? (flipped ? "Show image" : "Show course summary") : undefined}
@@ -29,33 +29,37 @@ export default function CourseCard({ course }: CourseCardProps) {
           }
         }}
       >
-        {imageUrl && (
-          <img
-            className="course-card__image"
-            src={imageUrl}
-            alt={course.thumbnail?.alt ?? course.title}
-          />
-        )}
-
-        {hasSummary && (
-          <div className="course-card__summary" aria-hidden={!flipped}>
-            <ul className="course-card__bullets">
-              {course.summary!.map((b, i) => (
-                <li key={i} className="course-card__bullet">
-                  <BulletIcon className="course-card__bullet-icon" />
-                  <span>{b.item}</span>
-                </li>
-              ))}
-            </ul>
-            <Link
-              to={`/courses/${course.slug}`}
-              className="btn btn--outline btn--lg course-card__details-btn"
-              onClick={(e) => e.stopPropagation()}
-            >
-              View Details
-            </Link>
+        <div className={`course-card__media-inner${flipped ? " course-card__media-inner--flipped" : ""}`}>
+          <div className="course-card__face course-card__face--front">
+            {imageUrl && (
+              <img
+                className="course-card__image"
+                src={imageUrl}
+                alt={course.thumbnail?.alt ?? course.title}
+              />
+            )}
           </div>
-        )}
+
+          {hasSummary && (
+            <div className="course-card__face course-card__face--back" aria-hidden={!flipped}>
+              <ul className="course-card__bullets">
+                {course.summary!.map((b, i) => (
+                  <li key={i} className="course-card__bullet">
+                    <BulletIcon className="course-card__bullet-icon" />
+                    <span>{b.item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to={`/courses/${course.slug}`}
+                className="btn btn--outline btn--lg course-card__details-btn"
+                onClick={(e) => e.stopPropagation()}
+              >
+                View Details
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Card body */}
