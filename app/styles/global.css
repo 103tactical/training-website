@@ -862,7 +862,7 @@ body.layout-overlay .app-content {
   font-family: var(--font-quantico);
   font-weight: var(--font-bold);
   text-transform: var(--heading-transform);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--color-white);
   letter-spacing: 0.01em;
   margin-bottom: var(--spacing-4);
