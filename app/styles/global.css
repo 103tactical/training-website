@@ -1181,15 +1181,12 @@ body.layout-overlay .app-content {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--spacing-4);
+  padding-inline: 0;
 }
 
 @media (max-width: 991px) {
   .highlight-callouts {
     padding-inline: var(--container-padding);
-  }
-
-  .highlight-callouts__grid {
-    padding-inline: 0;
   }
 }
 
