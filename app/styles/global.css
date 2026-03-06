@@ -1494,6 +1494,7 @@ body.layout-overlay .app-content {
   );
   padding: var(--spacing-4) var(--spacing-5);
   align-self: flex-start;
+  margin-left: var(--spacing-5);
 }
 
 /* Duration grid: label | value pairs */
