@@ -1799,10 +1799,26 @@ body.layout-overlay .app-content {
   margin: 0;
 }
 
-.course-card__signup-btn {
+.course-card__title-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.course-card__title-link:hover .course-card__title {
+  color: var(--color-blue-tint);
+}
+
+.course-card__card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+}
+
+.course-card__signup-btn,
+.course-card__details-btn {
   --btn-px: 22px;
   --btn-py: 14px;
-  margin-top: var(--spacing-4);
   align-self: flex-start;
 }
 

@@ -65,7 +65,9 @@ export default function CourseCard({ course }: CourseCardProps) {
 
       {/* Card body */}
       <div className="course-card__body">
-        <h3 className="course-card__title">{course.title}</h3>
+        <Link to={`/courses/${course.slug}`} className="course-card__title-link">
+          <h3 className="course-card__title">{course.title}</h3>
+        </Link>
 
         <div className="course-card__meta">
           {course.durationHours != null && (
@@ -80,9 +82,17 @@ export default function CourseCard({ course }: CourseCardProps) {
           <p className="course-card__price">${course.price.toLocaleString()}</p>
         )}
 
-        <button type="button" className="btn btn--outline btn--lg course-card__signup-btn">
-          Schedule Now
-        </button>
+        <div className="course-card__card-actions">
+          <button type="button" className="btn btn--outline btn--lg course-card__signup-btn">
+            Schedule Now
+          </button>
+          <Link
+            to={`/courses/${course.slug}`}
+            className="btn btn--outline btn--lg course-card__details-btn"
+          >
+            View Details
+          </Link>
+        </div>
       </div>
     </div>
   );
