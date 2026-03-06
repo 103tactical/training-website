@@ -1462,7 +1462,7 @@ body.layout-overlay .app-content {
 .featured-carousel__overlay-content .btn {
   text-shadow: none;
   --btn-px: var(--spacing-5);
-  --btn-py: var(--spacing-2);
+  --btn-py: calc(var(--spacing-2) + 3px);
   --btn-fs: var(--text-xs);
   --btn-cut: 7px;
 }
