@@ -1,14 +1,4 @@
 import type { CollectionConfig } from "payload";
-import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import {
-  BoldFeature,
-  ItalicFeature,
-  UnderlineFeature,
-  LinkFeature,
-  UnorderedListFeature,
-  ParagraphFeature,
-  FixedToolbarFeature,
-} from "@payloadcms/richtext-lexical";
 
 export const Courses: CollectionConfig = {
   slug: "courses",
@@ -68,17 +58,6 @@ export const Courses: CollectionConfig = {
       admin: {
         description: "Full course description. Supports bold, italic, underline, links, and bullet lists.",
       },
-      editor: lexicalEditor({
-        features: [
-          ParagraphFeature(),
-          BoldFeature(),
-          ItalicFeature(),
-          UnderlineFeature(),
-          UnorderedListFeature(),
-          LinkFeature(),
-          FixedToolbarFeature(),
-        ],
-      }),
     },
     {
       name: "durationHours",
