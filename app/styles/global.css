@@ -1397,7 +1397,7 @@ body.layout-overlay .app-content {
   .course-detail__inner {
     display: grid;
     grid-template-columns: 1fr 300px;
-    align-items: stretch;
+    align-items: start;
     gap: var(--spacing-8);
     padding-inline: calc(var(--container-padding) / 2);
   }
@@ -1406,6 +1406,7 @@ body.layout-overlay .app-content {
 @media (min-width: 992px) {
   .course-detail__inner {
     grid-template-columns: 1fr 451px;
+    align-items: stretch;
     gap: var(--spacing-10);
   }
 }
@@ -1451,6 +1452,11 @@ body.layout-overlay .app-content {
 @media (min-width: 768px) {
   .course-detail__img-wrap {
     order: 0;
+  }
+}
+
+@media (min-width: 992px) {
+  .course-detail__img-wrap {
     height: 100%;
   }
 }
@@ -1458,15 +1464,15 @@ body.layout-overlay .app-content {
 .course-detail__img {
   display: block;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 3 / 4;
   object-fit: cover;
   object-position: center;
 }
 
-@media (max-width: 767px) {
+@media (min-width: 992px) {
   .course-detail__img {
-    aspect-ratio: 3 / 4;
-    height: auto;
+    height: 100%;
+    aspect-ratio: unset;
   }
 }
 
