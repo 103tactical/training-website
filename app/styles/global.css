@@ -2398,7 +2398,7 @@ body.layout-overlay .app-content {
   width: 10px;
   height: 10px;
   flex-shrink: 0;
-  color: var(--color-white);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* NYC Permits */
