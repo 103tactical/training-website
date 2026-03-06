@@ -40,6 +40,10 @@ export async function getCourses() {
   return fetchPayload<{ docs: Course[] }>("/courses?where[isActive][equals]=true&sort=displayOrder");
 }
 
+export async function getCourseGroups() {
+  return fetchPayload<CourseGroups>("/globals/course-groups?depth=2");
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Utility {
@@ -70,7 +74,6 @@ export interface HomePage {
   featured: FeaturedSlide[];
   featuredCoursesSection?: {
     heading?: string;
-    courses: Course[];
   };
   whyChoose: {
     heading: string;
@@ -93,8 +96,21 @@ export interface Course {
   slug: string;
   thumbnail?: { url: string; alt: string };
   summary?: { item: string }[];
+  durationHours?: number;
+  durationDays?: number;
   price?: number;
   isActive: boolean;
+}
+
+export interface CourseGroups {
+  groups?: {
+    id: string;
+    title: string;
+    courses?: {
+      id: string;
+      course: Course;
+    }[];
+  }[];
 }
 
 export interface Badge {

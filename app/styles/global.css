@@ -1085,6 +1085,226 @@ body.layout-overlay .app-content {
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   COURSES SECTION
+   ───────────────────────────────────────────────────────────────────────── */
+
+.courses-section {
+  padding-block: var(--spacing-16) var(--spacing-20);
+}
+
+.courses-section__header {
+  text-align: center;
+  padding-bottom: var(--spacing-12);
+}
+
+.courses-section__heading {
+  font-family: var(--font-quantico);
+  color: var(--color-white);
+  font-size: var(--text-3xl);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 767px) {
+  .courses-section__heading {
+    padding-inline: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .courses-section__heading {
+    font-size: var(--text-4xl);
+  }
+}
+
+.courses-section__group {
+  margin-bottom: var(--spacing-16);
+}
+
+.courses-section__group:last-child {
+  margin-bottom: 0;
+}
+
+.courses-section__group-heading {
+  color: var(--color-white);
+  font-size: var(--text-xl);
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: var(--heading-transform);
+  margin-bottom: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .courses-section__group-heading {
+    font-size: var(--text-2xl);
+  }
+}
+
+.courses-section__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 480px) {
+  .courses-section__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .courses-section__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .courses-section__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Course Card ──────────────────────────────────────────────────────────── */
+
+.course-card {
+  background-color: #2e2e2e;
+  clip-path: polygon(
+    12px 0%, 100% 0%,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0% 100%, 0% 12px
+  );
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Media / image-flip area ── */
+
+.course-card__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.course-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity var(--transition-slow);
+}
+
+.course-card__summary {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-5);
+  padding: var(--spacing-5);
+  background-color: rgba(46, 46, 46, 0.97);
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  pointer-events: none;
+  overflow-y: auto;
+}
+
+.course-card__media--flipped .course-card__image {
+  opacity: 0;
+}
+
+.course-card__media--flipped .course-card__summary {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.course-card__bullets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.course-card__bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.course-card__bullet-icon {
+  flex-shrink: 0;
+  width: 0.6em;
+  height: 0.6em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.45em;
+}
+
+.course-card__bullet-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.course-card__details-btn {
+  align-self: flex-start;
+}
+
+/* ── Card body ── */
+
+.course-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  flex: 1;
+}
+
+.course-card__title {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: var(--heading-transform);
+  font-size: var(--text-base);
+  color: var(--color-white);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.course-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.course-card__meta-item {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: var(--font-light);
+  margin: 0;
+}
+
+.course-card__price {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  font-size: var(--text-xl);
+  color: var(--color-white);
+  margin: 0;
+}
+
+.course-card__signup-btn {
+  margin-top: var(--spacing-4);
+  align-self: flex-start;
+}
+
 /* ── Placeholder pages ────────────────────────────────────────────────── */
 
 .placeholder-page {

@@ -166,15 +166,8 @@ export const HomePage: GlobalConfig = {
           type: "text",
           label: "Section Heading",
           defaultValue: "Our Courses",
-        },
-        {
-          name: "courses",
-          type: "relationship",
-          relationTo: "courses",
-          hasMany: true,
-          label: "Courses",
           admin: {
-            description: "Select which courses to display on the home page and in what order.",
+            description: "Heading displayed above the courses section. Courses are managed via Course Groups.",
           },
         },
       ],
