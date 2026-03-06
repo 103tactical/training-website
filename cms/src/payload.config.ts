@@ -31,7 +31,6 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
-    css: path.resolve(dirname, 'styles/admin.css'),
   },
   collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups],
   globals: [HomePage, SiteSettings, ContactSettings, Utility],
