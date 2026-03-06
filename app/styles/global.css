@@ -1744,8 +1744,8 @@ body.layout-overlay .app-content {
   position: absolute;
   bottom: var(--spacing-3);
   right: var(--spacing-3);
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   color: rgba(255, 255, 255, 0.5);
   pointer-events: none;
   transition: color 0.2s;
