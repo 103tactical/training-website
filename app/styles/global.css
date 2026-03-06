@@ -626,7 +626,6 @@ body.menu-open .app-content {
 
 .navbar-desktop__link--active::after {
   transform: scaleX(1);
-  background-color: var(--color-red);
 }
 
 /* ── Responsive show/hide ────────────────────────────────────────────────── */
