@@ -45,7 +45,7 @@ export async function getCourseGroup(id: string) {
 }
 
 export async function getCoursesPage() {
-  return fetchPayload<CoursesPage>("/globals/courses-page?depth=2");
+  return fetchPayload<CoursesPage>("/globals/courses-page?depth=3");
 }
 
 export async function getAllCourses() {
