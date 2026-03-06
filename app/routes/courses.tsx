@@ -79,7 +79,7 @@ export default function CoursesRoute() {
       {remainingCourses.length > 0 && (
         <section className="courses-section">
           <div className="courses-section__header">
-            <h2 className="courses-section__heading">All Courses</h2>
+            <h2 className="courses-section__heading">Additional Training</h2>
           </div>
           <div className="container">
             <div className="courses-section__grid">
