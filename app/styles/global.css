@@ -1430,15 +1430,15 @@ body.layout-overlay .app-content {
   gap: 0;
   text-align: center;
   padding: var(--spacing-8) clamp(52px, 12%, 72px);
+  pointer-events: auto;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+  max-width: 780px;
 }
 
 @media (min-width: 900px) {
   .featured-carousel__overlay-content {
     padding-inline: var(--spacing-10);
   }
-  pointer-events: auto;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
-  max-width: 780px;
 }
 
 .featured-carousel__overlay-heading {
