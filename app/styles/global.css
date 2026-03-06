@@ -2273,6 +2273,199 @@ body.layout-overlay .app-content {
   border-radius: 3px;
 }
 
+/* ── Applications Page ────────────────────────────────────────────────── */
+
+.applications-page__body {
+  padding-block: var(--spacing-14);
+}
+
+/* Lead */
+.applications-page__lead {
+  max-width: 800px;
+  margin: 0 auto var(--spacing-12);
+  text-align: center;
+}
+
+.applications-page__lead-text {
+  font-size: var(--text-lg);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Context cards */
+.applications-page__context {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-12);
+}
+
+@media (min-width: 768px) {
+  .applications-page__context {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.applications-page__context-card {
+  background: var(--color-bg-card);
+  padding: var(--spacing-6);
+  clip-path: polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px);
+}
+
+.applications-page__context-heading {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  font-size: var(--text-base);
+  color: var(--color-white);
+  margin-bottom: var(--spacing-3);
+  letter-spacing: 0.04em;
+}
+
+.applications-page__context-text {
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.applications-page__context-note {
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: var(--spacing-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: var(--spacing-4);
+}
+
+.applications-page__inline-link {
+  color: var(--color-blue-tint);
+  text-decoration: underline;
+  transition: opacity 0.15s;
+}
+
+.applications-page__inline-link:hover { opacity: 0.75; }
+
+/* Section headings */
+.applications-page__section-heading {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  font-size: var(--text-2xl);
+  color: var(--color-white);
+  margin-bottom: var(--spacing-2);
+  letter-spacing: 0.03em;
+}
+
+.applications-page__section-sub {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: var(--spacing-6);
+  max-width: 680px;
+}
+
+/* Eligibility */
+.applications-page__eligibility {
+  margin-bottom: var(--spacing-14);
+}
+
+.applications-page__bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-3);
+}
+
+@media (min-width: 640px) {
+  .applications-page__bullets {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.applications-page__bullet {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.8);
+  background: var(--color-bg-card);
+  padding: var(--spacing-3) var(--spacing-4);
+  clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);
+}
+
+.applications-page__bullet-icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  color: var(--color-white);
+}
+
+/* NYC Permits */
+.applications-page__nyc {
+  margin-bottom: var(--spacing-10);
+}
+
+.applications-page__permits {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .applications-page__permits {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.applications-page__permit-card {
+  background: var(--color-bg-card);
+  padding: var(--spacing-6);
+  clip-path: polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.applications-page__permit-title {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  font-size: var(--text-lg);
+  color: var(--color-white);
+  letter-spacing: 0.04em;
+}
+
+.applications-page__permit-body {
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.applications-page__permit-service {
+  background: var(--color-bg-card-alt);
+  padding: var(--spacing-4);
+  clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);
+  margin-top: auto;
+}
+
+.applications-page__permit-service-label {
+  font-family: var(--font-quantico);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-white);
+  display: block;
+  margin-bottom: var(--spacing-2);
+}
+
+.applications-page__permit-service-text {
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* ── Placeholder pages ────────────────────────────────────────────────── */
 
 .placeholder-page {
