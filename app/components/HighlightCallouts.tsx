@@ -21,7 +21,7 @@ export default function HighlightCallouts({ items, oddItemPlacement = "first" }:
 
   return (
     <section className="highlight-callouts">
-      <div className={gridClass}
+      <div className={gridClass}>
         {items.map((item) => {
           const imageUrl = resolveMediaUrl(item.backgroundImage?.url);
           const isLight = item.backgroundColor === "white" && !imageUrl;
