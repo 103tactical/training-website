@@ -157,20 +157,13 @@ export const HomePage: GlobalConfig = {
 
     // ── Featured Courses ──────────────────────────────────────────────────
     {
-      name: "featuredCoursesSection",
-      type: "group",
-      label: "Featured Courses",
-      fields: [
-        {
-          name: "heading",
-          type: "text",
-          label: "Section Heading",
-          defaultValue: "Our Courses",
-          admin: {
-            description: "Heading displayed above the courses section. Courses are managed via Course Groups.",
-          },
-        },
-      ],
+      name: "featuredCourseGroup",
+      type: "relationship",
+      relationTo: "course-groups",
+      label: "Featured Course Group",
+      admin: {
+        description: "Select the course group to display on the home page. The group's title will be used as the section heading.",
+      },
     },
 
     // ── Details Section ───────────────────────────────────────────────────

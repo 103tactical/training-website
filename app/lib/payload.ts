@@ -29,7 +29,7 @@ export async function getUtility() {
 }
 
 export async function getHomePage() {
-  return fetchPayload<HomePage>("/globals/home-page?depth=2");
+  return fetchPayload<HomePage>("/globals/home-page?depth=3");
 }
 
 export async function getContactSettings() {
@@ -40,8 +40,8 @@ export async function getCourses() {
   return fetchPayload<{ docs: Course[] }>("/courses?where[isActive][equals]=true&sort=displayOrder");
 }
 
-export async function getCourseGroups() {
-  return fetchPayload<CourseGroups>("/globals/course-groups?depth=2");
+export async function getCourseGroup(id: string) {
+  return fetchPayload<CourseGroup>(`/course-groups/${id}?depth=2`);
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -72,9 +72,7 @@ export interface SiteSettings {
 export interface HomePage {
   websiteHeadline?: string;
   featured: FeaturedSlide[];
-  featuredCoursesSection?: {
-    heading?: string;
-  };
+  featuredCourseGroup?: CourseGroup | string;
   whyChoose: {
     heading: string;
     items: {
@@ -102,14 +100,12 @@ export interface Course {
   isActive: boolean;
 }
 
-export interface CourseGroups {
-  groups?: {
+export interface CourseGroup {
+  id: string;
+  title: string;
+  courses?: {
     id: string;
-    title: string;
-    courses?: {
-      id: string;
-      course: Course;
-    }[];
+    course: Course;
   }[];
 }
 
