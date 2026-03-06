@@ -1396,10 +1396,17 @@ body.layout-overlay .app-content {
 @media (min-width: 768px) {
   .course-detail__inner {
     display: grid;
-    grid-template-columns: 1fr 451px;
+    grid-template-columns: 1fr 300px;
     align-items: stretch;
-    gap: var(--spacing-10);
+    gap: var(--spacing-8);
     padding-inline: calc(var(--container-padding) / 2);
+  }
+}
+
+@media (min-width: 992px) {
+  .course-detail__inner {
+    grid-template-columns: 1fr 451px;
+    gap: var(--spacing-10);
   }
 }
 
