@@ -54,13 +54,6 @@ export default function CourseCard({ course }: CourseCardProps) {
                   </li>
                 ))}
               </ul>
-              <Link
-                to={`/courses/${course.slug}`}
-                className="btn btn--outline btn--lg course-card__details-btn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                View Details
-              </Link>
               <FlipIcon className="course-card__flip-icon" aria-hidden="true" />
             </div>
           )}

@@ -1831,16 +1831,19 @@ body.layout-overlay .app-content {
 
 .course-card__card-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: var(--spacing-3);
   margin-top: var(--spacing-4);
 }
 
 .course-card__signup-btn,
 .course-card__details-btn {
-  --btn-px: 22px;
+  --btn-px: 18px;
   --btn-py: 14px;
-  align-self: flex-start;
+  flex: 1 1 0;
+  text-align: center;
+  justify-content: center;
 }
 
 /* ── Placeholder pages ────────────────────────────────────────────────── */
