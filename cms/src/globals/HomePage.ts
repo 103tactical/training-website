@@ -8,7 +8,7 @@ export const HomePage: GlobalConfig = {
   },
   admin: {
     group: "Pages",
-    description: "Content for the home page: featured carousel, courses, Why Choose section, and badges.",
+    description: "Manage content for the home page.",
   },
   fields: [
     // ── Website Headline ───────────────────────────────────────────────────
