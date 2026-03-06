@@ -14,6 +14,7 @@ import * as migration_20260305_contact_submissions_topic_status from './20260305
 import * as migration_20260305_contact_settings_hero_image from './20260305_contact_settings_hero_image';
 import * as migration_20260306_course_groups from './20260306_course_groups';
 import * as migration_20260306_course_groups_to_collection from './20260306_course_groups_to_collection';
+import * as migration_20260306_homepage_group_sections from './20260306_homepage_group_sections';
 import * as migration_20260304_course_description_and_duration from './20260304_course_description_and_duration';
 
 export const migrations = [
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20260306_course_groups_to_collection.up,
     down: migration_20260306_course_groups_to_collection.down,
     name: '20260306_course_groups_to_collection'
+  },
+  {
+    up: migration_20260306_homepage_group_sections.up,
+    down: migration_20260306_homepage_group_sections.down,
+    name: '20260306_homepage_group_sections'
   },
 ];

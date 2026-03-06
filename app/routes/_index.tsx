@@ -29,14 +29,14 @@ export async function loader(_: LoaderFunctionArgs) {
 
 export default function Index() {
   const { homePage, carouselDelay } = useLoaderData<typeof loader>();
-  const courseGroup = homePage?.featuredCourseGroup;
+  const courseGroup = homePage?.featuredCoursesSection?.courseGroup;
   const populatedGroup = courseGroup && typeof courseGroup === "object" ? courseGroup as CourseGroup : null;
 
   return (
     <>
-      {homePage?.websiteHeadline && (
+      {homePage?.websiteHeadlineSection?.headline && (
         <div className="site-headline">
-          <h1 className="site-headline__text">{homePage.websiteHeadline}</h1>
+          <h1 className="site-headline__text">{homePage.websiteHeadlineSection.headline}</h1>
         </div>
       )}
       {homePage?.featured && homePage.featured.length > 0 && (

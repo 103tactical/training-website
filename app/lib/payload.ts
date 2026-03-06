@@ -70,9 +70,9 @@ export interface SiteSettings {
 }
 
 export interface HomePage {
-  websiteHeadline?: string;
+  websiteHeadlineSection?: { headline?: string };
   featured: FeaturedSlide[];
-  featuredCourseGroup?: CourseGroup | string;
+  featuredCoursesSection?: { courseGroup?: CourseGroup | string };
   whyChoose: {
     heading: string;
     items: {

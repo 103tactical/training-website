@@ -13,12 +13,19 @@ export const HomePage: GlobalConfig = {
   fields: [
     // ── Website Headline ───────────────────────────────────────────────────
     {
-      name: "websiteHeadline",
-      type: "text",
+      name: "websiteHeadlineSection",
+      type: "group",
       label: "Website Headline",
-      admin: {
-        description: "Large headline displayed above the featured carousel on the home page.",
-      },
+      fields: [
+        {
+          name: "headline",
+          type: "text",
+          label: "Headline Text",
+          admin: {
+            description: "Large headline displayed above the featured carousel on the home page.",
+          },
+        },
+      ],
     },
 
     // ── Featured Carousel ──────────────────────────────────────────────────
@@ -157,13 +164,20 @@ export const HomePage: GlobalConfig = {
 
     // ── Featured Courses ──────────────────────────────────────────────────
     {
-      name: "featuredCourseGroup",
-      type: "relationship",
-      relationTo: "course-groups",
-      label: "Featured Course Group",
-      admin: {
-        description: "Select the course group to display on the home page. The group's title will be used as the section heading.",
-      },
+      name: "featuredCoursesSection",
+      type: "group",
+      label: "Featured Courses",
+      fields: [
+        {
+          name: "courseGroup",
+          type: "relationship",
+          relationTo: "course-groups",
+          label: "Course Group",
+          admin: {
+            description: "Select the course group to display on the home page. The group's title will be used as the section heading.",
+          },
+        },
+      ],
     },
 
     // ── Details Section ───────────────────────────────────────────────────
