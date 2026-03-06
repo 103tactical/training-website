@@ -52,6 +52,12 @@ export async function getAllCourses() {
   return fetchPayload<{ docs: Course[] }>("/courses?limit=100&depth=1&sort=title");
 }
 
+export async function getCourseBySlug(slug: string) {
+  return fetchPayload<{ docs: Course[] }>(
+    `/courses?where[slug][equals]=${encodeURIComponent(slug)}&depth=1&limit=1`
+  );
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Utility {
@@ -115,6 +121,8 @@ export interface Course {
   slug: string;
   thumbnail?: { url: string; alt: string };
   summary?: { item: string }[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  description?: any; // Lexical rich-text JSON
   durationHours?: number;
   durationDays?: number;
   price?: number;
