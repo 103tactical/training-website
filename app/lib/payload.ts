@@ -90,7 +90,10 @@ export interface HomePage {
   websiteHeadlineSection?: { headline?: string };
   featured: FeaturedSlide[];
   featuredCoursesSection?: { courseGroup?: CourseGroup | string };
-  highlightCallouts?: { items?: HighlightCalloutItem[] };
+  highlightCallouts?: {
+    oddItemPlacement?: "first" | "last";
+    items?: HighlightCalloutItem[];
+  };
   whyChoose: {
     heading: string;
     items: {

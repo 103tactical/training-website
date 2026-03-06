@@ -187,6 +187,19 @@ export const HomePage: GlobalConfig = {
       label: "Highlight Callouts",
       fields: [
         {
+          name: "oddItemPlacement",
+          type: "select",
+          label: "Odd Item Placement",
+          defaultValue: "first",
+          admin: {
+            description: "When the total number of callouts is odd, choose whether the lone full-width item appears first or last.",
+          },
+          options: [
+            { label: "First — full-width item on top, pairs below", value: "first" },
+            { label: "Last — pairs on top, full-width item on bottom", value: "last"  },
+          ],
+        },
+        {
           name: "items",
           type: "array",
           label: "Items",

@@ -17,6 +17,7 @@ import * as migration_20260306_course_groups_to_collection from './20260306_cour
 import * as migration_20260306_homepage_group_sections from './20260306_homepage_group_sections';
 import * as migration_20260306_courses_page from './20260306_courses_page';
 import * as migration_20260306_highlight_callouts from './20260306_highlight_callouts';
+import * as migration_20260306_highlight_callouts_odd_placement from './20260306_highlight_callouts_odd_placement';
 import * as migration_20260304_course_description_and_duration from './20260304_course_description_and_duration';
 
 export const migrations = [
@@ -119,5 +120,10 @@ export const migrations = [
     up: migration_20260306_highlight_callouts.up,
     down: migration_20260306_highlight_callouts.down,
     name: '20260306_highlight_callouts'
+  },
+  {
+    up: migration_20260306_highlight_callouts_odd_placement.up,
+    down: migration_20260306_highlight_callouts_odd_placement.down,
+    name: '20260306_highlight_callouts_odd_placement'
   },
 ];

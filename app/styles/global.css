@@ -1095,7 +1095,7 @@ body.layout-overlay .app-content {
    ───────────────────────────────────────────────────────────────────────── */
 
 .courses-section {
-  padding-block: var(--spacing-16) var(--spacing-20);
+  padding-block: var(--spacing-14) var(--spacing-20) var(--spacing-16);
 }
 
 .courses-section__header {
@@ -1188,8 +1188,13 @@ body.layout-overlay .app-content {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Odd total count: first item spans full width, remaining pairs fill 2-col rows */
-  .highlight-callouts__grid:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:first-child {
+  /* Odd total, "first" mode: first item full-width, pairs below */
+  .highlight-callouts__grid--odd-first:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:first-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Odd total, "last" mode: pairs on top, last item full-width */
+  .highlight-callouts__grid--odd-last:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:last-child {
     grid-column: 1 / -1;
   }
 }

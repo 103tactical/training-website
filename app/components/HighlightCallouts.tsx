@@ -11,14 +11,17 @@ const BG_COLORS: Record<string, string> = {
 
 interface Props {
   items: HighlightCalloutItem[];
+  oddItemPlacement?: "first" | "last";
 }
 
-export default function HighlightCallouts({ items }: Props) {
+export default function HighlightCallouts({ items, oddItemPlacement = "first" }: Props) {
   if (!items || items.length === 0) return null;
+
+  const gridClass = `container highlight-callouts__grid highlight-callouts__grid--odd-${oddItemPlacement}`;
 
   return (
     <section className="highlight-callouts">
-      <div className="container highlight-callouts__grid">
+      <div className={gridClass}
         {items.map((item) => {
           const imageUrl = resolveMediaUrl(item.backgroundImage?.url);
           const isLight = item.backgroundColor === "white" && !imageUrl;

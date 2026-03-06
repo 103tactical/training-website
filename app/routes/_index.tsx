@@ -47,7 +47,10 @@ export default function Index() {
         <CoursesSection courseGroup={populatedGroup} />
       )}
       {homePage?.highlightCallouts?.items && homePage.highlightCallouts.items.length > 0 && (
-        <HighlightCallouts items={homePage.highlightCallouts.items} />
+        <HighlightCallouts
+          items={homePage.highlightCallouts.items}
+          oddItemPlacement={homePage.highlightCallouts.oddItemPlacement ?? "first"}
+        />
       )}
       {homePage?.whyChoose && (
         <WhyChooseSection data={homePage.whyChoose} />
