@@ -1233,12 +1233,22 @@ body.layout-overlay .app-content {
   margin: 0;
 }
 
+.course-card__summary-heading {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: var(--heading-transform);
+  font-size: var(--text-lg);
+  color: var(--color-white);
+  margin: 0;
+  line-height: 1.2;
+}
+
 .course-card__bullet {
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-3);
   color: rgba(255, 255, 255, 0.85);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   line-height: 1.4;
 }
 

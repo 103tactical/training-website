@@ -42,6 +42,7 @@ export default function CourseCard({ course }: CourseCardProps) {
 
           {hasSummary && (
             <div className="course-card__face course-card__face--back" aria-hidden={!flipped}>
+              <h4 className="course-card__summary-heading">Course Summary</h4>
               <ul className="course-card__bullets">
                 {course.summary!.map((b, i) => (
                   <li key={i} className="course-card__bullet">
