@@ -58,6 +58,12 @@ export async function getCourseBySlug(slug: string) {
   );
 }
 
+export async function getCourseSchedules(courseId: string) {
+  return fetchPayload<{ docs: CourseSchedule[] }>(
+    `/course-schedules?where[course][equals]=${encodeURIComponent(courseId)}&where[isActive][equals]=true&depth=0&limit=100&sort=createdAt`
+  );
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Utility {
@@ -152,6 +158,23 @@ export interface Badge {
   name: string;
   image: { url: string; alt?: string };
   url: string;
+}
+
+export interface CourseSession {
+  id: string;
+  date?: string;       // ISO timestamp (dayOnly picker)
+  startTime?: string;  // ISO timestamp (timeOnly picker)
+  endTime?: string;    // ISO timestamp (timeOnly picker)
+}
+
+export interface CourseSchedule {
+  id: string;
+  course: Course | string;
+  label?: string;
+  sessions?: CourseSession[];
+  maxSeats: number;
+  seatsBooked?: number;
+  isActive: boolean;
 }
 
 export interface FeaturedSlide {

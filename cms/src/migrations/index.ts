@@ -20,6 +20,7 @@ import * as migration_20260306_highlight_callouts from './20260306_highlight_cal
 import * as migration_20260306_highlight_callouts_odd_placement from './20260306_highlight_callouts_odd_placement';
 import * as migration_20260304_course_description_and_duration from './20260304_course_description_and_duration';
 import * as migration_20260307_course_schedules from './20260307_course_schedules';
+import * as migration_20260309_course_schedules from './20260309_course_schedules';
 
 export const migrations = [
   {
@@ -131,5 +132,10 @@ export const migrations = [
     up: migration_20260307_course_schedules.up,
     down: migration_20260307_course_schedules.down,
     name: '20260307_course_schedules'
+  },
+  {
+    up: migration_20260309_course_schedules.up,
+    down: migration_20260309_course_schedules.down,
+    name: '20260309_course_schedules'
   },
 ];
