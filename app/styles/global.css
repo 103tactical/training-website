@@ -1434,7 +1434,7 @@ body.layout-overlay .app-content {
 .featured-carousel__overlay-tint {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.325);
+  background: rgba(0, 0, 0, 0.4825);
   pointer-events: none;
 }
 
@@ -1569,7 +1569,7 @@ body.layout-overlay .contact-page__hero-img {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.325);
+  background: rgba(0, 0, 0, 0.4825);
   pointer-events: none;
 }
 
