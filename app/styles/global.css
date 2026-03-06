@@ -866,7 +866,7 @@ body.layout-overlay .app-content {
 }
 
 .badges-section__img {
-  max-height: 110px;
+  max-height: 130px;
   width: auto;
   max-width: 100%;
   object-fit: contain;
