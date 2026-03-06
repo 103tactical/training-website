@@ -988,6 +988,12 @@ body.layout-overlay .app-content {
   letter-spacing: 0.01em;
 }
 
+@media (max-width: 767px) {
+  .details-section__heading {
+    padding-inline: 20px;
+  }
+}
+
 .details-section__grid {
   display: grid;
   grid-template-columns: 1fr;
