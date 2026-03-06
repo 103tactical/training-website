@@ -2289,7 +2289,7 @@ body.layout-overlay .app-content {
 
 .site-headline {
   background: var(--color-bg-dark);
-  padding: var(--spacing-16) var(--spacing-6) var(--spacing-10);
+  padding: var(--spacing-20) var(--spacing-6) var(--spacing-10);
   text-align: center;
 }
 
