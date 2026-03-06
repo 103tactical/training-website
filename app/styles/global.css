@@ -1147,7 +1147,7 @@ body.layout-overlay .app-content {
   gap: var(--spacing-6);
 }
 
-@media (min-width: 480px) {
+@media (min-width: 576px) {
   .courses-section__grid {
     grid-template-columns: repeat(2, 1fr);
   }
