@@ -2,6 +2,7 @@ import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getCourseBySlug, getCourseSchedules, resolveMediaUrl } from "~/lib/payload";
 import type { Course, CourseSchedule } from "~/lib/payload";
+import MiniCalendar from "~/components/MiniCalendar";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -117,7 +118,9 @@ export default function CourseSchedulePage() {
                       <p className="schedule-slot__label">{slot.label}</p>
                     )}
 
-                    <div className="schedule-slot__sessions">
+                    <MiniCalendar dates={sessions.map((s) => s.date)} />
+
+                  <div className="schedule-slot__sessions">
                       {sessions.map((session, idx) => (
                         <div key={session.id ?? idx} className="schedule-slot__session">
                           {multiDay && (
