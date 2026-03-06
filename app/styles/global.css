@@ -1160,7 +1160,12 @@ body.layout-overlay .app-content {
 
 @media (min-width: 900px) {
   .courses-section__grid {
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .courses-section__grid > .course-card {
+    flex: 0 0 calc(33.333% - 16px);
   }
 }
 
