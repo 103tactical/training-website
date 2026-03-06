@@ -60,6 +60,10 @@ export default function CourseSchedulePage() {
 
         {/* ── Left column: course card ── */}
         <div className="schedule-page__course-card">
+          <Link to={`/courses/${course.slug}`} className="schedule-page__back-link">
+            ← Back to Course
+          </Link>
+
           {imageUrl && (
             <div className="schedule-page__img-wrap">
               <img
@@ -90,10 +94,6 @@ export default function CourseSchedulePage() {
               </div>
             </div>
           )}
-
-          <Link to={`/courses/${course.slug}`} className="schedule-page__back-link">
-            ← Back to Course
-          </Link>
         </div>
 
         {/* ── Right column: slots ── */}
