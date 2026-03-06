@@ -1186,35 +1186,54 @@ body.layout-overlay .app-content {
 @media (min-width: 992px) {
   .highlight-callouts__grid {
     grid-template-columns: repeat(2, 1fr);
-    /* Each paired callout spans 3 rows; subgrid equalises title height across siblings */
-    grid-auto-rows: auto 1fr auto;
   }
 
-  /* Paired side-by-side cards: switch to grid/subgrid */
+  /* ── Paired 2-col cards: flow from top so button can pin to bottom ── */
   .highlight-callout {
-    display: grid;
-    grid-row: span 3;
-    grid-template-rows: subgrid;
     align-items: stretch;
-    justify-content: normal;
+    justify-content: flex-start;
   }
 
-  /* Odd total, "first" mode: first item full-width — revert to centered flex */
+  .highlight-callout .highlight-callout__header {
+    min-height: 80px;
+    align-items: flex-end;
+  }
+
+  .highlight-callout .highlight-callout__subtext {
+    flex: 1;
+  }
+
+  /* ── Full-width items: revert to centered stack ── */
+  /* Odd-first: first item spans full width */
   .highlight-callouts__grid--odd-first:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:first-child {
     grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
   }
 
-  /* Odd total, "last" mode: last item full-width — revert to centered flex */
+  .highlight-callouts__grid--odd-first:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:first-child .highlight-callout__header {
+    min-height: unset;
+    align-items: center;
+  }
+
+  .highlight-callouts__grid--odd-first:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:first-child .highlight-callout__subtext {
+    flex: 0 0 auto;
+  }
+
+  /* Odd-last: last item spans full width */
   .highlight-callouts__grid--odd-last:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:last-child {
     grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
+  }
+
+  .highlight-callouts__grid--odd-last:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:last-child .highlight-callout__header {
+    min-height: unset;
+    align-items: center;
+  }
+
+  .highlight-callouts__grid--odd-last:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:last-child .highlight-callout__subtext {
+    flex: 0 0 auto;
   }
 }
 
