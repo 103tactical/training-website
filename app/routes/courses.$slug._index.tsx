@@ -45,7 +45,7 @@ export default function CourseDetailRoute() {
                   <>
                     <dt className="course-detail__meta-label">Sessions:</dt>
                     <dd className="course-detail__meta-value">
-                      {course.durationDays} {course.durationDays === 1 ? "Session" : "Sessions"}
+                      {course.durationDays} {course.durationDays === 1 ? "Day" : "Days"}
                     </dd>
                   </>
                 )}

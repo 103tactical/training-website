@@ -77,7 +77,7 @@ export default function CourseCard({ course }: CourseCardProps) {
             {course.durationDays != null && (
               <>
                 <dt className="course-card__meta-label">Sessions:</dt>
-                <dd className="course-card__meta-value">{course.durationDays} {course.durationDays === 1 ? "Session" : "Sessions"}</dd>
+                <dd className="course-card__meta-value">{course.durationDays} {course.durationDays === 1 ? "Day" : "Days"}</dd>
               </>
             )}
           </dl>
