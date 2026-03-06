@@ -1188,8 +1188,8 @@ body.layout-overlay .app-content {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Any lone item on the last row (1, 3, 5… items total) spans full width */
-  .highlight-callout:last-child:nth-child(odd) {
+  /* Odd total count: first item spans full width, remaining pairs fill 2-col rows */
+  .highlight-callouts__grid:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:first-child {
     grid-column: 1 / -1;
   }
 }
