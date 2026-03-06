@@ -1183,9 +1183,13 @@ body.layout-overlay .app-content {
   gap: var(--spacing-4);
 }
 
-@media (min-width: 576px) {
+@media (min-width: 992px) {
   .highlight-callouts__grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .highlight-callouts__grid:has(> :only-child) {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1243,7 +1247,7 @@ body.layout-overlay .app-content {
   font-family: var(--font-quantico);
   font-weight: var(--font-bold);
   text-transform: uppercase;
-  font-size: 1.1rem;
+  font-size: 1.75rem;
   line-height: 1.1;
   color: var(--color-white);
   margin: 0;
@@ -1252,20 +1256,20 @@ body.layout-overlay .app-content {
 
 @media (min-width: 768px) {
   .highlight-callout__title {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
 }
 
 @media (min-width: 992px) {
   .highlight-callout__title {
-    font-size: 2rem;
+    font-size: 2.25rem;
   }
 }
 
 .highlight-callout__subtext {
   color: var(--color-white);
   font-weight: var(--font-light);
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   line-height: 1.4;
   margin: 0;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
@@ -1273,7 +1277,7 @@ body.layout-overlay .app-content {
 
 @media (min-width: 768px) {
   .highlight-callout__subtext {
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
   }
 }
 
