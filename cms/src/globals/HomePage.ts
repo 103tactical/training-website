@@ -189,8 +189,8 @@ export const HomePage: GlobalConfig = {
         {
           name: "items",
           type: "array",
-          label: "Callouts",
-          labels: { singular: "Callout", plural: "Callouts" },
+          label: "Items",
+          labels: { singular: "Item", plural: "Items" },
           fields: [
             {
               name: "backgroundImage",
