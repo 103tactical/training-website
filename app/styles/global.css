@@ -1397,7 +1397,7 @@ body.layout-overlay .app-content {
   .course-detail__inner {
     display: grid;
     grid-template-columns: 1fr 451px;
-    align-items: start;
+    align-items: stretch;
     gap: var(--spacing-10);
     padding-inline: calc(var(--container-padding) / 2);
   }
@@ -1444,18 +1444,23 @@ body.layout-overlay .app-content {
 @media (min-width: 768px) {
   .course-detail__img-wrap {
     order: 0;
-    position: sticky;
-    top: var(--spacing-8);
+    height: 100%;
   }
 }
 
 .course-detail__img {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 4;
+  height: 100%;
   object-fit: cover;
   object-position: center;
+}
+
+@media (max-width: 767px) {
+  .course-detail__img {
+    aspect-ratio: 3 / 4;
+    height: auto;
+  }
 }
 
 /* ── Title ── */
@@ -1481,7 +1486,14 @@ body.layout-overlay .app-content {
   flex-direction: column;
   gap: var(--spacing-4);
   background-color: var(--color-bg-card-alt);
+  clip-path: polygon(
+    10px 0%, 100% 0%,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0% 100%, 0% 10px
+  );
   padding: var(--spacing-4) var(--spacing-5);
+  align-self: flex-start;
 }
 
 /* Duration grid: label | value pairs */
@@ -1571,7 +1583,7 @@ body.layout-overlay .app-content {
 
 /* ── Summary bullets ── */
 .course-detail__summary-box {
-  background-color: var(--color-bg-card-alt);
+  background-color: transparent;
   padding: var(--spacing-4) var(--spacing-5);
   display: flex;
   flex-direction: column;
