@@ -32,7 +32,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media, Courses, Badges, ContactSubmissions],
-  globals: [SiteSettings, HomePage, Utility, ContactSettings],
+  globals: [SiteSettings, ContactSettings, Utility, HomePage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

@@ -7,6 +7,7 @@ export const HomePage: GlobalConfig = {
     read: () => true,
   },
   admin: {
+    group: "Pages",
     description: "Content for the home page: featured carousel, courses, Why Choose section, and badges.",
   },
   fields: [
