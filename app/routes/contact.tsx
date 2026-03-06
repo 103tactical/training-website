@@ -169,10 +169,11 @@ export default function Contact() {
         </div>
 
         {/* ── Right: form ────────────────────────────────────────────────── */}
-        <div className="contact-form-wrap">
+        <div className={`contact-form-wrap${success ? " contact-form-wrap--success" : ""}`}>
           {success ? (
             <div className="contact-form__success">
-              <p>Thank you — your message has been received. We&rsquo;ll be in touch shortly.</p>
+              <h2 className="contact-form__success-heading">Thank You</h2>
+              <p className="contact-form__success-text">Your message has been received. We&rsquo;ll be in touch shortly.</p>
             </div>
           ) : (
             <Form
