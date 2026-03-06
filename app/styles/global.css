@@ -11,6 +11,7 @@
   --color-bg-card:        #2e2e2e;
   --color-bg-card-alt:    #404040;
   --color-bg-light:       #f4f4f4;
+  --color-bg-light-grey:  #c8c8c8;
   --color-bg-page:        var(--color-bg-dark);
 
   --color-text-primary:   #d8d8d8;
@@ -816,6 +817,58 @@ body.layout-overlay .app-content {
   body.layout-overlay .navbar-desktop__logo-link .nav-logo {
     height: 164px;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BADGES SECTION
+   ───────────────────────────────────────────────────────────────────────── */
+
+.badges-section {
+  background-color: var(--color-bg-light-grey);
+  padding-block: var(--spacing-8);
+}
+
+.badges-section__heading {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  font-size: var(--text-xl);
+  color: var(--color-dark-grey);
+  text-align: center;
+  margin-bottom: var(--spacing-6);
+}
+
+.badges-section__row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-6);
+  align-items: center;
+  justify-items: center;
+}
+
+@media (min-width: 576px) {
+  .badges-section__row {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+}
+
+.badges-section__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+
+.badges-section__item:hover {
+  opacity: 1;
+}
+
+.badges-section__img {
+  max-height: 80px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

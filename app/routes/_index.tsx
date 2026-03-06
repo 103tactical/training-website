@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { getHomePage, getUtility } from "~/lib/payload";
+import { getHomePage, getUtility, resolveMediaUrl } from "~/lib/payload";
 import type { HomePage, CourseGroup } from "~/lib/payload";
 import { BulletIcon, cmsIcons } from "~/components/Icons";
 import type { CmsIconKey } from "~/components/Icons";
@@ -55,6 +55,9 @@ export default function Index() {
       {homePage?.whyChoose && (
         <WhyChooseSection data={homePage.whyChoose} />
       )}
+      {homePage?.badgesSection?.badges && homePage.badgesSection.badges.length > 0 && (
+        <BadgesSection data={homePage.badgesSection} />
+      )}
     </>
   );
 }
@@ -73,6 +76,41 @@ function CoursesSection({ courseGroup }: { courseGroup: CourseGroup }) {
           {activeCourses.map(({ id, course }) => (
             <CourseCard key={id} course={course} />
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BadgesSection({ data }: { data: NonNullable<HomePage["badgesSection"]> }) {
+  return (
+    <section className="badges-section">
+      <div className="container">
+        {data.heading && (
+          <h2 className="badges-section__heading">{data.heading}</h2>
+        )}
+        <div className="badges-section__row">
+          {data.badges.map((badge) => {
+            const imgUrl = resolveMediaUrl(badge.image?.url);
+            return (
+              <a
+                key={badge.id}
+                href={badge.url}
+                className="badges-section__item"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={badge.name}
+              >
+                {imgUrl && (
+                  <img
+                    src={imgUrl}
+                    alt={badge.image?.alt ?? badge.name}
+                    className="badges-section__img"
+                  />
+                )}
+              </a>
+            );
+          })}
         </div>
       </div>
     </section>
