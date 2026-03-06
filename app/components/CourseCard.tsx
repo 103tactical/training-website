@@ -88,14 +88,17 @@ export default function CourseCard({ course }: CourseCardProps) {
         )}
 
         <div className="course-card__card-actions">
-          <button type="button" className="btn btn--outline btn--lg course-card__signup-btn">
-            Schedule Now
-          </button>
           <Link
             to={`/courses/${course.slug}`}
             className="btn btn--outline btn--lg course-card__details-btn"
           >
             View Details
+          </Link>
+          <Link
+            to={`/courses/${course.slug}/schedule`}
+            className="btn btn--outline btn--lg course-card__signup-btn"
+          >
+            Schedule Now
           </Link>
         </div>
       </div>

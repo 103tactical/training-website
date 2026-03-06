@@ -148,7 +148,7 @@ export default function CourseSchedulePage() {
                       disabled={full}
                       aria-disabled={full}
                     >
-                      {full ? "Unavailable" : "Book Now"}
+                      {full ? "Unavailable" : "Schedule Now"}
                     </button>
                   </div>
                 );
