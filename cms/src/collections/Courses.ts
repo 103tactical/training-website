@@ -7,6 +7,7 @@ import {
   LinkFeature,
   UnorderedListFeature,
   ParagraphFeature,
+  InlineToolbarFeature,
 } from "@payloadcms/richtext-lexical";
 
 export const Courses: CollectionConfig = {
@@ -75,6 +76,7 @@ export const Courses: CollectionConfig = {
           UnderlineFeature(),
           UnorderedListFeature(),
           LinkFeature(),
+          InlineToolbarFeature(),
         ],
       }),
     },
