@@ -14,6 +14,7 @@ import { SiteSettings } from './globals/SiteSettings'
 import { HomePage } from './globals/HomePage'
 import { Utility } from './globals/Utility'
 import { ContactSettings } from './globals/ContactSettings'
+import { CourseGroups } from './globals/CourseGroups'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -32,7 +33,7 @@ export default buildConfig({
     },
   },
   collections: [ContactSubmissions, Users, Media, Courses, Badges],
-  globals: [HomePage, SiteSettings, ContactSettings, Utility],
+  globals: [HomePage, CourseGroups, SiteSettings, ContactSettings, Utility],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
