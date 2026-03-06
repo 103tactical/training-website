@@ -1418,6 +1418,10 @@ body.layout-overlay .app-content {
   padding: var(--spacing-6) 0;
 }
 
+.course-detail__content > * {
+  padding-inline: var(--spacing-5);
+}
+
 @media (min-width: 768px) {
   .course-detail__content {
     order: 0;
