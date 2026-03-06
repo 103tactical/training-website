@@ -122,6 +122,16 @@ export function LinkedInIcon({ className }: { className?: string }) {
   );
 }
 
+export function FlipIcon({ className }: { className?: string }) {
+  return (
+    <span className={className}>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor">
+        <path d="M534.9 406.6l-118.6 118.6-45.3-45.3 64-64-402.7 0 0-64 402.7 0-64-64 45.3-45.3c2.9 2.9 42.4 42.4 118.6 118.6l22.6 22.6-22.6 22.6zM41.6 150.6L19 128c2.9-2.9 42.4-42.4 118.6-118.6L160.3-13.3 205.5 32c-12 12-33.3 33.3-64 64l402.7 0 0 64-402.7 0c30.7 30.7 52 52 64 64l-45.3 45.3c-2.9-2.9-42.4-42.4-118.6-118.6z"/>
+      </svg>
+    </span>
+  );
+}
+
 export function BulletIcon({ className }: { className?: string }) {
   return (
     <span className={className}>

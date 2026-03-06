@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@remix-run/react";
 import type { Course } from "~/lib/payload";
 import { resolveMediaUrl } from "~/lib/payload";
-import { BulletIcon } from "~/components/Icons";
+import { BulletIcon, FlipIcon } from "~/components/Icons";
 
 interface CourseCardProps {
   course: Course;
@@ -38,6 +38,9 @@ export default function CourseCard({ course }: CourseCardProps) {
                 alt={course.thumbnail?.alt ?? course.title}
               />
             )}
+            {hasSummary && (
+              <FlipIcon className="course-card__flip-icon" aria-hidden="true" />
+            )}
           </div>
 
           {hasSummary && (
@@ -58,6 +61,7 @@ export default function CourseCard({ course }: CourseCardProps) {
               >
                 View Details
               </Link>
+              <FlipIcon className="course-card__flip-icon" aria-hidden="true" />
             </div>
           )}
         </div>

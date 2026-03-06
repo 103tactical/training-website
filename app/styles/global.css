@@ -1740,6 +1740,27 @@ body.layout-overlay .app-content {
   fill: currentColor;
 }
 
+.course-card__flip-icon {
+  position: absolute;
+  bottom: var(--spacing-3);
+  right: var(--spacing-3);
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.course-card__flip-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.course-card__media:hover .course-card__flip-icon {
+  color: var(--color-white);
+}
+
 .course-card__details-btn {
   --btn-px: 22px;
   --btn-py: 14px;
