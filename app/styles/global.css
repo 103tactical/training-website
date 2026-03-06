@@ -1095,7 +1095,7 @@ body.layout-overlay .app-content {
    ───────────────────────────────────────────────────────────────────────── */
 
 .courses-section {
-  padding-block: var(--spacing-14) var(--spacing-20) var(--spacing-16);
+  padding-block: var(--spacing-14) var(--spacing-16);
 }
 
 .courses-section__header {
