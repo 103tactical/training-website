@@ -1251,6 +1251,8 @@ body.layout-overlay .app-content {
 }
 
 .course-card__details-btn {
+  --btn-px: 22px;
+  --btn-py: 14px;
   align-self: flex-start;
 }
 
