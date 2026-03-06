@@ -1297,7 +1297,7 @@ body.layout-overlay .app-content {
 
 .course-card__signup-btn {
   --btn-px: var(--spacing-6);
-  --btn-py: var(--spacing-2);
+  --btn-py: var(--spacing-3);
   margin-top: var(--spacing-4);
   align-self: flex-start;
 }
