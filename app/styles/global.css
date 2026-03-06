@@ -1165,6 +1165,145 @@ body.layout-overlay .app-content {
 }
 
 
+/* ── Highlight Callouts ───────────────────────────────────────────────────── */
+
+.highlight-callouts {
+  background-color: var(--color-bg-dark);
+  padding-block: var(--spacing-16) var(--spacing-20);
+}
+
+.highlight-callouts__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 576px) {
+  .highlight-callouts__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.highlight-callout {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(
+    12px 0%, 100% 0%,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0% 100%, 0% 12px
+  );
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  background-color: var(--color-bg-card-alt);
+}
+
+@media (min-width: 768px) {
+  .highlight-callout {
+    min-height: 320px;
+  }
+}
+
+.highlight-callout__bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.highlight-callout__tint {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4825);
+  pointer-events: none;
+}
+
+.highlight-callout__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-8) var(--spacing-7);
+  height: 100%;
+}
+
+.highlight-callout__title {
+  font-family: var(--font-quantico);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  line-height: 1.1;
+  color: var(--color-white);
+  margin: 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 768px) {
+  .highlight-callout__title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .highlight-callout__title {
+    font-size: 2rem;
+  }
+}
+
+.highlight-callout__subtext {
+  color: var(--color-white);
+  font-weight: var(--font-light);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  margin: 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 768px) {
+  .highlight-callout__subtext {
+    font-size: var(--text-base);
+  }
+}
+
+.highlight-callout__btn {
+  margin-top: var(--spacing-2);
+  --btn-px: var(--spacing-5);
+  --btn-py: calc(var(--spacing-2) + 2px);
+  --btn-fs: var(--text-xs);
+  --btn-cut: 6px;
+  text-shadow: none;
+}
+
+@media (min-width: 768px) {
+  .highlight-callout__btn {
+    --btn-px: var(--spacing-6);
+    --btn-py: var(--spacing-3);
+    --btn-fs: var(--text-sm);
+    --btn-cut: 8px;
+  }
+}
+
+/* White bg + no image → dark text */
+.highlight-callout--light .highlight-callout__title,
+.highlight-callout--light .highlight-callout__subtext {
+  color: var(--color-bg-dark);
+  text-shadow: none;
+}
+
+.highlight-callout--light .highlight-callout__btn {
+  background-color: var(--color-bg-dark);
+  color: var(--color-white);
+}
+
+.highlight-callout--light .highlight-callout__btn:hover {
+  background-color: var(--color-bg-surface);
+}
+
 /* ── Course Card ──────────────────────────────────────────────────────────── */
 
 .course-card {

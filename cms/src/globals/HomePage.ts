@@ -180,6 +180,73 @@ export const HomePage: GlobalConfig = {
       ],
     },
 
+    // ── Highlight Callouts ────────────────────────────────────────────────
+    {
+      name: "highlightCallouts",
+      type: "group",
+      label: "Highlight Callouts",
+      fields: [
+        {
+          name: "items",
+          type: "array",
+          label: "Callouts",
+          labels: { singular: "Callout", plural: "Callouts" },
+          fields: [
+            {
+              name: "backgroundImage",
+              type: "upload",
+              relationTo: "media",
+              label: "Background Image",
+              admin: {
+                description: "Optional. A dark tint overlay will be applied automatically.",
+              },
+            },
+            {
+              name: "backgroundColor",
+              type: "select",
+              label: "Background Color",
+              admin: {
+                description: "Used when no background image is set. White with no image will render dark text.",
+              },
+              options: [
+                { label: "Blue",        value: "blue"  },
+                { label: "Red",         value: "red"   },
+                { label: "Medium Grey", value: "grey"  },
+                { label: "White",       value: "white" },
+              ],
+            },
+            {
+              name: "title",
+              type: "text",
+              required: true,
+              label: "Title",
+            },
+            {
+              name: "subtext",
+              type: "textarea",
+              required: true,
+              label: "Sub-text",
+            },
+            {
+              name: "button",
+              type: "group",
+              label: "Button (optional)",
+              fields: [
+                { name: "label", type: "text",     label: "Button Label" },
+                {
+                  name: "url",
+                  type: "text",
+                  label: "Button URL",
+                  admin: { description: "Use /path for internal links or https:// for external." },
+                },
+                { name: "openInNewTab", type: "checkbox", label: "Open in new tab", defaultValue: false },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+
     // ── Details Section ───────────────────────────────────────────────────
     {
       name: "whyChoose",

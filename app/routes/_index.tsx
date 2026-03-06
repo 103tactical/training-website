@@ -7,6 +7,7 @@ import { BulletIcon, cmsIcons } from "~/components/Icons";
 import type { CmsIconKey } from "~/components/Icons";
 import FeaturedCarousel from "~/components/FeaturedCarousel";
 import CourseCard from "~/components/CourseCard";
+import HighlightCallouts from "~/components/HighlightCallouts";
 
 export const meta: MetaFunction = () => [
   { title: "103 Tactical Training" },
@@ -44,6 +45,9 @@ export default function Index() {
       )}
       {populatedGroup && populatedGroup.courses && populatedGroup.courses.length > 0 && (
         <CoursesSection courseGroup={populatedGroup} />
+      )}
+      {homePage?.highlightCallouts?.items && homePage.highlightCallouts.items.length > 0 && (
+        <HighlightCallouts items={homePage.highlightCallouts.items} />
       )}
       {homePage?.whyChoose && (
         <WhyChooseSection data={homePage.whyChoose} />

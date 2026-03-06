@@ -77,10 +77,20 @@ export interface SiteSettings {
   copyright?: string;
 }
 
+export interface HighlightCalloutItem {
+  id: string;
+  backgroundImage?: { url: string; alt?: string };
+  backgroundColor?: "blue" | "red" | "grey" | "white";
+  title: string;
+  subtext: string;
+  button?: { label?: string; url?: string; openInNewTab?: boolean };
+}
+
 export interface HomePage {
   websiteHeadlineSection?: { headline?: string };
   featured: FeaturedSlide[];
   featuredCoursesSection?: { courseGroup?: CourseGroup | string };
+  highlightCallouts?: { items?: HighlightCalloutItem[] };
   whyChoose: {
     heading: string;
     items: {
