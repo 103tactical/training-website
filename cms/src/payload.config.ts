@@ -15,6 +15,7 @@ import { HomePage } from './globals/HomePage'
 import { Utility } from './globals/Utility'
 import { ContactSettings } from './globals/ContactSettings'
 import { CoursesPage } from './globals/CoursesPage'
+import { ApplicationsPage } from './globals/ApplicationsPage'
 import { CourseGroups } from './collections/CourseGroups'
 import { CourseSchedules } from './collections/CourseSchedules'
 
@@ -35,7 +36,7 @@ export default buildConfig({
     },
   },
   collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups, CourseSchedules],
-  globals: [HomePage, CoursesPage, SiteSettings, ContactSettings, Utility],
+  globals: [HomePage, CoursesPage, ApplicationsPage, SiteSettings, ContactSettings, Utility],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

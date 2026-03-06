@@ -48,6 +48,10 @@ export async function getCoursesPage() {
   return fetchPayload<CoursesPage>("/globals/courses-page?depth=3");
 }
 
+export async function getApplicationsPage() {
+  return fetchPayload<ApplicationsPage>("/globals/applications-page?depth=2");
+}
+
 export async function getAllCourses() {
   return fetchPayload<{ docs: Course[] }>("/courses?limit=100&depth=1&sort=title");
 }
@@ -142,6 +146,11 @@ export interface CoursesPage {
     id: string;
     group: CourseGroup;
   }[];
+}
+
+export interface ApplicationsPage {
+  heroImage?: { url: string; alt?: string };
+  header?: { title?: string; subtext?: string };
 }
 
 export interface CourseGroup {
