@@ -603,7 +603,7 @@ body.menu-open .app-content {
 .navbar-desktop__link::after {
   content: "";
   position: absolute;
-  bottom: 0;
+  bottom: 3px;
   left: var(--spacing-4);
   right: var(--spacing-4);
   height: 2px;
