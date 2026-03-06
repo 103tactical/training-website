@@ -757,7 +757,7 @@ body.layout-overlay .app-content {
       Combined offset = --mobile-header-height (60px) + logo+padding (166px) = 226px */
 @media (max-width: 767px) {
   body.layout-overlay {
-    --mobile-overlay-nav-height: 226px;
+    --mobile-overlay-nav-height: 214px;
   }
 
   /* Hero starts at top:0 — no offset for fixed header */
@@ -773,6 +773,10 @@ body.layout-overlay .app-content {
     right: 0;
     background: transparent;
     z-index: 99;
+  }
+
+  body.layout-overlay .mobile-logo .mobile-logo__img {
+    height: 122px;
   }
 
   /* Home page: push headline below the combined mobile overlay nav */
