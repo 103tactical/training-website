@@ -76,7 +76,7 @@ export default function CourseCard({ course }: CourseCardProps) {
         )}
 
         <button type="button" className="btn btn--outline btn--lg course-card__signup-btn">
-          Sign Up
+          Schedule Now
         </button>
       </div>
     </div>
