@@ -1407,7 +1407,7 @@ body.layout-overlay .app-content {
   .course-detail__inner {
     grid-template-columns: 1fr 451px;
     align-items: stretch;
-    gap: var(--spacing-10);
+    gap: var(--spacing-5);
   }
 }
 
