@@ -1186,23 +1186,33 @@ body.layout-overlay .app-content {
 @media (min-width: 992px) {
   .highlight-callouts__grid {
     grid-template-columns: repeat(2, 1fr);
-    /* Each callout spans 3 rows; subgrid equalises title height across siblings */
+    /* Each paired callout spans 3 rows; subgrid equalises title height across siblings */
     grid-auto-rows: auto 1fr auto;
   }
 
+  /* Paired side-by-side cards: switch to grid/subgrid */
   .highlight-callout {
+    display: grid;
     grid-row: span 3;
     grid-template-rows: subgrid;
   }
 
-  /* Odd total, "first" mode: first item full-width, pairs below */
+  /* Odd total, "first" mode: first item full-width — revert to centered flex */
   .highlight-callouts__grid--odd-first:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:first-child {
     grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* Odd total, "last" mode: pairs on top, last item full-width */
+  /* Odd total, "last" mode: last item full-width — revert to centered flex */
   .highlight-callouts__grid--odd-last:has(> .highlight-callout:nth-child(odd):last-child) > .highlight-callout:last-child {
     grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -1215,8 +1225,10 @@ body.layout-overlay .app-content {
     calc(100% - 12px) 100%,
     0% 100%, 0% 12px
   );
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 280px;
   background-color: var(--color-bg-card-alt);
 }
