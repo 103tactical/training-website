@@ -13,4 +13,4 @@ export const overlayNavRoutes = new Set(["/contact", "/"]);
  * These pages will show the primary (header) logo instead of the footer logo.
  * Any route in overlayNavRoutes that is NOT listed here will use the footer logo.
  */
-export const overlayNavPrimaryLogoRoutes = new Set<string>([]);
+export const overlayNavPrimaryLogoRoutes = new Set<string>(["/"]);
