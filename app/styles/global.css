@@ -840,7 +840,7 @@ body.layout-overlay .app-content {
 }
 
 .footer__logo {
-  height: 74px;
+  height: 94px;
   width: auto;
   margin-bottom: var(--spacing-4);
 }
@@ -1219,9 +1219,9 @@ body.layout-overlay .app-content {
   transform: rotateY(180deg);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--spacing-5);
-  padding: var(--spacing-5);
+  padding: var(--spacing-12) var(--spacing-5) var(--spacing-5) var(--spacing-5);
   background-color: var(--color-bg-card-alt);
   overflow-y: auto;
 }
