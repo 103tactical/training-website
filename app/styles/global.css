@@ -1933,7 +1933,7 @@ a.contact-info__value:hover {
 .contact-form__field-error {
   color: var(--color-white);
   font-size: var(--text-sm);
-  font-style: italic;
+  font-weight: 100;
   line-height: 1.3;
 }
 
