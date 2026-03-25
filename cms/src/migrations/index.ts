@@ -29,6 +29,7 @@ import * as migration_20260325_store_page from './20260325_store_page';
 import * as migration_20260325_home_page_testimonials_heading from './20260325_home_page_testimonials_heading';
 import * as migration_20260325_attendees from './20260325_attendees';
 import * as migration_20260325_instructors_and_schedule_fields from './20260325_instructors_and_schedule_fields';
+import * as migration_20260325_course_schedules_admin_title from './20260325_course_schedules_admin_title';
 
 export const migrations = [
   {
@@ -185,5 +186,10 @@ export const migrations = [
     up: migration_20260325_instructors_and_schedule_fields.up,
     down: migration_20260325_instructors_and_schedule_fields.down,
     name: '20260325_instructors_and_schedule_fields'
+  },
+  {
+    up: migration_20260325_course_schedules_admin_title.up,
+    down: migration_20260325_course_schedules_admin_title.down,
+    name: '20260325_course_schedules_admin_title'
   },
 ];

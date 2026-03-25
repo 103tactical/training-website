@@ -1,9 +1,43 @@
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, CollectionBeforeChangeHook } from "payload";
+
+/**
+ * Auto-populates adminTitle as "Course Name: Internal Label" on every save.
+ * This gives relationship dropdowns (e.g. Attendee → Session) a clear,
+ * unambiguous display value without showing raw IDs.
+ */
+const syncAdminTitle: CollectionBeforeChangeHook = async ({
+  data,
+  originalDoc,
+  req,
+}) => {
+  const courseVal = data.course ?? originalDoc?.course
+  const labelVal = data.label ?? originalDoc?.label ?? ""
+
+  if (courseVal) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const p = req.payload as any
+      const courseId =
+        typeof courseVal === "object" && courseVal !== null
+          ? (courseVal as { id: number }).id
+          : courseVal
+      const course = await p.findByID({ collection: "courses", id: courseId, req })
+      const name: string = course?.title ?? ""
+      data.adminTitle = name ? `${name}: ${labelVal}` : labelVal
+    } catch {
+      data.adminTitle = labelVal
+    }
+  } else {
+    data.adminTitle = labelVal
+  }
+
+  return data
+}
 
 export const CourseSchedules: CollectionConfig = {
   slug: "course-schedules",
   admin: {
-    useAsTitle: "label",
+    useAsTitle: "adminTitle",
     group: "Course Management",
     defaultColumns: ["course", "label", "maxSeats", "seatsBooked", "isActive"],
     description:
@@ -12,7 +46,16 @@ export const CourseSchedules: CollectionConfig = {
   access: {
     read: () => true,
   },
+  hooks: {
+    beforeChange: [syncAdminTitle],
+  },
   fields: [
+    // Auto-managed — hidden from UI, used as the document title in dropdowns
+    {
+      name: "adminTitle",
+      type: "text",
+      admin: { hidden: true },
+    },
     // ── 1. Course Session info (collapsible) ────────────────────────────────
     {
       type: "collapsible",
