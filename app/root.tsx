@@ -14,6 +14,7 @@ import siteMetadata from "./data/site-metadata.json";
 import { overlayNavRoutes } from "./config/layouts";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import AgeGate from "./components/AgeGate";
 
 import globalStyles from "./styles/global.css?url";
 
@@ -205,6 +206,7 @@ export default function App() {
           />
         </Navbar>
 
+        <AgeGate />
         <ScrollRestoration />
         <Scripts />
       </body>
