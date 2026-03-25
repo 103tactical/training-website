@@ -992,7 +992,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   font-family: Georgia, serif;
   font-size: 4.5rem;
   line-height: 1;
-  color: var(--color-blue);
+  color: var(--color-red-dark-hover);
   display: block;
   margin-bottom: calc(var(--spacing-2) * -1);
   user-select: none;
@@ -2318,7 +2318,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 .schedule-slot__instructor {
   font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.7);
-  margin: var(--spacing-5) 0;
+  margin: var(--spacing-3) 0;
 }
 
 .schedule-slot__instructor-label {
