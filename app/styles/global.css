@@ -503,13 +503,13 @@ body.menu-open .app-content {
 
 /* Wide (horizontal) logo — desktop navbar only */
 .nav-logo--wide {
-  height: 58px;
+  height: 78px;
   padding-top: 8px;
 }
 
 @media (min-width: 992px) {
   .nav-logo--wide {
-    height: 68px;
+    height: 88px;
   }
 }
 
@@ -831,9 +831,9 @@ body.layout-overlay .app-content {
   }
 }
 
-/* Wide logo always stays 84px regardless of overlay layout */
+/* Wide logo always stays 114px regardless of overlay layout */
 body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
-  height: 84px;
+  height: 114px;
   padding-top: 8px;
 }
 
