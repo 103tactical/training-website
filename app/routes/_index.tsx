@@ -35,11 +35,13 @@ export default function Index() {
 
   return (
     <>
-      {homePage?.websiteHeadlineSection?.headline && (
-        <div className="site-headline">
-          <h1 className="site-headline__text">{homePage.websiteHeadlineSection.headline}</h1>
-        </div>
-      )}
+      <div className="site-headline-spacer">
+        {homePage?.websiteHeadlineSection?.headline && (
+          <div className="site-headline">
+            <h1 className="site-headline__text">{homePage.websiteHeadlineSection.headline}</h1>
+          </div>
+        )}
+      </div>
       {homePage?.featured && homePage.featured.length > 0 && (
         <FeaturedCarousel slides={homePage.featured} delay={carouselDelay} />
       )}

@@ -794,8 +794,8 @@ body.layout-overlay .app-content {
     height: 132px;
   }
 
-  /* Home page: push headline below the combined mobile overlay nav */
-  body.layout-overlay .site-headline {
+  /* Home page: push spacer (and any headline inside) below the combined mobile overlay nav */
+  body.layout-overlay .site-headline-spacer {
     margin-top: var(--mobile-overlay-nav-height);
     padding-top: calc(var(--spacing-8) / 2);
   }
@@ -810,9 +810,9 @@ body.layout-overlay .app-content {
   }
 }
 
-/* Home page: push headline below the floating navbar, halve its top padding */
+/* Home page: push spacer (and any headline inside) below the floating navbar, halve its top padding */
 @media (min-width: 768px) {
-  body.layout-overlay .site-headline {
+  body.layout-overlay .site-headline-spacer {
     margin-top: var(--overlay-nav-height);
     padding-top: calc(var(--spacing-12) / 2);
   }
@@ -2498,9 +2498,13 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 
 /* ── Site Headline ────────────────────────────────────────────────────── */
 
-.site-headline {
+.site-headline-spacer {
   background: var(--color-bg-dark);
-  padding: var(--spacing-20) var(--spacing-6) var(--spacing-10);
+  padding-top: var(--spacing-20);
+}
+
+.site-headline {
+  padding: 0 var(--spacing-6) var(--spacing-10);
   text-align: center;
 }
 
@@ -2526,7 +2530,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 @media (max-width: 767px) {
-  .site-headline {
+  .site-headline-spacer {
     padding-top: var(--spacing-8);
   }
   .site-headline__text {
