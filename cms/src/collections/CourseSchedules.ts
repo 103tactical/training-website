@@ -56,10 +56,10 @@ export const CourseSchedules: CollectionConfig = {
       type: "text",
       admin: { hidden: true },
     },
-    // ── 1. Course Session info (collapsible) ────────────────────────────────
+    // ── 1. Course Info (collapsible) ─────────────────────────────────────────
     {
       type: "collapsible",
-      label: "Course Session",
+      label: "Course Info",
       admin: {
         initCollapsed: false,
       },
@@ -181,10 +181,10 @@ export const CourseSchedules: CollectionConfig = {
       ],
     },
 
-    // ── 3. Roster ────────────────────────────────────────────────────────────
+    // ── 3. Attendee Roster (collapsible) ─────────────────────────────────────
     {
       type: "collapsible",
-      label: "Roster",
+      label: "Attendee Roster",
       admin: {
         initCollapsed: false,
       },
