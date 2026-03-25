@@ -3471,7 +3471,7 @@ a.contact-info__value:hover {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin: 0 0 var(--spacing-2);
+  margin: 24px 0 var(--spacing-2);
   font-family: var(--font-quantico);
 }
 
@@ -3542,7 +3542,7 @@ a.contact-info__value:hover {
 .age-gate__btn {
   padding: 14px 40px;
   font-size: var(--text-base);
-  margin-top: var(--spacing-1);
+  margin-top: 24px;
 }
 
 .age-gate__disclaimer {
