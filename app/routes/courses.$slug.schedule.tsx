@@ -121,6 +121,7 @@ export default function CourseSchedulePage() {
                     )}
                     {slot.instructor && typeof slot.instructor === "object" && (
                       <p className="schedule-slot__instructor">
+                        <span className="schedule-slot__instructor-label">Instructor:</span>
                         {(slot.instructor as Instructor).name}
                       </p>
                     )}

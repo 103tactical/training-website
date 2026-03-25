@@ -503,7 +503,7 @@ body.menu-open .app-content {
 
 /* Wide (horizontal) logo — desktop navbar only */
 .nav-logo--wide {
-  height: 78px;
+  height: 66px;
   padding-top: 8px;
 }
 
@@ -2307,7 +2307,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 .schedule-slot--full { opacity: 0.65; }
 
 .schedule-slot__label {
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: var(--font-bold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2319,6 +2319,15 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.7);
   margin: var(--spacing-1) 0 0;
+}
+
+.schedule-slot__instructor-label {
+  font-weight: var(--font-bold);
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  margin-right: 4px;
 }
 
 .schedule-slot__sessions {
