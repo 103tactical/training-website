@@ -37,6 +37,9 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      providers: ['./providers/AdminStyles'],
+    },
   },
   collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups, CourseSchedules, Attendees, Instructors],
   globals: [HomePage, CoursesPage, ApplicationsPage, StorePage, SiteSettings, ContactSettings, Utility],
