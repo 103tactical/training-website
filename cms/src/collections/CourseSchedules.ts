@@ -13,38 +13,92 @@ export const CourseSchedules: CollectionConfig = {
     read: () => true,
   },
   fields: [
+    // ── 1. Course Session info (collapsible) ────────────────────────────────
     {
-      name: "course",
-      type: "relationship",
-      relationTo: "courses",
-      required: true,
-      label: "Course",
-    },
-    {
-      name: "label",
-      type: "text",
-      label: "Internal Label",
+      type: "collapsible",
+      label: "Course Session",
       admin: {
-        description:
-          'Admin-only identifier — use dates for clarity, e.g. "Mar 20" or "Jun 5 / Jun 12". This is what appears in dropdowns when adding an attendee.',
+        initCollapsed: false,
       },
+      fields: [
+        {
+          name: "course",
+          type: "relationship",
+          relationTo: "courses",
+          required: true,
+          label: "Course",
+        },
+        {
+          name: "label",
+          type: "text",
+          label: "Internal Label",
+          admin: {
+            description:
+              'Admin-only identifier — use dates for clarity, e.g. "Mar 20" or "Jun 5 / Jun 12". This is what appears in dropdowns when adding an attendee.',
+          },
+        },
+        {
+          name: "displayLabel",
+          type: "text",
+          label: "Display Label",
+          admin: {
+            description:
+              'Visitor-facing session name shown on the schedule page, e.g. "Afternoon Session". Falls back to Internal Label if left blank.',
+          },
+        },
+        {
+          name: "instructor",
+          type: "relationship",
+          relationTo: "instructors",
+          label: "Instructor",
+          admin: {
+            description:
+              "Select the instructor leading this session. Manage instructors under Course Management → Instructors.",
+          },
+        },
+        {
+          type: "row",
+          fields: [
+            {
+              name: "maxSeats",
+              type: "number",
+              label: "Total Seats",
+              required: true,
+              min: 1,
+              admin: {
+                description: "Total number of seats available for this slot.",
+              },
+            },
+            {
+              name: "seatsBooked",
+              type: "number",
+              label: "Seats Booked",
+              defaultValue: 0,
+              min: 0,
+              admin: {
+                description: "Auto-managed by booking hooks.",
+              },
+            },
+            {
+              name: "isActive",
+              type: "checkbox",
+              label: "Active (show on site)",
+              defaultValue: true,
+            },
+          ],
+        },
+      ],
     },
-    {
-      name: "displayLabel",
-      type: "text",
-      label: "Display Label",
-      admin: {
-        description:
-          'Visitor-facing session name shown on the schedule page, e.g. "Spring Session". Falls back to Internal Label if left blank.',
-      },
-    },
+
+    // ── 2. Session Dates ─────────────────────────────────────────────────────
     {
       name: "sessions",
       type: "array",
       label: "Session Dates",
       minRows: 1,
       admin: {
-        description: "Add one row per day. For a 2-day course on two separate Fridays, add two rows.",
+        description:
+          "Add one row per day. For a 2-day course on two separate Fridays, add two rows.",
       },
       fields: [
         {
@@ -83,53 +137,30 @@ export const CourseSchedules: CollectionConfig = {
         },
       ],
     },
+
+    // ── 3. Roster ────────────────────────────────────────────────────────────
     {
-      name: "instructor",
-      type: "relationship",
-      relationTo: "instructors",
-      label: "Instructor",
-      admin: {
-        description: "Select the instructor leading this session. Manage instructors under Course Management → Instructors.",
-      },
-    },
-    {
-      name: "maxSeats",
-      type: "number",
-      label: "Total Seats",
-      required: true,
-      min: 1,
-      admin: {
-        description: "Total number of seats available for this slot.",
-      },
-    },
-    {
-      name: "seatsBooked",
-      type: "number",
-      label: "Seats Booked",
-      defaultValue: 0,
-      min: 0,
-      admin: {
-        description: "Increment as students register to track remaining seats.",
-      },
-    },
-    {
-      name: "isActive",
-      type: "checkbox",
-      label: "Active (show on site)",
-      defaultValue: true,
-    },
-    {
-      name: "roster",
-      type: "join",
-      collection: "attendees",
-      on: "courseSchedule",
+      type: "collapsible",
       label: "Roster",
-      defaultLimit: 0,
-      defaultSort: "lastName",
       admin: {
-        defaultColumns: ["firstName", "lastName", "email", "phone", "status"],
-        description: "Attendees booked into this session. Use 'Add Attendee' to manually register someone.",
+        initCollapsed: false,
       },
+      fields: [
+        {
+          name: "roster",
+          type: "join",
+          collection: "attendees",
+          on: "courseSchedule",
+          label: "Attendees",
+          defaultLimit: 0,
+          defaultSort: "lastName",
+          admin: {
+            defaultColumns: ["firstName", "lastName", "email", "phone", "status"],
+            description:
+              "Attendees booked into this session. Use 'Add Attendee' to manually register someone.",
+          },
+        },
+      ],
     },
   ],
 };
