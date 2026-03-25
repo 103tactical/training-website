@@ -107,6 +107,9 @@ export const Attendees: CollectionConfig = {
     defaultColumns: ['firstName', 'lastName', 'email', 'course', 'courseSchedule', 'status'],
     description:
       'Manage course bookings. Use the Course and Session filters to view rosters for a specific course or session.',
+    components: {
+      beforeList: ['./components/PrintRosterListAction'],
+    },
   },
   access: {
     read: () => true,

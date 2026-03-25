@@ -4187,3 +4187,155 @@ a.contact-info__value:hover {
   line-height: 1.5;
   margin: 0;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Print Roster page  (/print/roster/:id)
+───────────────────────────────────────────────────────────────────────────── */
+
+.print-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #111;
+}
+
+/* Toolbar (Print button) — hidden when printing */
+.print-page__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.print-page__btn {
+  padding: 10px 24px;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+
+.print-page__btn:hover {
+  background: #2a2a4e;
+}
+
+/* Header */
+.print-page__header {
+  border-bottom: 2px solid #111;
+  padding-bottom: 16px;
+  margin-bottom: 28px;
+}
+
+.print-page__course {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.print-page__session {
+  font-size: 17px;
+  font-weight: 400;
+  font-style: italic;
+  margin: 0 0 16px;
+  color: #444;
+}
+
+.print-page__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 24px;
+  font-size: 13px;
+}
+
+.print-page__meta div {
+  display: flex;
+  gap: 6px;
+}
+
+.print-page__meta dt {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.print-page__meta dd {
+  margin: 0;
+  color: #333;
+}
+
+/* Attendee table */
+.print-table {
+  margin-bottom: 36px;
+}
+
+.print-table__heading {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #ccc;
+}
+
+.print-table__count {
+  font-weight: 400;
+  color: #555;
+}
+
+.print-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.print-table__table th,
+.print-table__table td {
+  border: 1px solid #ddd;
+  padding: 7px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.print-table__table th {
+  background: #f4f4f4;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.print-table__table tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+/* Footer */
+.print-page__footer {
+  margin-top: 48px;
+  padding-top: 12px;
+  border-top: 1px solid #ccc;
+  font-size: 11px;
+  color: #777;
+  text-align: center;
+}
+
+/* ── Print media — hide site chrome, keep only the roster ── */
+@media print {
+  .no-print               { display: none !important; }
+  .site-nav,
+  .site-header,
+  nav,
+  footer,
+  .age-gate               { display: none !important; }
+
+  .print-page             { padding: 0; max-width: 100%; }
+  .print-table__table     { page-break-inside: auto; }
+  .print-table__table tr  { page-break-inside: avoid; }
+  .print-table            { page-break-before: auto; }
+  .print-table__table th  { background: #eee !important; -webkit-print-color-adjust: exact; }
+}

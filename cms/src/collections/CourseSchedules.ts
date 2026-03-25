@@ -56,6 +56,16 @@ export const CourseSchedules: CollectionConfig = {
       type: "text",
       admin: { hidden: true },
     },
+    // ── Print Roster shortcut ─────────────────────────────────────────────────
+    {
+      name: "printRosterLink",
+      type: "ui",
+      admin: {
+        components: {
+          Field: "./components/PrintRosterButton",
+        },
+      },
+    },
     // ── 1. Course Info (collapsible) ─────────────────────────────────────────
     {
       type: "collapsible",
