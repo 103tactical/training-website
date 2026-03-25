@@ -56,13 +56,14 @@ export default function Navbar({
   const mobileLogoUrl = useWhite ? (logoStackedWhiteUrl ?? logoStackedColorUrl) : logoStackedColorUrl;
   const mobileLogoAlt = useWhite ? (logoStackedWhiteAlt ?? logoStackedColorAlt) : logoStackedColorAlt;
 
-  // Desktop: wide white or wide color, falling back to stacked counterpart
+  // Desktop: home (no hero) uses Wide/White field for color logo;
+  // all other pages (dark hero) use Wide/Color field for the white knockout logo.
   const desktopLogoUrl = useWhite
-    ? (logoWideWhiteUrl ?? logoStackedWhiteUrl ?? logoStackedColorUrl)
-    : (logoWideColorUrl ?? logoStackedColorUrl);
+    ? (logoWideColorUrl ?? logoStackedWhiteUrl ?? logoStackedColorUrl)
+    : (logoWideWhiteUrl ?? logoStackedColorUrl);
   const desktopLogoAlt = useWhite
-    ? (logoWideWhiteAlt ?? logoStackedWhiteAlt ?? logoStackedColorAlt)
-    : (logoWideColorAlt ?? logoStackedColorAlt);
+    ? (logoWideColorAlt ?? logoStackedWhiteAlt ?? logoStackedColorAlt)
+    : (logoWideWhiteAlt ?? logoStackedColorAlt);
 
   const mobileLogoNode = mobileLogoUrl ? (
     <img src={mobileLogoUrl} alt={mobileLogoAlt ?? "103 Tactical"} className="nav-logo" />

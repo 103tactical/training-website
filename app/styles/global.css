@@ -503,7 +503,7 @@ body.menu-open .app-content {
 
 /* Wide (horizontal) logo — desktop navbar only */
 .nav-logo--wide {
-  height: 64px;
+  height: 84px;
   padding-top: 8px;
 }
 
@@ -711,7 +711,7 @@ body.layout-overlay .app-content {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-3);
+    gap: var(--spacing-6);
     padding-top: var(--spacing-5);
     padding-bottom: var(--spacing-4);
     max-width: 100%;
@@ -825,9 +825,9 @@ body.layout-overlay .app-content {
   }
 }
 
-/* Wide logo always stays 64px regardless of overlay layout */
+/* Wide logo always stays 84px regardless of overlay layout */
 body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
-  height: 64px;
+  height: 84px;
   padding-top: 8px;
 }
 
