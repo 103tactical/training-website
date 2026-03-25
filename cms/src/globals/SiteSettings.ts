@@ -14,7 +14,19 @@ export const SiteSettings: GlobalConfig = {
       name: "logo",
       type: "upload",
       relationTo: "media",
-      label: "Logo — Header",
+      label: "Logo — Header / Stacked",
+      admin: {
+        description: "Used on mobile and as a fallback on desktop if no horizontal logo is set.",
+      },
+    },
+    {
+      name: "logoHeaderWide",
+      type: "upload",
+      relationTo: "media",
+      label: "Logo — Header / Horizontal",
+      admin: {
+        description: "Displayed on desktop (above mobile breakpoint) in place of the stacked logo.",
+      },
     },
     {
       name: "logoFooter",

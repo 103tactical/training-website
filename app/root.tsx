@@ -74,6 +74,8 @@ const FALLBACK_NAV = [
 interface LoaderData {
   logoUrl: string | null;
   logoAlt: string | null;
+  logoWideUrl: string | null;
+  logoWideAlt: string | null;
   footerLogoUrl: string | null;
   footerLogoAlt: string | null;
   nav: { label: string; url: string; openInNewTab: boolean }[];
@@ -99,6 +101,11 @@ export async function loader(_: LoaderFunctionArgs) {
       ? rawLogoUrl.startsWith("http") ? rawLogoUrl : `${apiUrl}${rawLogoUrl}`
       : null;
 
+    const rawLogoWideUrl = settings.logoHeaderWide?.url ?? null;
+    const logoWideUrl = rawLogoWideUrl
+      ? rawLogoWideUrl.startsWith("http") ? rawLogoWideUrl : `${apiUrl}${rawLogoWideUrl}`
+      : null;
+
     const rawFooterLogoUrl = settings.logoFooter?.url ?? null;
     const footerLogoUrl = rawFooterLogoUrl
       ? rawFooterLogoUrl.startsWith("http") ? rawFooterLogoUrl : `${apiUrl}${rawFooterLogoUrl}`
@@ -107,6 +114,8 @@ export async function loader(_: LoaderFunctionArgs) {
     return json<LoaderData>({
       logoUrl,
       logoAlt: settings.logo?.alt ?? null,
+      logoWideUrl,
+      logoWideAlt: settings.logoHeaderWide?.alt ?? settings.logo?.alt ?? null,
       footerLogoUrl,
       footerLogoAlt: settings.logoFooter?.alt ?? settings.logo?.alt ?? null,
       nav: Array.isArray(settings.nav) && settings.nav.length > 0
@@ -121,6 +130,8 @@ export async function loader(_: LoaderFunctionArgs) {
     return json<LoaderData>({
       logoUrl: null,
       logoAlt: null,
+      logoWideUrl: null,
+      logoWideAlt: null,
       footerLogoUrl: null,
       footerLogoAlt: null,
       nav: FALLBACK_NAV,
@@ -135,7 +146,7 @@ export async function loader(_: LoaderFunctionArgs) {
 /* ── Root component ─────────────────────────────────────────────────────── */
 
 export default function App() {
-  const { logoUrl, logoAlt, footerLogoUrl, footerLogoAlt, nav, contact, social, copyright, tagline } =
+  const { logoUrl, logoAlt, logoWideUrl, logoWideAlt, footerLogoUrl, footerLogoAlt, nav, contact, social, copyright, tagline } =
     useLoaderData<typeof loader>();
   const { pathname } = useLocation();
   const bodyClass = [
@@ -156,6 +167,8 @@ export default function App() {
         <Navbar
           logoUrl={logoUrl ?? undefined}
           logoAlt={logoAlt ?? undefined}
+          logoWideUrl={logoWideUrl ?? undefined}
+          logoWideAlt={logoWideAlt ?? undefined}
           overlayLogoUrl={footerLogoUrl ?? undefined}
           overlayLogoAlt={footerLogoAlt ?? undefined}
           nav={nav}

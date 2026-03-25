@@ -12,6 +12,8 @@ export interface NavItem {
 export interface NavbarProps {
   logoUrl?: string;
   logoAlt?: string;
+  logoWideUrl?: string;
+  logoWideAlt?: string;
   overlayLogoUrl?: string;
   overlayLogoAlt?: string;
   nav: NavItem[];
@@ -19,7 +21,7 @@ export interface NavbarProps {
   children?: React.ReactNode;
 }
 
-export default function Navbar({ logoUrl, logoAlt, overlayLogoUrl, overlayLogoAlt, nav, social, children }: NavbarProps) {
+export default function Navbar({ logoUrl, logoAlt, logoWideUrl, logoWideAlt, overlayLogoUrl, overlayLogoAlt, nav, social, children }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const isOverlay = overlayNavRoutes.has(location.pathname);
@@ -47,8 +49,18 @@ export default function Navbar({ logoUrl, logoAlt, overlayLogoUrl, overlayLogoAl
   const activeLogoUrl = useFooterLogo ? (overlayLogoUrl ?? logoUrl) : logoUrl;
   const activeLogoAlt = useFooterLogo ? (overlayLogoAlt ?? logoAlt) : logoAlt;
 
-  const logoNode = activeLogoUrl ? (
+  // Mobile: always use stacked logo
+  const mobileLogoNode = activeLogoUrl ? (
     <img src={activeLogoUrl} alt={activeLogoAlt ?? "103 Tactical"} className="nav-logo" />
+  ) : (
+    <span className="nav-logo-text">103 Tactical</span>
+  );
+
+  // Desktop: use horizontal logo if available, fall back to stacked
+  const desktopLogoUrl = logoWideUrl ?? activeLogoUrl;
+  const desktopLogoAlt = logoWideUrl ? (logoWideAlt ?? activeLogoAlt) : activeLogoAlt;
+  const desktopLogoNode = desktopLogoUrl ? (
+    <img src={desktopLogoUrl} alt={desktopLogoAlt ?? "103 Tactical"} className="nav-logo" />
   ) : (
     <span className="nav-logo-text">103 Tactical</span>
   );
@@ -112,7 +124,7 @@ export default function Navbar({ logoUrl, logoAlt, overlayLogoUrl, overlayLogoAl
           </button>
 
           <Link to="/" className="mobile-header__logo-link" aria-label="103 Tactical — home">
-            {logoNode}
+            {mobileLogoNode}
           </Link>
 
           {/* Right slot — reserved for future icon */}
@@ -123,15 +135,14 @@ export default function Navbar({ logoUrl, logoAlt, overlayLogoUrl, overlayLogoAl
         <div className="mobile-logo">
           {activeLogoUrl
             ? <img src={activeLogoUrl} alt={activeLogoAlt ?? "103 Tactical"} className="mobile-logo__img" />
-            : <span className="mobile-logo__text">103 Tactical</span>
-          }
+            : <span className="mobile-logo__text">103 Tactical</span>}
         </div>
 
         {/* Desktop navbar */}
         <header className="navbar-desktop">
           <div className="navbar-desktop__inner">
             <Link to="/" className="navbar-desktop__logo-link" aria-label="103 Tactical — home">
-              {logoNode}
+              {desktopLogoNode}
             </Link>
 
             <nav className="navbar-desktop__nav" aria-label="Primary navigation">
