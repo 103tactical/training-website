@@ -118,5 +118,18 @@ export const CourseSchedules: CollectionConfig = {
       label: "Active (show on site)",
       defaultValue: true,
     },
+    {
+      name: "roster",
+      type: "join",
+      collection: "attendees",
+      on: "courseSchedule",
+      label: "Roster",
+      defaultLimit: 0,
+      defaultSort: "lastName",
+      admin: {
+        defaultColumns: ["firstName", "lastName", "email", "phone", "status"],
+        description: "Attendees booked into this session. Use 'Add Attendee' to manually register someone.",
+      },
+    },
   ],
 };
