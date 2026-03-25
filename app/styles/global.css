@@ -2249,7 +2249,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 .mini-cal__month-label {
   font-family: var(--font-quantico);
   font-weight: var(--font-bold);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-white);
@@ -2262,7 +2262,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 .mini-cal__day-label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: var(--font-bold);
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
@@ -2271,7 +2271,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 .mini-cal__cell {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: var(--font-regular);
   color: rgba(255, 255, 255, 0.5);
   text-align: center;
