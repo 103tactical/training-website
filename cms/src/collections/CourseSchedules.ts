@@ -3,7 +3,7 @@ import type { CollectionConfig } from "payload";
 export const CourseSchedules: CollectionConfig = {
   slug: "course-schedules",
   admin: {
-    useAsTitle: "label",
+    useAsTitle: "course",
     group: "Course Management",
     defaultColumns: ["course", "label", "maxSeats", "seatsBooked", "isActive"],
     description:
