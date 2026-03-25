@@ -4206,13 +4206,11 @@ a.contact-info__value:hover {
 body.layout-print .sidenav,
 body.layout-print .mobile-header,
 body.layout-print .mobile-logo,
-body.layout-print .desktop-header,
-body.layout-print .desktop-nav,
+body.layout-print .navbar-desktop,
 body.layout-print footer { display: none !important; }
 
-/* Also ensure app-content has no extra top offset on print pages */
+/* Reset any nav-driven transforms on the content wrapper */
 body.layout-print .app-content { transform: none !important; }
-body.layout-print .print-page { padding-top: 48px; }
 
 /* Logo — hidden on screen, shown only when printing */
 .print-only {
