@@ -6,6 +6,8 @@ import type {
 
 /** Statuses that count against a schedule's seat inventory */
 const ACTIVE_STATUSES = ['confirmed', 'waitlisted']
+/** Statuses that free a seat (do not count against inventory) */
+// 'cancelled' and 'transferred' both release a seat
 
 /**
  * Resolve a relationship field value to a numeric ID.
@@ -177,10 +179,11 @@ export const Attendees: CollectionConfig = {
         { label: 'Confirmed', value: 'confirmed' },
         { label: 'Waitlisted', value: 'waitlisted' },
         { label: 'Cancelled', value: 'cancelled' },
+        { label: 'Transferred', value: 'transferred' },
       ],
       admin: {
         description:
-          'Confirmed and Waitlisted count against available seats. Changing to Cancelled frees the seat automatically.',
+          'Confirmed and Waitlisted count against available seats. Cancelled and Transferred free the seat automatically.',
       },
     },
     {
