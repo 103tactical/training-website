@@ -3531,12 +3531,20 @@ a.contact-info__value:hover {
   margin-top: 2px;
 }
 
+.age-gate__panel form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .age-gate__error {
   color: var(--color-red-tint);
   font-size: var(--text-sm);
   font-weight: 100;
-  margin: 0;
+  margin: 8px 0 0;
   line-height: 1.4;
+  text-align: center;
 }
 
 .age-gate__btn {
