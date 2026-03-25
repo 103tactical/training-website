@@ -2679,8 +2679,8 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 .store-featured__label {
-  font-size: var(--text-sm);
-  letter-spacing: 0.14em;
+  font-size: var(--text-2xl);
+  letter-spacing: 0.06em;
   color: var(--color-blue-tint);
   margin-bottom: var(--spacing-6);
 }
@@ -3003,8 +3003,15 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 .store-visit-cta__accent {
   width: 56px;
   height: 4px;
-  background: var(--color-red);
+  background: var(--color-blue);
   clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+}
+
+.store-visit-cta .btn--accent {
+  background-color: var(--color-blue);
+}
+.store-visit-cta .btn--accent:hover {
+  background-color: var(--color-blue-hover);
 }
 
 .store-visit-cta__heading {
