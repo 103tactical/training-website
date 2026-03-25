@@ -56,6 +56,15 @@ export const SiteSettings: GlobalConfig = {
       },
     },
     {
+      name: "logoPrint",
+      type: "upload",
+      relationTo: "media",
+      label: "Logo — Print",
+      admin: {
+        description: "Solid black logo used at the top of printed rosters and documents. Upload a black version of the stacked logo.",
+      },
+    },
+    {
       name: "nav",
       type: "array",
       label: "Navigation Links",

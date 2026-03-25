@@ -32,8 +32,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   const attendeesData = await attendeesRes.json();
   const siteSettings = siteRes.ok ? await siteRes.json() : null;
   const logoUrl: string | null =
-    siteSettings?.logos?.logoHeaderStackedColor?.url
-      ? `${API}${siteSettings.logos.logoHeaderStackedColor.url}`
+    siteSettings?.logoPrint?.url
+      ? `${API}${siteSettings.logoPrint.url}`
       : null;
   const attendees: Attendee[] = attendeesData.docs ?? [];
 
