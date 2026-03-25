@@ -144,6 +144,11 @@ export const Attendees: CollectionConfig = {
           type: 'email',
           label: 'Email Address',
           required: true,
+          admin: {
+            components: {
+              Cell: './components/EmailCell',
+            },
+          },
         },
         {
           name: 'phone',
