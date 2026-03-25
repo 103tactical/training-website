@@ -1,53 +1,55 @@
-import type { GlobalConfig } from "payload";
+import type { Field, GlobalConfig } from "payload";
 
-const productFields = [
-  {
-    name: "image",
-    type: "upload" as const,
-    relationTo: "media" as const,
-    label: "Product Image",
-  },
-  {
-    name: "badge",
-    type: "text" as const,
-    label: "Badge",
-    admin: {
-      description: "Optional label overlaid on the image, e.g. New Arrival or Staff Pick.",
+function productFields(): Field[] {
+  return [
+    {
+      name: "image",
+      type: "upload",
+      relationTo: "media",
+      label: "Product Image",
     },
-  },
-  {
-    name: "brand",
-    type: "text" as const,
-    label: "Brand",
-  },
-  {
-    name: "name",
-    type: "text" as const,
-    required: true,
-    label: "Product Name",
-  },
-  {
-    name: "caliber",
-    type: "text" as const,
-    label: "Caliber / Gauge",
-    admin: {
-      description: "Optional. E.g. 9mm, .45 ACP, 12ga.",
+    {
+      name: "badge",
+      type: "text",
+      label: "Badge",
+      admin: {
+        description: "Optional label overlaid on the image, e.g. New Arrival or Staff Pick.",
+      },
     },
-  },
-  {
-    name: "description",
-    type: "textarea" as const,
-    label: "Description",
-  },
-  {
-    name: "price",
-    type: "number" as const,
-    label: "Price",
-    admin: {
-      description: "Only displayed if Show Prices is enabled on this page.",
+    {
+      name: "brand",
+      type: "text",
+      label: "Brand",
     },
-  },
-];
+    {
+      name: "name",
+      type: "text",
+      required: true,
+      label: "Product Name",
+    },
+    {
+      name: "caliber",
+      type: "text",
+      label: "Caliber / Gauge",
+      admin: {
+        description: "Optional. E.g. 9mm, .45 ACP, 12ga.",
+      },
+    },
+    {
+      name: "description",
+      type: "textarea",
+      label: "Description",
+    },
+    {
+      name: "price",
+      type: "number",
+      label: "Price",
+      admin: {
+        description: "Only displayed if Show Prices is enabled on this page.",
+      },
+    },
+  ];
+}
 
 export const StorePage: GlobalConfig = {
   slug: "store-page",
@@ -95,7 +97,7 @@ export const StorePage: GlobalConfig = {
       label: "Show Prices",
       defaultValue: false,
       admin: {
-        description: "When enabled, prices are displayed on all product cards and the featured product. Disable to showcase products without prices.",
+        description: "When enabled, prices are displayed on all product cards and the featured product.",
       },
     },
 
@@ -111,7 +113,7 @@ export const StorePage: GlobalConfig = {
           label: "Section Heading",
           defaultValue: "This Week's Feature",
         },
-        ...productFields,
+        ...productFields(),
       ],
     },
 
@@ -132,7 +134,7 @@ export const StorePage: GlobalConfig = {
           type: "array",
           label: "Products",
           labels: { singular: "Product", plural: "Products" },
-          fields: productFields,
+          fields: productFields(),
         },
       ],
     },
@@ -154,7 +156,7 @@ export const StorePage: GlobalConfig = {
           type: "array",
           label: "Products",
           labels: { singular: "Product", plural: "Products" },
-          fields: productFields,
+          fields: productFields(),
         },
       ],
     },
@@ -176,7 +178,7 @@ export const StorePage: GlobalConfig = {
           type: "array",
           label: "Products",
           labels: { singular: "Product", plural: "Products" },
-          fields: productFields,
+          fields: productFields(),
         },
       ],
     },
@@ -198,7 +200,7 @@ export const StorePage: GlobalConfig = {
           type: "array",
           label: "Items",
           labels: { singular: "Item", plural: "Items" },
-          fields: productFields,
+          fields: productFields(),
         },
       ],
     },
