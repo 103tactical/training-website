@@ -133,50 +133,59 @@ export const CourseSchedules: CollectionConfig = {
       ],
     },
 
-    // ── 2. Session Dates ─────────────────────────────────────────────────────
+    // ── 2. Session Dates (collapsible) ───────────────────────────────────────
     {
-      name: "sessions",
-      type: "array",
+      type: "collapsible",
       label: "Session Dates",
-      minRows: 1,
       admin: {
-        description:
-          "Add one row per day. For a 2-day course on two separate Fridays, add two rows.",
+        initCollapsed: false,
       },
       fields: [
         {
-          name: "date",
-          type: "date",
-          required: true,
-          label: "Date",
+          name: "sessions",
+          type: "array",
+          label: false,
+          minRows: 1,
           admin: {
-            date: {
-              pickerAppearance: "dayOnly",
-              displayFormat: "MMM d, yyyy",
-            },
+            description:
+              "Add one row per day. For a 2-day course on two separate Fridays, add two rows.",
           },
-        },
-        {
-          name: "startTime",
-          type: "date",
-          label: "Start Time",
-          admin: {
-            date: {
-              pickerAppearance: "timeOnly",
-              displayFormat: "h:mm aa",
+          fields: [
+            {
+              name: "date",
+              type: "date",
+              required: true,
+              label: "Date",
+              admin: {
+                date: {
+                  pickerAppearance: "dayOnly",
+                  displayFormat: "MMM d, yyyy",
+                },
+              },
             },
-          },
-        },
-        {
-          name: "endTime",
-          type: "date",
-          label: "End Time",
-          admin: {
-            date: {
-              pickerAppearance: "timeOnly",
-              displayFormat: "h:mm aa",
+            {
+              name: "startTime",
+              type: "date",
+              label: "Start Time",
+              admin: {
+                date: {
+                  pickerAppearance: "timeOnly",
+                  displayFormat: "h:mm aa",
+                },
+              },
             },
-          },
+            {
+              name: "endTime",
+              type: "date",
+              label: "End Time",
+              admin: {
+                date: {
+                  pickerAppearance: "timeOnly",
+                  displayFormat: "h:mm aa",
+                },
+              },
+            },
+          ],
         },
       ],
     },
