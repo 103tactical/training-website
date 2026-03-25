@@ -2924,11 +2924,11 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   background: var(--color-red);
   color: var(--color-white);
   font-family: var(--font-quantico);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 3px 8px;
+  padding: 5px 12px;
   clip-path: polygon(
     4px 0%, 100% 0%,
     100% calc(100% - 4px),
