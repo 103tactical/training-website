@@ -295,7 +295,7 @@ export const HomePage: GlobalConfig = {
               required: true,
               label: "Name",
               admin: {
-                description: "The person's name (e.g. "John D.").",
+                description: "The person's name (e.g. John D.).",
               },
             },
             {
@@ -303,7 +303,7 @@ export const HomePage: GlobalConfig = {
               type: "text",
               label: "Title / Context",
               admin: {
-                description: "Optional. E.g. "Pistol Permit Course Graduate" or "NRA Safety Student".",
+                description: "Optional. E.g. Pistol Permit Course Graduate or NRA Safety Student.",
               },
             },
           ],
