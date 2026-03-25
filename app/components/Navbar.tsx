@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "@remix-run/react";
 import { HamburgerIcon, CloseIcon, SocialIcon } from "./Icons";
-import { overlayNavRoutes, overlayNavPrimaryLogoRoutes } from "~/config/layouts";
 
 export interface NavItem {
   label: string;
@@ -32,8 +31,7 @@ export default function Navbar({
 }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const isOverlay = overlayNavRoutes.has(location.pathname);
-  const useWhite = isOverlay && !overlayNavPrimaryLogoRoutes.has(location.pathname);
+  const useWhite = location.pathname !== "/";
 
   /* Close on route change */
   useEffect(() => {
@@ -73,7 +71,7 @@ export default function Navbar({
   );
 
   const desktopLogoNode = desktopLogoUrl ? (
-    <img src={desktopLogoUrl} alt={desktopLogoAlt ?? "103 Tactical"} className="nav-logo" />
+    <img src={desktopLogoUrl} alt={desktopLogoAlt ?? "103 Tactical"} className="nav-logo nav-logo--wide" />
   ) : (
     <span className="nav-logo-text">103 Tactical</span>
   );

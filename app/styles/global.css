@@ -501,6 +501,12 @@ body.menu-open .app-content {
   }
 }
 
+/* Wide (horizontal) logo — desktop navbar only */
+.nav-logo--wide {
+  height: 64px;
+  padding-top: 8px;
+}
+
 .mobile-header .nav-logo,
 .mobile-header .nav-logo-text {
   display: none;
@@ -3387,3 +3393,4 @@ a.contact-info__value:hover {
   line-height: 1.4;
   margin: 0;
 }
+
