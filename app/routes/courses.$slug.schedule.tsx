@@ -119,14 +119,14 @@ export default function CourseSchedulePage() {
                         {slot.displayLabel ?? slot.label}
                       </p>
                     )}
+                    <MiniCalendar dates={sessions.map((s) => s.date)} />
+
                     {slot.instructor && typeof slot.instructor === "object" && (
                       <p className="schedule-slot__instructor">
                         <span className="schedule-slot__instructor-label">Instructor:</span>
                         {(slot.instructor as Instructor).name}
                       </p>
                     )}
-
-                    <MiniCalendar dates={sessions.map((s) => s.date)} />
 
                   <div className="schedule-slot__sessions">
                       {sessions.map((session, idx) => (
