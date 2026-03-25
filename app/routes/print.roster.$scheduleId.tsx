@@ -143,24 +143,32 @@ function AttendeeTable({ title, attendees }: { title: string; attendees: Attende
       <table className="print-table__table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Ref #</th>
-            <th>Notes</th>
+            <th style={{ width: "32px" }}>#</th>
+            <th style={{ width: "20%" }}>Name</th>
+            <th style={{ width: "26%" }}>Email</th>
+            <th style={{ width: "16%" }}>Phone</th>
+            <th style={{ width: "14%" }}>Ref #</th>
           </tr>
         </thead>
         <tbody>
           {attendees.map((a, i) => (
-            <tr key={a.id}>
-              <td>{i + 1}</td>
-              <td>{a.firstName} {a.lastName}</td>
-              <td>{a.email}</td>
-              <td>{a.phone ?? "—"}</td>
-              <td>{a.paymentReference ?? "—"}</td>
-              <td>{a.notes ?? ""}</td>
-            </tr>
+            <>
+              <tr key={a.id}>
+                <td>{i + 1}</td>
+                <td>{a.firstName} {a.lastName}</td>
+                <td>{a.email}</td>
+                <td>{a.phone ?? "—"}</td>
+                <td>{a.paymentReference ?? "—"}</td>
+              </tr>
+              {a.notes && (
+                <tr key={`${a.id}-notes`} className="print-table__notes-row">
+                  <td />
+                  <td colSpan={4} className="print-table__notes-cell">
+                    <span className="print-table__notes-label">Note:</span> {a.notes}
+                  </td>
+                </tr>
+              )}
+            </>
           ))}
         </tbody>
       </table>

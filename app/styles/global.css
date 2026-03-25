@@ -4195,9 +4195,11 @@ a.contact-info__value:hover {
 .print-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 48px 40px 64px;
   font-family: Georgia, 'Times New Roman', serif;
   color: #111;
+  background: #fff;
+  min-height: 100vh;
 }
 
 /* Toolbar (Print button) — hidden when printing */
@@ -4324,6 +4326,25 @@ a.contact-info__value:hover {
   text-align: center;
 }
 
+.print-table__notes-row td {
+  border-top: none !important;
+  padding-top: 0 !important;
+  background: #fff !important;
+}
+
+.print-table__notes-cell {
+  padding-bottom: 8px !important;
+  color: #555;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.print-table__notes-label {
+  font-weight: 700;
+  font-style: normal;
+  color: #333;
+}
+
 /* ── Print media — hide site chrome, keep only the roster ── */
 @media print {
   .no-print               { display: none !important; }
@@ -4333,9 +4354,10 @@ a.contact-info__value:hover {
   footer,
   .age-gate               { display: none !important; }
 
-  .print-page             { padding: 0; max-width: 100%; }
+  html, body              { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  .print-page             { padding: 16px 24px 32px; max-width: 100%; margin: 0; }
   .print-table__table     { page-break-inside: auto; }
   .print-table__table tr  { page-break-inside: avoid; }
   .print-table            { page-break-before: auto; }
-  .print-table__table th  { background: #eee !important; -webkit-print-color-adjust: exact; }
+  .print-table__table th  { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
