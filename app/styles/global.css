@@ -766,6 +766,12 @@ body.layout-overlay .app-content {
   }
 }
 
+@media (min-width: 1400px) {
+  body.layout-overlay .contact-page__hero {
+    height: 800px;
+  }
+}
+
 /* ── Mobile overlay: header + logo float over hero ───────────────────────── */
 /*    mobile-header is already transparent + fixed.
       mobile-logo: pull out of flow so hero slides behind it.
@@ -2555,6 +2561,12 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   overflow: hidden;
 }
 
+@media (min-width: 1400px) {
+  .featured-carousel__inner {
+    max-height: 940px;
+  }
+}
+
 @media (max-width: 767px) {
   .featured-carousel__inner {
     aspect-ratio: 16 / 9;
@@ -2954,6 +2966,12 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   }
 }
 
+@media (min-width: 1400px) {
+  .contact-page__hero {
+    height: 800px;
+  }
+}
+
 .contact-page__hero-img {
   position: absolute;
   inset: 0;
@@ -3060,6 +3078,12 @@ body.layout-overlay .courses-page__hero-content {
   }
   body.layout-overlay .courses-page__hero-content {
     padding-top: calc(var(--overlay-nav-height) + var(--spacing-8));
+  }
+}
+
+@media (min-width: 1400px) {
+  body.layout-overlay .courses-page__hero {
+    height: 800px;
   }
 }
 
