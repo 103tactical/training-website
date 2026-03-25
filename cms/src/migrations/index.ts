@@ -23,6 +23,7 @@ import * as migration_20260307_course_schedules from './20260307_course_schedule
 import * as migration_20260309_course_schedules from './20260309_course_schedules';
 import * as migration_20260310_applications_page from './20260310_applications_page';
 import * as migration_20260310_site_settings_logo_header_wide from './20260310_site_settings_logo_header_wide';
+import * as migration_20260311_site_settings_logo_refactor from './20260311_site_settings_logo_refactor';
 
 export const migrations = [
   {
@@ -149,5 +150,10 @@ export const migrations = [
     up: migration_20260310_site_settings_logo_header_wide.up,
     down: migration_20260310_site_settings_logo_header_wide.down,
     name: '20260310_site_settings_logo_header_wide'
+  },
+  {
+    up: migration_20260311_site_settings_logo_refactor.up,
+    down: migration_20260311_site_settings_logo_refactor.down,
+    name: '20260311_site_settings_logo_refactor'
   },
 ];

@@ -72,10 +72,14 @@ const FALLBACK_NAV = [
 ];
 
 interface LoaderData {
-  logoUrl: string | null;
-  logoAlt: string | null;
-  logoWideUrl: string | null;
-  logoWideAlt: string | null;
+  logoStackedColorUrl: string | null;
+  logoStackedColorAlt: string | null;
+  logoStackedWhiteUrl: string | null;
+  logoStackedWhiteAlt: string | null;
+  logoWideColorUrl: string | null;
+  logoWideColorAlt: string | null;
+  logoWideWhiteUrl: string | null;
+  logoWideWhiteAlt: string | null;
   footerLogoUrl: string | null;
   footerLogoAlt: string | null;
   nav: { label: string; url: string; openInNewTab: boolean }[];
@@ -96,28 +100,28 @@ export async function loader(_: LoaderFunctionArgs) {
 
     const settings = await res.json();
 
-    const rawLogoUrl = settings.logo?.url ?? null;
-    const logoUrl = rawLogoUrl
-      ? rawLogoUrl.startsWith("http") ? rawLogoUrl : `${apiUrl}${rawLogoUrl}`
-      : null;
+    function resolveUrl(url: string | null | undefined): string | null {
+      if (!url) return null;
+      return url.startsWith("http") ? url : `${apiUrl}${url}`;
+    }
 
-    const rawLogoWideUrl = settings.logoHeaderWide?.url ?? null;
-    const logoWideUrl = rawLogoWideUrl
-      ? rawLogoWideUrl.startsWith("http") ? rawLogoWideUrl : `${apiUrl}${rawLogoWideUrl}`
-      : null;
-
-    const rawFooterLogoUrl = settings.logoFooter?.url ?? null;
-    const footerLogoUrl = rawFooterLogoUrl
-      ? rawFooterLogoUrl.startsWith("http") ? rawFooterLogoUrl : `${apiUrl}${rawFooterLogoUrl}`
-      : logoUrl;
+    const logoStackedColorUrl = resolveUrl(settings.logoHeaderStackedColor?.url);
+    const logoStackedWhiteUrl = resolveUrl(settings.logoHeaderStackedWhite?.url);
+    const logoWideColorUrl    = resolveUrl(settings.logoHeaderWideColor?.url);
+    const logoWideWhiteUrl    = resolveUrl(settings.logoHeaderWideWhite?.url);
+    const footerLogoUrl       = resolveUrl(settings.logoFooter?.url) ?? logoStackedColorUrl;
 
     return json<LoaderData>({
-      logoUrl,
-      logoAlt: settings.logo?.alt ?? null,
-      logoWideUrl,
-      logoWideAlt: settings.logoHeaderWide?.alt ?? settings.logo?.alt ?? null,
+      logoStackedColorUrl,
+      logoStackedColorAlt: settings.logoHeaderStackedColor?.alt ?? null,
+      logoStackedWhiteUrl,
+      logoStackedWhiteAlt: settings.logoHeaderStackedWhite?.alt ?? null,
+      logoWideColorUrl,
+      logoWideColorAlt: settings.logoHeaderWideColor?.alt ?? null,
+      logoWideWhiteUrl,
+      logoWideWhiteAlt: settings.logoHeaderWideWhite?.alt ?? null,
       footerLogoUrl,
-      footerLogoAlt: settings.logoFooter?.alt ?? settings.logo?.alt ?? null,
+      footerLogoAlt: settings.logoFooter?.alt ?? settings.logoHeaderStackedColor?.alt ?? null,
       nav: Array.isArray(settings.nav) && settings.nav.length > 0
         ? settings.nav
         : FALLBACK_NAV,
@@ -128,10 +132,14 @@ export async function loader(_: LoaderFunctionArgs) {
     });
   } catch {
     return json<LoaderData>({
-      logoUrl: null,
-      logoAlt: null,
-      logoWideUrl: null,
-      logoWideAlt: null,
+      logoStackedColorUrl: null,
+      logoStackedColorAlt: null,
+      logoStackedWhiteUrl: null,
+      logoStackedWhiteAlt: null,
+      logoWideColorUrl: null,
+      logoWideColorAlt: null,
+      logoWideWhiteUrl: null,
+      logoWideWhiteAlt: null,
       footerLogoUrl: null,
       footerLogoAlt: null,
       nav: FALLBACK_NAV,
@@ -146,8 +154,14 @@ export async function loader(_: LoaderFunctionArgs) {
 /* ── Root component ─────────────────────────────────────────────────────── */
 
 export default function App() {
-  const { logoUrl, logoAlt, logoWideUrl, logoWideAlt, footerLogoUrl, footerLogoAlt, nav, contact, social, copyright, tagline } =
-    useLoaderData<typeof loader>();
+  const {
+    logoStackedColorUrl, logoStackedColorAlt,
+    logoStackedWhiteUrl, logoStackedWhiteAlt,
+    logoWideColorUrl, logoWideColorAlt,
+    logoWideWhiteUrl, logoWideWhiteAlt,
+    footerLogoUrl, footerLogoAlt,
+    nav, contact, social, copyright, tagline,
+  } = useLoaderData<typeof loader>();
   const { pathname } = useLocation();
   const bodyClass = [
     pathname === "/contact" ? "theme-contact" : null,
@@ -165,12 +179,14 @@ export default function App() {
       </head>
       <body className={bodyClass}>
         <Navbar
-          logoUrl={logoUrl ?? undefined}
-          logoAlt={logoAlt ?? undefined}
-          logoWideUrl={logoWideUrl ?? undefined}
-          logoWideAlt={logoWideAlt ?? undefined}
-          overlayLogoUrl={footerLogoUrl ?? undefined}
-          overlayLogoAlt={footerLogoAlt ?? undefined}
+          logoStackedColorUrl={logoStackedColorUrl ?? undefined}
+          logoStackedColorAlt={logoStackedColorAlt ?? undefined}
+          logoStackedWhiteUrl={logoStackedWhiteUrl ?? undefined}
+          logoStackedWhiteAlt={logoStackedWhiteAlt ?? undefined}
+          logoWideColorUrl={logoWideColorUrl ?? undefined}
+          logoWideColorAlt={logoWideColorAlt ?? undefined}
+          logoWideWhiteUrl={logoWideWhiteUrl ?? undefined}
+          logoWideWhiteAlt={logoWideWhiteAlt ?? undefined}
           nav={nav}
           social={social}
         >

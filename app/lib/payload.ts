@@ -80,8 +80,10 @@ export interface ContactSettings {
 }
 
 export interface SiteSettings {
-  logo?: { url: string; alt: string };
-  logoHeaderWide?: { url: string; alt: string };
+  logoHeaderStackedColor?: { url: string; alt: string };
+  logoHeaderStackedWhite?: { url: string; alt: string };
+  logoHeaderWideColor?: { url: string; alt: string };
+  logoHeaderWideWhite?: { url: string; alt: string };
   logoFooter?: { url: string; alt: string };
   nav: { label: string; url: string; openInNewTab: boolean }[];
   contact: {

@@ -11,21 +11,39 @@ export const SiteSettings: GlobalConfig = {
   },
   fields: [
     {
-      name: "logo",
+      name: "logoHeaderStackedColor",
       type: "upload",
       relationTo: "media",
-      label: "Logo — Header / Stacked",
+      label: "Logo — Stacked / Color",
       admin: {
-        description: "Used on mobile and as a fallback on desktop if no horizontal logo is set.",
+        description: "Full-color stacked logo. Used on mobile for pages without a hero image, and as a fallback.",
       },
     },
     {
-      name: "logoHeaderWide",
+      name: "logoHeaderStackedWhite",
       type: "upload",
       relationTo: "media",
-      label: "Logo — Header / Horizontal",
+      label: "Logo — Stacked / White",
       admin: {
-        description: "Displayed on desktop (above mobile breakpoint) in place of the stacked logo.",
+        description: "Knockout white stacked logo. Used on mobile for pages with a dark hero image (Courses, Applications, Contact).",
+      },
+    },
+    {
+      name: "logoHeaderWideColor",
+      type: "upload",
+      relationTo: "media",
+      label: "Logo — Wide / Color",
+      admin: {
+        description: "Full-color horizontal logo. Used on desktop for pages without a hero image. Falls back to Stacked / Color if not set.",
+      },
+    },
+    {
+      name: "logoHeaderWideWhite",
+      type: "upload",
+      relationTo: "media",
+      label: "Logo — Wide / White",
+      admin: {
+        description: "Knockout white horizontal logo. Used on desktop for pages with a dark hero image. Falls back to Stacked / White if not set.",
       },
     },
     {
@@ -34,7 +52,7 @@ export const SiteSettings: GlobalConfig = {
       relationTo: "media",
       label: "Logo — Footer",
       admin: {
-        description: "Displayed in the site footer. Falls back to the Header logo if not set.",
+        description: "Displayed in the site footer.",
       },
     },
     {

@@ -10,22 +10,30 @@ export interface NavItem {
 }
 
 export interface NavbarProps {
-  logoUrl?: string;
-  logoAlt?: string;
-  logoWideUrl?: string;
-  logoWideAlt?: string;
-  overlayLogoUrl?: string;
-  overlayLogoAlt?: string;
+  logoStackedColorUrl?: string;
+  logoStackedColorAlt?: string;
+  logoStackedWhiteUrl?: string;
+  logoStackedWhiteAlt?: string;
+  logoWideColorUrl?: string;
+  logoWideColorAlt?: string;
+  logoWideWhiteUrl?: string;
+  logoWideWhiteAlt?: string;
   nav: NavItem[];
   social?: { platform: string; url: string }[];
   children?: React.ReactNode;
 }
 
-export default function Navbar({ logoUrl, logoAlt, logoWideUrl, logoWideAlt, overlayLogoUrl, overlayLogoAlt, nav, social, children }: NavbarProps) {
+export default function Navbar({
+  logoStackedColorUrl, logoStackedColorAlt,
+  logoStackedWhiteUrl, logoStackedWhiteAlt,
+  logoWideColorUrl, logoWideColorAlt,
+  logoWideWhiteUrl, logoWideWhiteAlt,
+  nav, social, children,
+}: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const isOverlay = overlayNavRoutes.has(location.pathname);
-  const useFooterLogo = isOverlay && !overlayNavPrimaryLogoRoutes.has(location.pathname);
+  const useWhite = isOverlay && !overlayNavPrimaryLogoRoutes.has(location.pathname);
 
   /* Close on route change */
   useEffect(() => {
@@ -46,19 +54,24 @@ export default function Navbar({ logoUrl, logoAlt, logoWideUrl, logoWideAlt, ove
     setMenuOpen((prev) => !prev);
   }
 
-  const activeLogoUrl = useFooterLogo ? (overlayLogoUrl ?? logoUrl) : logoUrl;
-  const activeLogoAlt = useFooterLogo ? (overlayLogoAlt ?? logoAlt) : logoAlt;
+  // Mobile: stacked white (hero pages) or stacked color (all others)
+  const mobileLogoUrl = useWhite ? (logoStackedWhiteUrl ?? logoStackedColorUrl) : logoStackedColorUrl;
+  const mobileLogoAlt = useWhite ? (logoStackedWhiteAlt ?? logoStackedColorAlt) : logoStackedColorAlt;
 
-  // Mobile: always use stacked logo
-  const mobileLogoNode = activeLogoUrl ? (
-    <img src={activeLogoUrl} alt={activeLogoAlt ?? "103 Tactical"} className="nav-logo" />
+  // Desktop: wide white or wide color, falling back to stacked counterpart
+  const desktopLogoUrl = useWhite
+    ? (logoWideWhiteUrl ?? logoStackedWhiteUrl ?? logoStackedColorUrl)
+    : (logoWideColorUrl ?? logoStackedColorUrl);
+  const desktopLogoAlt = useWhite
+    ? (logoWideWhiteAlt ?? logoStackedWhiteAlt ?? logoStackedColorAlt)
+    : (logoWideColorAlt ?? logoStackedColorAlt);
+
+  const mobileLogoNode = mobileLogoUrl ? (
+    <img src={mobileLogoUrl} alt={mobileLogoAlt ?? "103 Tactical"} className="nav-logo" />
   ) : (
     <span className="nav-logo-text">103 Tactical</span>
   );
 
-  // Desktop: use horizontal logo if available, fall back to stacked
-  const desktopLogoUrl = logoWideUrl ?? activeLogoUrl;
-  const desktopLogoAlt = logoWideUrl ? (logoWideAlt ?? activeLogoAlt) : activeLogoAlt;
   const desktopLogoNode = desktopLogoUrl ? (
     <img src={desktopLogoUrl} alt={desktopLogoAlt ?? "103 Tactical"} className="nav-logo" />
   ) : (
@@ -133,8 +146,8 @@ export default function Navbar({ logoUrl, logoAlt, logoWideUrl, logoWideAlt, ove
 
         {/* Mobile logo — centered below the header bar, hidden on desktop */}
         <div className="mobile-logo">
-          {activeLogoUrl
-            ? <img src={activeLogoUrl} alt={activeLogoAlt ?? "103 Tactical"} className="mobile-logo__img" />
+          {mobileLogoUrl
+            ? <img src={mobileLogoUrl} alt={mobileLogoAlt ?? "103 Tactical"} className="mobile-logo__img" />
             : <span className="mobile-logo__text">103 Tactical</span>}
         </div>
 
