@@ -4195,7 +4195,7 @@ a.contact-info__value:hover {
 .print-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 48px 40px 64px;
+  padding: 16px 40px 64px;
   font-family: var(--font-body, system-ui, sans-serif);
   color: #111;
   background: #fff;
