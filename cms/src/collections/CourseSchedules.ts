@@ -4,7 +4,7 @@ export const CourseSchedules: CollectionConfig = {
   slug: "course-schedules",
   admin: {
     useAsTitle: "label",
-    group: "Courses Management",
+    group: "Course Management",
     defaultColumns: ["course", "label", "maxSeats", "seatsBooked", "isActive"],
     description:
       "Define available date slots for each course. Each slot can contain one or more session dates (e.g. two non-adjacent Fridays for a 2-day course).",
@@ -23,9 +23,19 @@ export const CourseSchedules: CollectionConfig = {
     {
       name: "label",
       type: "text",
-      label: "Slot Label",
+      label: "Internal Label",
       admin: {
-        description: 'Optional label, e.g. "Spring Session" or "March Weekends".',
+        description:
+          'Admin-only identifier — use dates for clarity, e.g. "Mar 20" or "Jun 5 / Jun 12". This is what appears in dropdowns when adding an attendee.',
+      },
+    },
+    {
+      name: "displayLabel",
+      type: "text",
+      label: "Display Label",
+      admin: {
+        description:
+          'Visitor-facing session name shown on the schedule page, e.g. "Spring Session". Falls back to Internal Label if left blank.',
       },
     },
     {
@@ -72,6 +82,15 @@ export const CourseSchedules: CollectionConfig = {
           },
         },
       ],
+    },
+    {
+      name: "instructor",
+      type: "relationship",
+      relationTo: "instructors",
+      label: "Instructor",
+      admin: {
+        description: "Select the instructor leading this session. Manage instructors under Course Management → Instructors.",
+      },
     },
     {
       name: "maxSeats",

@@ -4,7 +4,7 @@ export const CourseGroups: CollectionConfig = {
   slug: "course-groups",
   admin: {
     useAsTitle: "title",
-    group: "Courses Management",
+    group: "Course Management",
     description: "Create and manage course groups. Each group has a title and an ordered list of courses.",
   },
   access: {

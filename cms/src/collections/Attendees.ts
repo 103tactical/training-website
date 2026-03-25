@@ -165,8 +165,16 @@ export const Attendees: CollectionConfig = {
       relationTo: 'course-schedules',
       required: true,
       label: 'Session',
+      // Filters dropdown to only show sessions belonging to the selected course
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      filterOptions: ({ siblingData }: any) => {
+        if (siblingData?.course) {
+          return { course: { equals: siblingData.course } }
+        }
+        return true
+      },
       admin: {
-        description: 'The specific session slot (date range) the attendee has booked.',
+        description: 'Select a Course first — this list will then show only sessions for that course.',
       },
     },
     {

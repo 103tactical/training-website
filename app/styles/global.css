@@ -2315,6 +2315,12 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   margin: 0;
 }
 
+.schedule-slot__instructor {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.7);
+  margin: var(--spacing-1) 0 0;
+}
+
 .schedule-slot__sessions {
   display: flex;
   flex-direction: column;

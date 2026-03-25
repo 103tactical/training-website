@@ -68,7 +68,7 @@ export async function getCourseBySlug(slug: string) {
 
 export async function getCourseSchedules(courseId: string) {
   return fetchPayload<{ docs: CourseSchedule[] }>(
-    `/course-schedules?where[course][equals]=${encodeURIComponent(courseId)}&where[isActive][equals]=true&depth=0&limit=100&sort=createdAt`
+    `/course-schedules?where[course][equals]=${encodeURIComponent(courseId)}&where[isActive][equals]=true&depth=1&limit=100&sort=createdAt`
   );
 }
 
@@ -219,10 +219,19 @@ export interface CourseSession {
   endTime?: string;    // ISO timestamp (timeOnly picker)
 }
 
+export interface Instructor {
+  id: string;
+  name: string;
+  title?: string;
+  photo?: { url: string; alt?: string };
+}
+
 export interface CourseSchedule {
   id: string;
   course: Course | string;
   label?: string;
+  displayLabel?: string;
+  instructor?: Instructor | string;
   sessions?: CourseSession[];
   maxSeats: number;
   seatsBooked?: number;

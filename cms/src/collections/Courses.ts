@@ -16,7 +16,7 @@ export const Courses: CollectionConfig = {
     useAsTitle: "title",
     defaultColumns: ["title", "price", "isActive"],
     description: "Manage courses. Fields will be expanded as the site grows.",
-    group: "Courses Management",
+    group: "Course Management",
   },
   access: {
     read: () => true,
