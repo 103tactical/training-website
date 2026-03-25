@@ -168,6 +168,7 @@ export default function App() {
   const bodyClass = [
     pathname === "/contact" ? "theme-contact" : null,
     overlayNavRoutes.has(pathname) ? "layout-overlay" : null,
+    pathname.startsWith("/print/") ? "layout-print" : null,
   ].filter(Boolean).join(" ") || undefined;
 
   return (

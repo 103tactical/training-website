@@ -31,10 +31,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   const schedule = await scheduleRes.json();
   const attendeesData = await attendeesRes.json();
   const siteSettings = siteRes.ok ? await siteRes.json() : null;
-  const logoUrl: string | null =
-    siteSettings?.logoPrint?.url
-      ? `${API}${siteSettings.logoPrint.url}`
-      : null;
+  const rawLogoUrl: string | null = siteSettings?.logoPrint?.url ?? null;
+  const logoUrl: string | null = rawLogoUrl
+    ? rawLogoUrl.startsWith("http") ? rawLogoUrl : `${API}${rawLogoUrl}`
+    : null;
   const attendees: Attendee[] = attendeesData.docs ?? [];
 
   const course = schedule.course;
