@@ -4202,6 +4202,23 @@ a.contact-info__value:hover {
   min-height: 100vh;
 }
 
+/* Logo — hidden on screen, shown only when printing */
+.print-only {
+  display: none;
+}
+
+.print-page__logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.print-page__logo-img {
+  width: 3in;
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+}
+
 /* Toolbar (Print button) — hidden when printing */
 .print-page__toolbar {
   display: flex;
@@ -4355,6 +4372,7 @@ a.contact-info__value:hover {
   .age-gate               { display: none !important; }
 
   html, body              { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  .print-only             { display: block !important; }
   .print-page             { padding: 16px 24px 32px; max-width: 100%; margin: 0; }
   .print-table__table     { page-break-inside: auto; }
   .print-table__table tr  { page-break-inside: avoid; }

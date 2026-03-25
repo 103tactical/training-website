@@ -20,15 +20,21 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   const id = params.scheduleId;
 
-  const [scheduleRes, attendeesRes] = await Promise.all([
+  const [scheduleRes, attendeesRes, siteRes] = await Promise.all([
     fetch(`${API}/api/course-schedules/${id}?depth=2`),
     fetch(`${API}/api/attendees?where[courseSchedule][equals]=${id}&limit=500&depth=0`),
+    fetch(`${API}/api/globals/site-settings?depth=1`),
   ]);
 
   if (!scheduleRes.ok) throw new Response("Session not found", { status: 404 });
 
   const schedule = await scheduleRes.json();
   const attendeesData = await attendeesRes.json();
+  const siteSettings = siteRes.ok ? await siteRes.json() : null;
+  const logoUrl: string | null =
+    siteSettings?.logos?.logoHeaderStackedColor?.url
+      ? `${API}${siteSettings.logos.logoHeaderStackedColor.url}`
+      : null;
   const attendees: Attendee[] = attendeesData.docs ?? [];
 
   const course = schedule.course;
@@ -48,7 +54,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     })
   );
 
-  return json({ schedule, attendees, courseName, instructorName, dates });
+  return json({ schedule, attendees, courseName, instructorName, dates, logoUrl });
 }
 
 interface Attendee {
@@ -63,7 +69,7 @@ interface Attendee {
 }
 
 export default function PrintRoster() {
-  const { schedule, attendees, courseName, instructorName, dates } =
+  const { schedule, attendees, courseName, instructorName, dates, logoUrl } =
     useLoaderData<typeof loader>();
 
   const confirmed  = attendees.filter((a) => a.status === "confirmed");
@@ -84,6 +90,13 @@ export default function PrintRoster() {
           Print / Save as PDF
         </button>
       </div>
+
+      {/* Logo — print only */}
+      {logoUrl && (
+        <div className="print-page__logo print-only">
+          <img src={logoUrl} alt="103 Tactical" className="print-page__logo-img" />
+        </div>
+      )}
 
       {/* Header */}
       <header className="print-page__header">
