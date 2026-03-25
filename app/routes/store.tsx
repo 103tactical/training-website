@@ -56,11 +56,11 @@ export default function StoreRoute() {
       {featured?.name && (
         <section className="store-featured">
           <div className="container">
-            <h2 className="store-section__heading store-featured__label">
-              {featured.heading ?? "This Week's Feature"}
-            </h2>
-          </div>
-          <div className="container store-featured__inner">
+            <div className="store-featured__box">
+              <h2 className="store-section__heading store-featured__label">
+                {featured.heading ?? "This Week's Feature"}
+              </h2>
+              <div className="store-featured__inner">
 
             {/* Image */}
             <div className="store-featured__img-wrap">
@@ -104,7 +104,9 @@ export default function StoreRoute() {
                 </Link>
               </div>
             </div>
-          </div>
+            </div>{/* end store-featured__inner */}
+          </div>{/* end store-featured__box */}
+          </div>{/* end container */}
         </section>
       )}
 

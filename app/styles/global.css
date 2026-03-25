@@ -2684,7 +2684,29 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 
 .store-featured {
   padding-block: var(--spacing-16);
-  background: var(--color-bg-surface);
+}
+
+.store-featured__box {
+  background: var(--color-bg-card);
+  clip-path: polygon(
+    24px 0%, 100% 0%,
+    100% calc(100% - 24px),
+    calc(100% - 24px) 100%,
+    0% 100%, 0% 24px
+  );
+  padding: var(--spacing-10) var(--spacing-8);
+}
+
+@media (min-width: 768px) {
+  .store-featured__box {
+    padding: var(--spacing-12) var(--spacing-12);
+  }
+}
+
+@media (min-width: 1024px) {
+  .store-featured__box {
+    padding: var(--spacing-14) var(--spacing-16);
+  }
 }
 
 .store-featured__label {
@@ -2991,8 +3013,8 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 /* ── Visit CTA ── */
 
 .store-visit-cta {
-  background: var(--color-bg-surface);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  /* border-top: 1px solid rgba(255, 255, 255, 0.06); */
   padding-block: var(--spacing-20);
   position: relative;
   overflow: hidden;
