@@ -195,6 +195,9 @@ export const Attendees: CollectionConfig = {
       admin: {
         description:
           'Confirmed and Waitlisted count against available seats. Cancelled and Transferred free the seat automatically.',
+        components: {
+          Cell: './components/StatusBadge',
+        },
       },
     },
     {
