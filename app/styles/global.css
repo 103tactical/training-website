@@ -503,8 +503,14 @@ body.menu-open .app-content {
 
 /* Wide (horizontal) logo — desktop navbar only */
 .nav-logo--wide {
-  height: 84px;
+  height: 58px;
   padding-top: 8px;
+}
+
+@media (min-width: 992px) {
+  .nav-logo--wide {
+    height: 68px;
+  }
 }
 
 .mobile-header .nav-logo,
