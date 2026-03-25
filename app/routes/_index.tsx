@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getHomePage, getUtility, resolveMediaUrl } from "~/lib/payload";
 import type { HomePage, CourseGroup, TestimonialItem } from "~/lib/payload";
 import { BulletIcon, cmsIcons } from "~/components/Icons";
@@ -126,6 +127,42 @@ function TestimonialsSection({ data }: { data: NonNullable<HomePage["testimonial
   const items = data.items ?? [];
   if (items.length === 0) return null;
 
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [activeDot, setActiveDot] = useState(0);
+  const [slidesPerView, setSlidesPerView] = useState(1);
+
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w >= 1280) setSlidesPerView(4);
+      else if (w >= 1024) setSlidesPerView(3);
+      else if (w >= 768) setSlidesPerView(2);
+      else setSlidesPerView(1);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const totalDots = Math.ceil(items.length / slidesPerView);
+
+  const goToDot = useCallback((dot: number) => {
+    if (!outerRef.current) return;
+    outerRef.current.scrollTo({
+      left: dot * outerRef.current.clientWidth,
+      behavior: "smooth",
+    });
+    setActiveDot(dot);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (!outerRef.current) return;
+    const { scrollLeft, clientWidth } = outerRef.current;
+    if (clientWidth === 0) return;
+    const dot = Math.round(scrollLeft / clientWidth);
+    setActiveDot(Math.min(dot, totalDots - 1));
+  }, [totalDots]);
+
   return (
     <section className="testimonials-section">
       {data.heading && (
@@ -133,10 +170,14 @@ function TestimonialsSection({ data }: { data: NonNullable<HomePage["testimonial
           <h2 className="testimonials-section__heading">{data.heading}</h2>
         </div>
       )}
-      <div className="testimonials-section__outer">
+      <div
+        className="testimonials-section__outer"
+        ref={outerRef}
+        onScroll={handleScroll}
+      >
         <div className="testimonials-section__track">
-          {items.map((item: TestimonialItem) => (
-            <div key={item.id} className="testimonial-card">
+          {items.map((item: TestimonialItem, i: number) => (
+            <div key={item.id ?? i} className="testimonial-card">
               <span className="testimonial-card__quote-mark" aria-hidden="true">&ldquo;</span>
               <p className="testimonial-card__quote">{item.quote}</p>
               <div className="testimonial-card__footer">
@@ -149,6 +190,18 @@ function TestimonialsSection({ data }: { data: NonNullable<HomePage["testimonial
           ))}
         </div>
       </div>
+      {totalDots > 1 && (
+        <div className="testimonials-section__dots">
+          {Array.from({ length: totalDots }).map((_, i) => (
+            <button
+              key={i}
+              className={`testimonials-section__dot${i === activeDot ? " testimonials-section__dot--active" : ""}`}
+              onClick={() => goToDot(i)}
+              aria-label={`Go to slide group ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

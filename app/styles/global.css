@@ -926,23 +926,54 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 .testimonials-section__outer {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
   padding-inline: var(--spacing-6);
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-bg-card-alt) transparent;
+  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+}
+
+.testimonials-section__outer::-webkit-scrollbar {
+  display: none;
 }
 
 .testimonials-section__track {
   display: flex;
   gap: var(--spacing-5);
-  width: max-content;
-  padding-bottom: var(--spacing-2);
+}
+
+.testimonials-section__dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-8);
+}
+
+.testimonials-section__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.25s, transform 0.25s;
+  flex-shrink: 0;
+}
+
+.testimonials-section__dot:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.testimonials-section__dot--active {
+  background: var(--color-blue);
+  transform: scale(1.25);
 }
 
 /* ── Testimonial card ── */
 
 .testimonial-card {
-  flex: 0 0 calc(min(340px, 82vw));
+  /* 1 per view mobile: full width minus padding */
+  flex: 0 0 calc(100%);
   scroll-snap-align: start;
   background: var(--color-bg-card);
   clip-path: polygon(
@@ -999,14 +1030,23 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 @media (min-width: 768px) {
+  /* 2 per view: calc(50% - gap/2) */
   .testimonial-card {
-    flex: 0 0 360px;
+    flex: 0 0 calc(50% - var(--spacing-5) / 2);
+  }
+}
+
+@media (min-width: 1024px) {
+  /* 3 per view: calc(33.333% - gap*2/3) */
+  .testimonial-card {
+    flex: 0 0 calc(33.333% - var(--spacing-5) * 2 / 3);
   }
 }
 
 @media (min-width: 1280px) {
+  /* 4 per view: calc(25% - gap*3/4) */
   .testimonial-card {
-    flex: 0 0 400px;
+    flex: 0 0 calc(25% - var(--spacing-5) * 3 / 4);
   }
 }
 
@@ -3513,20 +3553,20 @@ body.layout-overlay .contact-page__hero-img {
   position: relative;
   z-index: 1;
   text-align: center;
-  padding: var(--spacing-10) var(--spacing-6) var(--spacing-8);
+  padding: var(--spacing-10) var(--spacing-10) var(--spacing-8);
   /* Subtle dark scrim so text stays readable over any photo */
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
 }
 
 @media (min-width: 768px) {
   .contact-page__hero-content {
-    padding: var(--spacing-12) var(--spacing-6) var(--spacing-10);
+    padding: var(--spacing-12) var(--spacing-16) var(--spacing-10);
   }
 }
 
 @media (min-width: 992px) {
   .contact-page__hero-content {
-    padding: var(--spacing-16) var(--spacing-6) var(--spacing-12);
+    padding: var(--spacing-16) var(--spacing-20) var(--spacing-12);
   }
 }
 
