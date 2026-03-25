@@ -67,6 +67,7 @@ export const links: LinksFunction = () => [
 /* ── Loader — fetch SiteSettings from Payload ───────────────────────────── */
 
 const FALLBACK_NAV = [
+  { label: "Store", url: "/store", openInNewTab: false },
   { label: "Courses", url: "/courses", openInNewTab: false },
   { label: "Applications", url: "/applications", openInNewTab: false },
   { label: "Contact", url: "/contact", openInNewTab: false },

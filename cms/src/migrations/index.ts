@@ -25,6 +25,7 @@ import * as migration_20260310_applications_page from './20260310_applications_p
 import * as migration_20260310_site_settings_logo_header_wide from './20260310_site_settings_logo_header_wide';
 import * as migration_20260311_site_settings_logo_refactor from './20260311_site_settings_logo_refactor';
 import * as migration_20260325_testimonials_section from './20260325_testimonials_section';
+import * as migration_20260325_store_page from './20260325_store_page';
 
 export const migrations = [
   {
@@ -161,5 +162,10 @@ export const migrations = [
     up: migration_20260325_testimonials_section.up,
     down: migration_20260325_testimonials_section.down,
     name: '20260325_testimonials_section'
+  },
+  {
+    up: migration_20260325_store_page.up,
+    down: migration_20260325_store_page.down,
+    name: '20260325_store_page'
   },
 ];

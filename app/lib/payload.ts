@@ -52,6 +52,10 @@ export async function getApplicationsPage() {
   return fetchPayload<ApplicationsPage>("/globals/applications-page?depth=2");
 }
 
+export async function getStorePage() {
+  return fetchPayload<StorePage>("/globals/store-page?depth=2");
+}
+
 export async function getAllCourses() {
   return fetchPayload<{ docs: Course[] }>("/courses?limit=100&depth=1&sort=title");
 }
@@ -165,6 +169,31 @@ export interface CoursesPage {
 export interface ApplicationsPage {
   heroImage?: { url: string; alt?: string };
   header?: { title?: string; subtext?: string };
+}
+
+export interface StoreProduct {
+  id: string;
+  image?: { url: string; alt?: string };
+  badge?: string;
+  brand?: string;
+  name: string;
+  caliber?: string;
+  description?: string;
+  price?: number;
+}
+
+export interface StorePage {
+  heroImage?: { url: string; alt?: string };
+  header?: { title?: string; subtext?: string };
+  showPrices?: boolean;
+  featuredProduct?: {
+    heading?: string;
+  } & Omit<StoreProduct, "id">;
+  pistolsSection?: { heading?: string; products?: StoreProduct[] };
+  riflesSection?: { heading?: string; products?: StoreProduct[] };
+  shotgunsSection?: { heading?: string; products?: StoreProduct[] };
+  accessoriesSection?: { heading?: string; items?: StoreProduct[] };
+  visitCta?: { heading?: string; subtext?: string; directionsUrl?: string };
 }
 
 export interface CourseGroup {
