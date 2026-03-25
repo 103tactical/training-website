@@ -6,7 +6,7 @@
  * To add a page: add its path string to the Set.
  * To remove a page: delete its path string.
  */
-export const overlayNavRoutes = new Set(["/", "/courses", "/applications", "/contact"]);
+export const overlayNavRoutes = new Set(["/", "/courses", "/applications", "/contact", "/store"]);
 
 /**
  * Overlay nav routes that do NOT have a hero image behind the navbar.
