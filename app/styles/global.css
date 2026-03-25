@@ -1740,6 +1740,11 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   flex-wrap: wrap;
 }
 
+.course-detail__actions .btn {
+  --btn-px: 18px;
+  --btn-py: 14px;
+}
+
 .course-detail__back-link {
   font-size: var(--text-sm);
   font-weight: var(--font-light);
@@ -2209,7 +2214,8 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 .schedule-slot__cta {
   margin-top: auto;
   align-self: flex-start;
-  padding: 10px 18px;
+  --btn-px: 18px;
+  --btn-py: 14px;
 }
 
 .schedule-slot__cta:disabled,
