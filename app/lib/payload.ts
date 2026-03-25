@@ -105,6 +105,13 @@ export interface HighlightCalloutItem {
   button?: { label?: string; url?: string; openInNewTab?: boolean };
 }
 
+export interface TestimonialItem {
+  id: string;
+  quote: string;
+  name: string;
+  context?: string;
+}
+
 export interface HomePage {
   websiteHeadlineSection?: { headline?: string };
   featured: FeaturedSlide[];
@@ -112,6 +119,10 @@ export interface HomePage {
   highlightCallouts?: {
     oddItemPlacement?: "first" | "last";
     items?: HighlightCalloutItem[];
+  };
+  testimonialsSection?: {
+    heading?: string;
+    items?: TestimonialItem[];
   };
   whyChoose: {
     heading: string;

@@ -2,7 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { getHomePage, getUtility, resolveMediaUrl } from "~/lib/payload";
-import type { HomePage, CourseGroup } from "~/lib/payload";
+import type { HomePage, CourseGroup, TestimonialItem } from "~/lib/payload";
 import { BulletIcon, cmsIcons } from "~/components/Icons";
 import type { CmsIconKey } from "~/components/Icons";
 import FeaturedCarousel from "~/components/FeaturedCarousel";
@@ -53,6 +53,9 @@ export default function Index() {
           items={homePage.highlightCallouts.items}
           oddItemPlacement={homePage.highlightCallouts.oddItemPlacement ?? "first"}
         />
+      )}
+      {homePage?.testimonialsSection?.items && homePage.testimonialsSection.items.length > 0 && (
+        <TestimonialsSection data={homePage.testimonialsSection} />
       )}
       {homePage?.badgesSection?.badges && homePage.badgesSection.badges.length > 0 && (
         <BadgesSection data={homePage.badgesSection} />
@@ -113,6 +116,37 @@ function BadgesSection({ data }: { data: NonNullable<HomePage["badgesSection"]> 
               </a>
             );
           })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection({ data }: { data: NonNullable<HomePage["testimonialsSection"]> }) {
+  const items = data.items ?? [];
+  if (items.length === 0) return null;
+
+  return (
+    <section className="testimonials-section">
+      {data.heading && (
+        <div className="container">
+          <h2 className="testimonials-section__heading">{data.heading}</h2>
+        </div>
+      )}
+      <div className="testimonials-section__outer">
+        <div className="testimonials-section__track">
+          {items.map((item: TestimonialItem) => (
+            <div key={item.id} className="testimonial-card">
+              <span className="testimonial-card__quote-mark" aria-hidden="true">&ldquo;</span>
+              <p className="testimonial-card__quote">{item.quote}</p>
+              <div className="testimonial-card__footer">
+                <span className="testimonial-card__name">{item.name}</span>
+                {item.context && (
+                  <span className="testimonial-card__context">{item.context}</span>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

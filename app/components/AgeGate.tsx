@@ -149,7 +149,7 @@ export default function AgeGate() {
         </form>
 
         <p className="age-gate__disclaimer">
-          By entering, you confirm you are 18 or older and agree to our terms of use.
+          By entering, you confirm you are 18 or older.
         </p>
       </div>
     </div>

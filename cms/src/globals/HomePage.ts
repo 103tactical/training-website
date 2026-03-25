@@ -260,6 +260,57 @@ export const HomePage: GlobalConfig = {
       ],
     },
 
+    // ── Testimonials ──────────────────────────────────────────────────────
+    {
+      name: "testimonialsSection",
+      type: "group",
+      label: "Testimonials",
+      fields: [
+        {
+          name: "heading",
+          type: "text",
+          label: "Section Heading",
+          admin: {
+            description: "Optional heading above the testimonials row. Leave blank to show no heading.",
+          },
+        },
+        {
+          name: "items",
+          type: "array",
+          label: "Testimonials",
+          labels: { singular: "Testimonial", plural: "Testimonials" },
+          fields: [
+            {
+              name: "quote",
+              type: "textarea",
+              required: true,
+              label: "Quote",
+              admin: {
+                description: "The testimonial text.",
+              },
+            },
+            {
+              name: "name",
+              type: "text",
+              required: true,
+              label: "Name",
+              admin: {
+                description: "The person's name (e.g. "John D.").",
+              },
+            },
+            {
+              name: "context",
+              type: "text",
+              label: "Title / Context",
+              admin: {
+                description: "Optional. E.g. "Pistol Permit Course Graduate" or "NRA Safety Student".",
+              },
+            },
+          ],
+        },
+      ],
+    },
+
     // ── Details Section ───────────────────────────────────────────────────
     {
       name: "whyChoose",
