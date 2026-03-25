@@ -825,6 +825,12 @@ body.layout-overlay .app-content {
   }
 }
 
+/* Wide logo always stays 64px regardless of overlay layout */
+body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
+  height: 64px;
+  padding-top: 8px;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    BADGES SECTION
    ───────────────────────────────────────────────────────────────────────── */
