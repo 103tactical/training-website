@@ -9,7 +9,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const seo = data?.coursesPage?.seo;
   return buildMeta({
     pageTitle: seo?.title ?? "Courses",
-    description: seo?.description ?? "Browse firearm safety, licensing, and tactical training courses offered by 103 Tactical Training on Staten Island, NY.",
+    description: seo?.description ?? "Browse firearm safety, licensing, and tactical training courses offered by 103 Tactical on Staten Island, NY.",
     ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
     canonicalUrl: data?.canonicalUrl,
   });

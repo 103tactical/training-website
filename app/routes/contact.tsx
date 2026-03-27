@@ -9,7 +9,7 @@ import { buildMeta } from "~/lib/meta";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return buildMeta({
     pageTitle: data?.seoTitle ?? "Contact",
-    description: data?.seoDescription ?? "Get in touch with 103 Tactical Training. We're located on Staten Island, NY. Ask about courses, licensing, and firearm services.",
+    description: data?.seoDescription ?? "Get in touch with 103 Tactical. We're located on Staten Island, NY. Ask about courses, licensing, and firearm services.",
     ogImage: data?.seoOgImage ? resolveMediaUrl(data.seoOgImage) : undefined,
     canonicalUrl: data?.canonicalUrl,
   });

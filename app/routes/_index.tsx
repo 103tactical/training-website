@@ -14,8 +14,8 @@ import { buildMeta } from "~/lib/meta";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const seo = data?.homePage?.seo;
   return buildMeta({
-    siteName: "103 Tactical Training",
-    description: seo?.description ?? "103 Tactical Training — firearm safety courses, licensing, and professional tactical training on Staten Island, NY.",
+    siteName: "103 Tactical",
+    description: seo?.description ?? "103 Tactical — firearm safety courses, licensing, and professional tactical training on Staten Island, NY.",
     ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
     canonicalUrl: data?.canonicalUrl,
   });

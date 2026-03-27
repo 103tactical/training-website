@@ -28,7 +28,7 @@ type MetaDescriptor = Record<string, any>;
 
 export function buildMeta({
   pageTitle,
-  siteName = "103 Tactical Training",
+  siteName = "103 Tactical",
   description,
   ogImage,
   canonicalUrl,

@@ -7,7 +7,7 @@ import { buildMeta } from "~/lib/meta";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const course = data?.course;
-  if (!course) return [{ title: "Schedule | 103 Tactical Training" }];
+  if (!course) return [{ title: "Schedule | 103 Tactical" }];
   const ogImageUrl =
     resolveMediaUrl(course.socialShareImage?.url) ??
     resolveMediaUrl(course.thumbnail?.url);

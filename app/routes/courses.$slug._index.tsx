@@ -8,7 +8,7 @@ import { buildMeta } from "~/lib/meta";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const course = data?.course;
-  if (!course) return [{ title: "Course | 103 Tactical Training" }];
+  if (!course) return [{ title: "Course | 103 Tactical" }];
 
   // Prefer dedicated social share image, fall back to card thumbnail
   const ogImageUrl =
