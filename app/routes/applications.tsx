@@ -9,7 +9,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const seo = data?.page?.seo;
   return buildMeta({
     pageTitle: seo?.title ?? "Applications",
-    description: seo?.description ?? "Apply for a firearms license through 103 Tactical. Learn about NYS pistol permit requirements and how to get started.",
+    description: seo?.description ?? "103 Tactical provides professional assistance with NYS and NYC firearms licensing applications — from permit paperwork to document preparation. Located on Staten Island, NY.",
     ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
     canonicalUrl: data?.canonicalUrl,
   });
