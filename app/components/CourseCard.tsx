@@ -3,6 +3,7 @@ import { Link } from "@remix-run/react";
 import type { Course } from "~/lib/payload";
 import { resolveMediaUrl } from "~/lib/payload";
 import { BulletIcon, FlipIcon } from "~/components/Icons";
+import { trackScheduleNowClick } from "~/lib/analytics";
 
 interface CourseCardProps {
   course: Course;
@@ -97,6 +98,7 @@ export default function CourseCard({ course }: CourseCardProps) {
           <Link
             to={`/courses/${course.slug}/schedule`}
             className="btn btn--outline btn--lg course-card__signup-btn"
+            onClick={() => trackScheduleNowClick(course.title, course.slug, "course_card")}
           >
             Schedule Now
           </Link>

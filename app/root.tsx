@@ -7,6 +7,7 @@ import {
   useLoaderData,
   useLocation,
 } from "@remix-run/react";
+import { useEffect } from "react";
 import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 
@@ -89,6 +90,7 @@ interface LoaderData {
   social: { platform: string; url: string }[];
   copyright: string | null;
   tagline: string | null;
+  gaMeasurementId: string | null;
 }
 
 export async function loader(_: LoaderFunctionArgs) {
@@ -131,6 +133,7 @@ export async function loader(_: LoaderFunctionArgs) {
       social: Array.isArray(settings.social) ? settings.social : [],
       copyright: settings.copyright ?? null,
       tagline: settings.tagline ?? null,
+      gaMeasurementId: process.env.GA_MEASUREMENT_ID ?? null,
     });
   } catch {
     return json<LoaderData>({
@@ -149,6 +152,7 @@ export async function loader(_: LoaderFunctionArgs) {
       social: [],
       copyright: null,
       tagline: null,
+      gaMeasurementId: process.env.GA_MEASUREMENT_ID ?? null,
     });
   }
 }
@@ -163,13 +167,26 @@ export default function App() {
     logoWideWhiteUrl, logoWideWhiteAlt,
     footerLogoUrl, footerLogoAlt,
     nav, contact, social, copyright, tagline,
+    gaMeasurementId,
   } = useLoaderData<typeof loader>();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const bodyClass = [
     pathname === "/contact" ? "theme-contact" : null,
     overlayNavRoutes.has(pathname) ? "layout-overlay" : null,
     pathname.startsWith("/print/") ? "layout-print" : null,
   ].filter(Boolean).join(" ") || undefined;
+
+  // Track page views on every client-side navigation
+  useEffect(() => {
+    if (!gaMeasurementId) return;
+    if (typeof window.gtag !== "function") return;
+    window.gtag("event", "page_view", {
+      page_path: location.pathname + location.search,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }, [location, gaMeasurementId]);
 
   return (
     <html lang="en">
@@ -179,6 +196,24 @@ export default function App() {
         <meta name="theme-color" content="#101010" />
         <Meta />
         <Links />
+        {gaMeasurementId && (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${gaMeasurementId}', { send_page_view: false });
+                `,
+              }}
+            />
+          </>
+        )}
       </head>
       <body className={bodyClass}>
         <Navbar

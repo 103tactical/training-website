@@ -1,9 +1,11 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
+import { useEffect } from "react";
 import { getCourseBySlug, getCourseSchedules, resolveMediaUrl } from "~/lib/payload";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
 import MiniCalendar from "~/components/MiniCalendar";
 import { buildMeta } from "~/lib/meta";
+import { trackScheduleView, trackScheduleNowClick } from "~/lib/analytics";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const course = data?.course;
@@ -68,6 +70,10 @@ export default function CourseSchedulePage() {
   const { course, schedules } = useLoaderData<typeof loader>();
   const imageUrl = resolveMediaUrl(course.thumbnail?.url);
   const activeSchedules = schedules as CourseSchedule[];
+
+  useEffect(() => {
+    trackScheduleView(course.title, course.slug);
+  }, [course.slug, course.title]);
 
   return (
     <div className="schedule-page">
@@ -169,6 +175,9 @@ export default function CourseSchedulePage() {
                       className="btn btn--outline btn--lg schedule-slot__cta"
                       disabled={full}
                       aria-disabled={full}
+                      onClick={() => {
+                        if (!full) trackScheduleNowClick(course.title, course.slug, "schedule_page");
+                      }}
                     >
                       {full ? "Unavailable" : "Schedule Now"}
                     </button>

@@ -1,10 +1,11 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { getContactSettings, getSiteSettings, PAYLOAD_API_URL, resolveMediaUrl } from "~/lib/payload";
 import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 import { buildMeta } from "~/lib/meta";
+import { trackContactFormSubmit } from "~/lib/analytics";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return buildMeta({
@@ -103,6 +104,16 @@ export default function Contact() {
 
   const serverErrors = actionData?.errors ?? {};
   const success      = actionData?.success === true;
+
+  // Fire once when the form submission succeeds
+  useEffect(() => {
+    if (success) {
+      const form = document.querySelector<HTMLFormElement>("form");
+      const topic = form?.querySelector<HTMLSelectElement>("[name='topic']")?.value ?? "unknown";
+      trackContactFormSubmit(topic);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [success]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     setAttempted(true);

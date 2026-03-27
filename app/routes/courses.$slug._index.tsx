@@ -1,10 +1,12 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
+import { useEffect } from "react";
 import { getCourseBySlug, resolveMediaUrl } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
 import RichText from "~/components/RichText";
 import { BulletIcon } from "~/components/Icons";
 import { buildMeta } from "~/lib/meta";
+import { trackCourseView, trackScheduleNowClick } from "~/lib/analytics";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const course = data?.course;
@@ -60,6 +62,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 export default function CourseDetailRoute() {
   const { course } = useLoaderData<typeof loader>();
   const imageUrl = resolveMediaUrl(course.thumbnail?.url);
+
+  useEffect(() => {
+    trackCourseView(course.title, course.slug);
+  }, [course.slug, course.title]);
   const hasMeta = course.durationHours != null || course.durationDays != null;
 
   return (
@@ -123,6 +129,7 @@ export default function CourseDetailRoute() {
             <Link
               to={`/courses/${course.slug}/schedule`}
               className="btn btn--outline btn--lg"
+              onClick={() => trackScheduleNowClick(course.title, course.slug, "course_detail")}
             >
               View Available Sessions
             </Link>
