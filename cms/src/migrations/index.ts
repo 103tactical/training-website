@@ -32,6 +32,7 @@ import * as migration_20260325_instructors_and_schedule_fields from './20260325_
 import * as migration_20260325_course_schedules_admin_title from './20260325_course_schedules_admin_title';
 import * as migration_20260325_site_settings_logo_print from './20260325_site_settings_logo_print';
 import * as migration_20260325_site_settings_logo_print_v2 from './20260325_site_settings_logo_print_v2';
+import * as migration_20260327_seo_fields from './20260327_seo_fields';
 
 export const migrations = [
   {
@@ -203,5 +204,10 @@ export const migrations = [
     up: migration_20260325_site_settings_logo_print_v2.up,
     down: migration_20260325_site_settings_logo_print_v2.down,
     name: '20260325_site_settings_logo_print_v2'
+  },
+  {
+    up: migration_20260327_seo_fields.up,
+    down: migration_20260327_seo_fields.down,
+    name: '20260327_seo_fields'
   },
 ];

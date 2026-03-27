@@ -48,6 +48,15 @@ export const Courses: CollectionConfig = {
       },
     },
     {
+      name: "socialShareImage",
+      type: "upload",
+      relationTo: "media",
+      label: "Social Share Image",
+      admin: {
+        description: "Image shown when this course is shared via social media, text message, or email. Recommended: 1200×630px. Falls back to the Card Image if not set.",
+      },
+    },
+    {
       name: "summary",
       type: "array",
       label: "Bullet Point Summary",

@@ -9,12 +9,19 @@ import type { CmsIconKey } from "~/components/Icons";
 import FeaturedCarousel from "~/components/FeaturedCarousel";
 import CourseCard from "~/components/CourseCard";
 import HighlightCallouts from "~/components/HighlightCallouts";
+import { buildMeta } from "~/lib/meta";
 
-export const meta: MetaFunction = () => [
-  { title: "103 Tactical Training" },
-];
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const seo = data?.homePage?.seo;
+  return buildMeta({
+    siteName: "103 Tactical Training",
+    description: seo?.description ?? "103 Tactical Training — firearm safety courses, licensing, and professional tactical training on Staten Island, NY.",
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    canonicalUrl: data?.canonicalUrl,
+  });
+};
 
-export async function loader(_: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   try {
     const [homePage, utility] = await Promise.allSettled([
       getHomePage(),
@@ -23,9 +30,10 @@ export async function loader(_: LoaderFunctionArgs) {
     return json({
       homePage: homePage.status === "fulfilled" ? homePage.value : null,
       carouselDelay: utility.status === "fulfilled" ? (utility.value.carouselDelay ?? "6") : "6",
+      canonicalUrl: new URL(request.url).toString(),
     });
   } catch {
-    return json({ homePage: null, carouselDelay: "6" as const });
+    return json({ homePage: null, carouselDelay: "6" as const, canonicalUrl: "" });
   }
 }
 

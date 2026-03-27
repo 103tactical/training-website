@@ -3,14 +3,21 @@ import { useLoaderData, Link } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/node";
 import { getStorePage, resolveMediaUrl } from "~/lib/payload";
 import type { StorePage, StoreProduct } from "~/lib/payload";
+import { buildMeta } from "~/lib/meta";
 
-export const meta: MetaFunction = () => [
-  { title: "Store | 103 Tactical" },
-];
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const seo = data?.page?.seo;
+  return buildMeta({
+    pageTitle: seo?.title ?? "Store",
+    description: seo?.description ?? "Browse 103 Tactical's selection of pistols, rifles, shotguns, and accessories. Visit us in-store on Staten Island, NY.",
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    canonicalUrl: data?.canonicalUrl,
+  });
+};
 
-export async function loader(_: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const page = await getStorePage().catch(() => null);
-  return json({ page });
+  return json({ page, canonicalUrl: new URL(request.url).toString() });
 }
 
 export default function StoreRoute() {

@@ -1,10 +1,21 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { getCoursesPage, getAllCourses, resolveMediaUrl } from "~/lib/payload";
 import type { CoursesPage, Course, CourseGroup } from "~/lib/payload";
 import CourseCard from "~/components/CourseCard";
+import { buildMeta } from "~/lib/meta";
 
-export async function loader(_: LoaderFunctionArgs) {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const seo = data?.coursesPage?.seo;
+  return buildMeta({
+    pageTitle: seo?.title ?? "Courses",
+    description: seo?.description ?? "Browse firearm safety, licensing, and tactical training courses offered by 103 Tactical Training on Staten Island, NY.",
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    canonicalUrl: data?.canonicalUrl,
+  });
+};
+
+export async function loader({ request }: LoaderFunctionArgs) {
   const [coursesPage, allCourses] = await Promise.allSettled([
     getCoursesPage(),
     getAllCourses(),
@@ -12,6 +23,7 @@ export async function loader(_: LoaderFunctionArgs) {
   return json({
     coursesPage: coursesPage.status === "fulfilled" ? coursesPage.value : null,
     allCourses: allCourses.status === "fulfilled" ? allCourses.value.docs : [],
+    canonicalUrl: new URL(request.url).toString(),
   });
 }
 

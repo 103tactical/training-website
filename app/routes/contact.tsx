@@ -2,16 +2,22 @@ import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remi
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
 import { useState, useCallback } from "react";
-import { getContactSettings, getSiteSettings, PAYLOAD_API_URL } from "~/lib/payload";
+import { getContactSettings, getSiteSettings, PAYLOAD_API_URL, resolveMediaUrl } from "~/lib/payload";
 import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
+import { buildMeta } from "~/lib/meta";
 
-export const meta: MetaFunction = () => [
-  { title: "Contact | 103 Tactical Training" },
-];
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  return buildMeta({
+    pageTitle: data?.seoTitle ?? "Contact",
+    description: data?.seoDescription ?? "Get in touch with 103 Tactical Training. We're located on Staten Island, NY. Ask about courses, licensing, and firearm services.",
+    ogImage: data?.seoOgImage ? resolveMediaUrl(data.seoOgImage) : undefined,
+    canonicalUrl: data?.canonicalUrl,
+  });
+};
 
 /* ── Loader — fetch topics from CMS ─────────────────────────────────────── */
 
-export async function loader(_: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const [contactSettings, siteSettings] = await Promise.allSettled([
     getContactSettings(),
     getSiteSettings(),
@@ -28,6 +34,10 @@ export async function loader(_: LoaderFunctionArgs) {
     email:        ss?.contact?.email   ?? null,
     address:      ss?.contact?.address ?? null,
     city:         ss?.contact?.city    ?? null,
+    seoTitle:       cs?.seo?.title       ?? null,
+    seoDescription: cs?.seo?.description ?? null,
+    seoOgImage:     cs?.seo?.ogImage?.url ?? null,
+    canonicalUrl: new URL(request.url).toString(),
   });
 }
 

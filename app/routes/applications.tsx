@@ -3,14 +3,21 @@ import { useLoaderData, Link } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/node";
 import { getApplicationsPage, resolveMediaUrl } from "~/lib/payload";
 import { BulletIcon } from "~/components/Icons";
+import { buildMeta } from "~/lib/meta";
 
-export const meta: MetaFunction = () => [
-  { title: "Applications | 103 Tactical Training" },
-];
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const seo = data?.page?.seo;
+  return buildMeta({
+    pageTitle: seo?.title ?? "Applications",
+    description: seo?.description ?? "Apply for a firearms license through 103 Tactical Training. Learn about NYS pistol permit requirements and how to get started.",
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    canonicalUrl: data?.canonicalUrl,
+  });
+};
 
-export async function loader(_: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const result = await getApplicationsPage().catch(() => null);
-  return json({ page: result });
+  return json({ page: result, canonicalUrl: new URL(request.url).toString() });
 }
 
 const ELIGIBILITY = [

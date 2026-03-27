@@ -149,5 +149,42 @@ export const SiteSettings: GlobalConfig = {
       label: "Copyright Line",
       defaultValue: "© 103 Tactical Training. All rights reserved.",
     },
+
+    // ── SEO Defaults ──────────────────────────────────────────────────────────
+    {
+      name: "seo",
+      type: "group",
+      label: "SEO Defaults",
+      admin: {
+        description: "Fallback SEO values used when individual pages do not override them.",
+      },
+      fields: [
+        {
+          name: "title",
+          type: "text",
+          label: "Site Name (title suffix)",
+          admin: {
+            description: 'Appended to every page title, e.g. "Courses | 103 Tactical Training". Defaults to "103 Tactical Training".',
+          },
+        },
+        {
+          name: "description",
+          type: "textarea",
+          label: "Default Meta Description",
+          admin: {
+            description: "Used on pages that do not have their own description. Recommended: 120–160 characters.",
+          },
+        },
+        {
+          name: "ogImage",
+          type: "upload",
+          relationTo: "media",
+          label: "Default Social Share Image",
+          admin: {
+            description: "Fallback image shown when any page is shared on social media or via text/email. Recommended: 1200×630px.",
+          },
+        },
+      ],
+    },
   ],
 };

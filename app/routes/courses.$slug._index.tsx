@@ -1,11 +1,48 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getCourseBySlug, resolveMediaUrl } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
 import RichText from "~/components/RichText";
 import { BulletIcon } from "~/components/Icons";
+import { buildMeta } from "~/lib/meta";
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const course = data?.course;
+  if (!course) return [{ title: "Course | 103 Tactical Training" }];
+
+  // Prefer dedicated social share image, fall back to card thumbnail
+  const ogImageUrl =
+    resolveMediaUrl(course.socialShareImage?.url) ??
+    resolveMediaUrl(course.thumbnail?.url);
+
+  const tags = buildMeta({
+    pageTitle: course.title,
+    ogImage: ogImageUrl,
+    canonicalUrl: data?.canonicalUrl,
+    ogType: "article",
+  });
+
+  // JSON-LD Course structured data
+  tags.push({
+    "script:ld+json": {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      name: course.title,
+      url: data?.canonicalUrl,
+      ...(course.price != null && {
+        offers: {
+          "@type": "Offer",
+          price: course.price,
+          priceCurrency: "USD",
+        },
+      }),
+    },
+  });
+
+  return tags;
+};
+
+export async function loader({ params, request }: LoaderFunctionArgs) {
   const { slug } = params;
   if (!slug) throw new Response("Not found", { status: 404 });
 
@@ -14,7 +51,10 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response("Course not found", { status: 404 });
   }
 
-  return json({ course: result.docs[0] as Course });
+  return json({
+    course: result.docs[0] as Course,
+    canonicalUrl: new URL(request.url).toString(),
+  });
 }
 
 export default function CourseDetailRoute() {

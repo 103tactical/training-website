@@ -21,7 +21,7 @@ export async function fetchPayload<T>(path: string): Promise<T> {
 }
 
 export async function getSiteSettings() {
-  return fetchPayload<SiteSettings>("/globals/site-settings");
+  return fetchPayload<SiteSettings>("/globals/site-settings?depth=1");
 }
 
 export async function getUtility() {
@@ -33,7 +33,7 @@ export async function getHomePage() {
 }
 
 export async function getContactSettings() {
-  return fetchPayload<ContactSettings>("/globals/contact-settings?depth=1");
+  return fetchPayload<ContactSettings>("/globals/contact-settings?depth=2");
 }
 
 export async function getCourses() {
@@ -62,7 +62,7 @@ export async function getAllCourses() {
 
 export async function getCourseBySlug(slug: string) {
   return fetchPayload<{ docs: Course[] }>(
-    `/courses?where[slug][equals]=${encodeURIComponent(slug)}&depth=1&limit=1`
+    `/courses?where[slug][equals]=${encodeURIComponent(slug)}&depth=2&limit=1`
   );
 }
 
@@ -74,6 +74,12 @@ export async function getCourseSchedules(courseId: string) {
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export interface SeoFields {
+  title?: string;
+  description?: string;
+  ogImage?: { url: string; alt?: string };
+}
+
 export interface Utility {
   carouselDelay?: "off" | "4" | "6" | "8" | "10";
 }
@@ -81,6 +87,7 @@ export interface Utility {
 export interface ContactSettings {
   heroImage?: { url: string; alt?: string };
   topics?: { label: string }[];
+  seo?: SeoFields;
 }
 
 export interface SiteSettings {
@@ -98,6 +105,7 @@ export interface SiteSettings {
   };
   social: { platform: string; url: string }[];
   copyright?: string;
+  seo?: SeoFields & { title?: string }; // title = site name suffix
 }
 
 export interface HighlightCalloutItem {
@@ -141,6 +149,7 @@ export interface HomePage {
     heading?: string;
     badges: Badge[];
   };
+  seo?: SeoFields;
 }
 
 export interface Course {
@@ -148,6 +157,7 @@ export interface Course {
   title: string;
   slug: string;
   thumbnail?: { url: string; alt: string };
+  socialShareImage?: { url: string; alt?: string };
   summary?: { item: string }[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   description?: any; // Lexical rich-text JSON
@@ -164,11 +174,13 @@ export interface CoursesPage {
     id: string;
     group: CourseGroup;
   }[];
+  seo?: SeoFields;
 }
 
 export interface ApplicationsPage {
   heroImage?: { url: string; alt?: string };
   header?: { title?: string; subtext?: string };
+  seo?: SeoFields;
 }
 
 export interface StoreProduct {
@@ -194,6 +206,7 @@ export interface StorePage {
   shotgunsSection?: { heading?: string; products?: StoreProduct[] };
   accessoriesSection?: { heading?: string; items?: StoreProduct[] };
   visitCta?: { heading?: string; subtext?: string; directionsUrl?: string };
+  seo?: SeoFields;
 }
 
 export interface CourseGroup {

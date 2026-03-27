@@ -1,8 +1,22 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getCourseBySlug, getCourseSchedules, resolveMediaUrl } from "~/lib/payload";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
 import MiniCalendar from "~/components/MiniCalendar";
+import { buildMeta } from "~/lib/meta";
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const course = data?.course;
+  if (!course) return [{ title: "Schedule | 103 Tactical Training" }];
+  const ogImageUrl =
+    resolveMediaUrl(course.socialShareImage?.url) ??
+    resolveMediaUrl(course.thumbnail?.url);
+  return buildMeta({
+    pageTitle: `${course.title} — Available Sessions`,
+    ogImage: ogImageUrl,
+    canonicalUrl: data?.canonicalUrl,
+  });
+};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -34,7 +48,7 @@ function seatsStatus(maxSeats: number, seatsBooked = 0): { label: string; full: 
 
 // ── Loader ───────────────────────────────────────────────────────────────────
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ params, request }: LoaderFunctionArgs) {
   const { slug } = params;
   if (!slug) throw new Response("Not found", { status: 404 });
 
@@ -45,7 +59,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const schedulesResult = await getCourseSchedules(course.id);
   const schedules = schedulesResult?.docs ?? [];
 
-  return json({ course, schedules });
+  return json({ course, schedules, canonicalUrl: new URL(request.url).toString() });
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
