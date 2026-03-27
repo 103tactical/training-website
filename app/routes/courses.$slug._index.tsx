@@ -5,20 +5,23 @@ import { getCourseBySlug, resolveMediaUrl } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
 import RichText from "~/components/RichText";
 import { BulletIcon } from "~/components/Icons";
-import { buildMeta } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 import { trackCourseView, trackScheduleNowClick } from "~/lib/analytics";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
+  const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
   const course = data?.course;
-  if (!course) return [{ title: "Course | 103 Tactical" }];
+  if (!course) return [{ title: `Course | ${defaultSiteName ?? "103 Tactical"}` }];
 
-  // Prefer dedicated social share image, fall back to card thumbnail
+  // Prefer dedicated social share image → card thumbnail → site default
   const ogImageUrl =
     resolveMediaUrl(course.socialShareImage?.url) ??
-    resolveMediaUrl(course.thumbnail?.url);
+    resolveMediaUrl(course.thumbnail?.url) ??
+    defaultOgImage;
 
   const tags = buildMeta({
     pageTitle: course.title,
+    siteName: defaultSiteName ?? "103 Tactical",
     ogImage: ogImageUrl,
     canonicalUrl: data?.canonicalUrl,
     ogType: "article",

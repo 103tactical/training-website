@@ -3,14 +3,16 @@ import { useLoaderData, Link } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/node";
 import { getStorePage, resolveMediaUrl } from "~/lib/payload";
 import type { StorePage, StoreProduct } from "~/lib/payload";
-import { buildMeta } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
+  const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
   const seo = data?.page?.seo;
   return buildMeta({
     pageTitle: seo?.title ?? "Store",
+    siteName: defaultSiteName ?? "103 Tactical",
     description: seo?.description ?? "Browse 103 Tactical's selection of pistols, rifles, shotguns, and accessories. Visit us in-store on Staten Island, NY.",
-    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : defaultOgImage,
     canonicalUrl: data?.canonicalUrl,
   });
 };

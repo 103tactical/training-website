@@ -3,14 +3,16 @@ import { useLoaderData } from "@remix-run/react";
 import { getCoursesPage, getAllCourses, resolveMediaUrl } from "~/lib/payload";
 import type { CoursesPage, Course, CourseGroup } from "~/lib/payload";
 import CourseCard from "~/components/CourseCard";
-import { buildMeta } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
+  const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
   const seo = data?.coursesPage?.seo;
   return buildMeta({
     pageTitle: seo?.title ?? "Courses",
+    siteName: defaultSiteName ?? "103 Tactical",
     description: seo?.description ?? "Browse firearm safety, licensing, and tactical training courses offered by 103 Tactical on Staten Island, NY.",
-    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : defaultOgImage,
     canonicalUrl: data?.canonicalUrl,
   });
 };

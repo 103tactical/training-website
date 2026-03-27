@@ -91,6 +91,8 @@ interface LoaderData {
   copyright: string | null;
   tagline: string | null;
   gaMeasurementId: string | null;
+  defaultOgImage: string | null;
+  defaultSiteName: string | null;
 }
 
 export async function loader(_: LoaderFunctionArgs) {
@@ -134,6 +136,8 @@ export async function loader(_: LoaderFunctionArgs) {
       copyright: settings.copyright ?? null,
       tagline: settings.tagline ?? null,
       gaMeasurementId: process.env.GA_MEASUREMENT_ID ?? null,
+      defaultOgImage: resolveUrl(settings.seo?.ogImage?.url),
+      defaultSiteName: settings.seo?.title ?? null,
     });
   } catch {
     return json<LoaderData>({
@@ -153,6 +157,8 @@ export async function loader(_: LoaderFunctionArgs) {
       copyright: null,
       tagline: null,
       gaMeasurementId: process.env.GA_MEASUREMENT_ID ?? null,
+      defaultOgImage: null,
+      defaultSiteName: null,
     });
   }
 }

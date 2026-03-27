@@ -9,14 +9,15 @@ import type { CmsIconKey } from "~/components/Icons";
 import FeaturedCarousel from "~/components/FeaturedCarousel";
 import CourseCard from "~/components/CourseCard";
 import HighlightCallouts from "~/components/HighlightCallouts";
-import { buildMeta } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
+  const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
   const seo = data?.homePage?.seo;
   return buildMeta({
-    siteName: "103 Tactical",
+    siteName: defaultSiteName ?? "103 Tactical",
     description: seo?.description ?? "103 Tactical — firearm safety courses, licensing, and professional tactical training on Staten Island, NY.",
-    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : defaultOgImage,
     canonicalUrl: data?.canonicalUrl,
   });
 };

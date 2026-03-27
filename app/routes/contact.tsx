@@ -4,14 +4,16 @@ import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/re
 import { useState, useCallback, useEffect } from "react";
 import { getContactSettings, getSiteSettings, PAYLOAD_API_URL, resolveMediaUrl } from "~/lib/payload";
 import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
-import { buildMeta } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 import { trackContactFormSubmit } from "~/lib/analytics";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
+  const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
   return buildMeta({
     pageTitle: data?.seoTitle ?? "Contact",
+    siteName: defaultSiteName ?? "103 Tactical",
     description: data?.seoDescription ?? "Get in touch with 103 Tactical. We're located on Staten Island, NY. Ask about courses, licensing, and firearm services.",
-    ogImage: data?.seoOgImage ? resolveMediaUrl(data.seoOgImage) : undefined,
+    ogImage: data?.seoOgImage ? resolveMediaUrl(data.seoOgImage) : defaultOgImage,
     canonicalUrl: data?.canonicalUrl,
   });
 };

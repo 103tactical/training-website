@@ -4,17 +4,20 @@ import { useEffect } from "react";
 import { getCourseBySlug, getCourseSchedules, resolveMediaUrl } from "~/lib/payload";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
 import MiniCalendar from "~/components/MiniCalendar";
-import { buildMeta } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 import { trackScheduleView, trackScheduleNowClick } from "~/lib/analytics";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
+  const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
   const course = data?.course;
-  if (!course) return [{ title: "Schedule | 103 Tactical" }];
+  if (!course) return [{ title: `Schedule | ${defaultSiteName ?? "103 Tactical"}` }];
   const ogImageUrl =
     resolveMediaUrl(course.socialShareImage?.url) ??
-    resolveMediaUrl(course.thumbnail?.url);
+    resolveMediaUrl(course.thumbnail?.url) ??
+    defaultOgImage;
   return buildMeta({
     pageTitle: `${course.title} — Available Sessions`,
+    siteName: defaultSiteName ?? "103 Tactical",
     ogImage: ogImageUrl,
     canonicalUrl: data?.canonicalUrl,
   });

@@ -3,14 +3,16 @@ import { useLoaderData, Link } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/node";
 import { getApplicationsPage, resolveMediaUrl } from "~/lib/payload";
 import { BulletIcon } from "~/components/Icons";
-import { buildMeta } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
+  const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
   const seo = data?.page?.seo;
   return buildMeta({
     pageTitle: seo?.title ?? "Applications",
+    siteName: defaultSiteName ?? "103 Tactical",
     description: seo?.description ?? "103 Tactical provides professional assistance with NYS and NYC firearms licensing applications — from permit paperwork to document preparation. Located on Staten Island, NY.",
-    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : undefined,
+    ogImage: seo?.ogImage?.url ? resolveMediaUrl(seo.ogImage.url) : defaultOgImage,
     canonicalUrl: data?.canonicalUrl,
   });
 };

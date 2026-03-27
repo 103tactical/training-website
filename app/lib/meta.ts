@@ -1,4 +1,19 @@
 /**
+ * Pull the SEO defaults set in Site Settings from the root route's loader data.
+ * Pass the `matches` array from any MetaFunction to get the fallback values.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getRootSeoDefaults(matches: any[]): { defaultOgImage?: string; defaultSiteName?: string } {
+  const rootData = matches.find((m) => m.id === "root")?.data as
+    | { defaultOgImage?: string | null; defaultSiteName?: string | null }
+    | undefined;
+  return {
+    defaultOgImage:  rootData?.defaultOgImage  ?? undefined,
+    defaultSiteName: rootData?.defaultSiteName ?? undefined,
+  };
+}
+
+/**
  * Builds a complete set of meta descriptors for Remix routes, covering:
  *   - HTML <title> and <meta name="description">
  *   - Open Graph (og:*) — used by Facebook, LinkedIn, iMessage, Apple Mail,
