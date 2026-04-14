@@ -253,11 +253,11 @@ export default function BookSessionPage() {
                 </span>
                 <div className="booking-summary__dates">
                   {sessions.map((s, i) => (
-                    <div key={s.id ?? i} className="booking-summary__date-row">
+                    <div key={s.id ?? i} className="booking-summary__session-block">
                       {sessions.length > 1 && (
-                        <span className="booking-summary__day-num">Day {i + 1}:</span>
+                        <span className="booking-summary__day-num">Day {i + 1}</span>
                       )}
-                      <span>{formatDate(s.date)}</span>
+                      <span className="booking-summary__date-text">{formatDate(s.date)}</span>
                       {(s.startTime || s.endTime) && (
                         <span className="booking-summary__time">
                           {s.startTime && formatTime(s.startTime)}
@@ -273,16 +273,21 @@ export default function BookSessionPage() {
 
             <div className="booking-summary__meta-row">
               {(durationHours != null || durationDays != null) && (
-                <span className="booking-summary__meta-chip">
-                  {durationHours != null && `${durationHours}h`}
-                  {durationHours != null && durationDays != null && " · "}
-                  {durationDays != null && `${durationDays} day${durationDays !== 1 ? "s" : ""}`}
-                </span>
+                <div className="booking-summary__meta-item">
+                  <span className="booking-summary__meta-key">Duration</span>
+                  <span className="booking-summary__meta-val">
+                    {[
+                      durationHours != null ? `${durationHours}h` : null,
+                      durationDays != null ? `${durationDays} day${durationDays !== 1 ? "s" : ""}` : null,
+                    ].filter(Boolean).join(" · ")}
+                  </span>
+                </div>
               )}
               {instructorName && (
-                <span className="booking-summary__meta-chip">
-                  Instructor: {instructorName}
-                </span>
+                <div className="booking-summary__meta-item">
+                  <span className="booking-summary__meta-key">Instructor</span>
+                  <span className="booking-summary__meta-val">{instructorName}</span>
+                </div>
               )}
               <span className={`booking-summary__seats${full ? " booking-summary__seats--full" : ""}`}>
                 {full
