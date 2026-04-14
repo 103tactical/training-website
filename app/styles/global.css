@@ -3069,15 +3069,6 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   --btn-py: 14px;
 }
 
-.store-visit-cta__btn--directions {
-  color: #fff;
-  border-color: #fff;
-}
-
-.store-visit-cta__btn--directions:hover {
-  color: #fff;
-  border-color: #fff;
-}
 
 .store-visit-cta__note {
   font-size: var(--text-xs);
