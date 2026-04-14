@@ -77,8 +77,7 @@ export default function PrintRoster() {
 
   const confirmed   = attendees.filter((a) => a.status === "confirmed");
   const waitlisted  = attendees.filter((a) => a.status === "waitlisted");
-  const cancelled   = attendees.filter((a) => a.status === "cancelled");
-  const transferred = attendees.filter((a) => a.status === "transferred");
+  const cancelled = attendees.filter((a) => a.status === "cancelled");
 
   const printed = new Date().toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
@@ -139,8 +138,7 @@ export default function PrintRoster() {
 
       <AttendeeTable title="Confirmed" attendees={confirmed} />
       {waitlisted.length  > 0 && <AttendeeTable title="Waitlisted"  attendees={waitlisted}  />}
-      {transferred.length > 0 && <AttendeeTable title="Transferred" attendees={transferred} />}
-      {cancelled.length   > 0 && <AttendeeTable title="Cancelled"   attendees={cancelled}   />}
+      {cancelled.length > 0 && <AttendeeTable title="Cancelled" attendees={cancelled} />}
 
       <footer className="print-page__footer">
         103 Tactical Training &nbsp;·&nbsp; 2556 Arthur Kill Road, Staten Island, NY 10309

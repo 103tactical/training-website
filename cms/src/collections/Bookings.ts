@@ -321,14 +321,13 @@ export const Bookings: CollectionConfig = {
       required: true,
       defaultValue: 'confirmed',
       options: [
-        { label: 'Confirmed',   value: 'confirmed' },
-        { label: 'Waitlisted',  value: 'waitlisted' },
-        { label: 'Cancelled',   value: 'cancelled' },
-        { label: 'Transferred', value: 'transferred' },
+        { label: 'Confirmed',  value: 'confirmed' },
+        { label: 'Waitlisted', value: 'waitlisted' },
+        { label: 'Cancelled',  value: 'cancelled' },
       ],
       admin: {
         description:
-          'Confirmed and Waitlisted count against available seats. Cancelled and Transferred free the seat and automatically promote the next Waitlisted person.',
+          'Confirmed and Waitlisted count against available seats. Cancelled frees the seat and automatically promotes the next Waitlisted person. To move someone to a different session, change the Session field above.',
         components: {
           Cell: './components/StatusBadge',
         },

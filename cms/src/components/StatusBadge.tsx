@@ -18,18 +18,12 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#991b1b',
     borderColor: '#fca5a5',
   },
-  transferred: {
-    background: '#e0e7ff',
-    color: '#3730a3',
-    borderColor: '#a5b4fc',
-  },
 }
 
 const labels: Record<string, string> = {
-  confirmed:   'Confirmed',
-  waitlisted:  'Waitlisted',
-  cancelled:   'Cancelled',
-  transferred: 'Transferred',
+  confirmed:  'Confirmed',
+  waitlisted: 'Waitlisted',
+  cancelled:  'Cancelled',
 }
 
 export default function StatusBadge({ cellData }: DefaultCellComponentProps) {
