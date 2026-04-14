@@ -769,10 +769,10 @@ body.layout-overlay .app-content {
 /* ── Mobile overlay: header + logo float over hero ───────────────────────── */
 /*    mobile-header is already transparent + fixed.
       mobile-logo: pull out of flow so hero slides behind it.
-      Combined offset = --mobile-header-height (60px) + logo+padding (166px) = 226px */
+      Combined offset = --mobile-header-height (60px) + logo (164px) + padding (2×16px) = 256px */
 @media (max-width: 767px) {
   body.layout-overlay {
-    --mobile-overlay-nav-height: 214px;
+    --mobile-overlay-nav-height: 256px;
   }
 
   /* Hero starts at top:0 — no offset for fixed header */
