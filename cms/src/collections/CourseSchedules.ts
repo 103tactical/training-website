@@ -156,9 +156,16 @@ export const CourseSchedules: CollectionConfig = {
           type: "array",
           label: false,
           minRows: 1,
+          labels: {
+            singular: "Day",
+            plural: "Days",
+          },
           admin: {
             description:
-              "Add one row per day. For a 2-day course on two separate Fridays, add two rows.",
+              "Add one entry for each day this course meets. Every day the class convenes — whether consecutive or not — needs its own entry here.",
+            components: {
+              RowLabel: "./components/DayRowLabel",
+            },
           },
           fields: [
             {
