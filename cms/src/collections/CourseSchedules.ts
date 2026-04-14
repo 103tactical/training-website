@@ -218,15 +218,15 @@ export const CourseSchedules: CollectionConfig = {
         {
           name: "roster",
           type: "join",
-          collection: "attendees",
+          collection: "bookings",
           on: "courseSchedule",
-          label: "Attendees",
+          label: "Bookings",
           defaultLimit: 0,
-          defaultSort: "lastName",
+          defaultSort: "adminTitle",
           admin: {
-            defaultColumns: ["firstName", "lastName", "email", "phone", "status"],
+            defaultColumns: ["adminTitle", "status", "paymentReference"],
             description:
-              "Attendees booked into this session. Use 'Add Attendee' to manually register someone.",
+              "Bookings for this session. Go to Course Management → Bookings to add or manage registrations.",
           },
         },
       ],

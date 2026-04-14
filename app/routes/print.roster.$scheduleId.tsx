@@ -22,7 +22,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   const [scheduleRes, attendeesRes, siteRes] = await Promise.all([
     fetch(`${API}/api/course-schedules/${id}?depth=2`),
-    fetch(`${API}/api/attendees?where[courseSchedule][equals]=${id}&limit=500&depth=0`),
+    fetch(`${API}/api/bookings?where[courseSchedule][equals]=${id}&limit=500&depth=1`),
     fetch(`${API}/api/globals/site-settings?depth=1`),
   ]);
 
@@ -35,7 +35,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   const logoUrl: string | null = rawLogoUrl
     ? rawLogoUrl.startsWith("http") ? rawLogoUrl : `${API}${rawLogoUrl}`
     : null;
-  const attendees: Attendee[] = attendeesData.docs ?? [];
+  const attendees: Booking[] = attendeesData.docs ?? [];
 
   const course = schedule.course;
   const courseName: string =
@@ -57,12 +57,15 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   return json({ schedule, attendees, courseName, instructorName, dates, logoUrl });
 }
 
-interface Attendee {
+interface Booking {
   id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
+  attendee: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  };
   status: string;
   paymentReference?: string;
   notes?: string;
@@ -72,9 +75,9 @@ export default function PrintRoster() {
   const { schedule, attendees, courseName, instructorName, dates, logoUrl } =
     useLoaderData<typeof loader>();
 
-  const confirmed  = attendees.filter((a) => a.status === "confirmed");
-  const waitlisted = attendees.filter((a) => a.status === "waitlisted");
-  const cancelled  = attendees.filter((a) => a.status === "cancelled");
+  const confirmed   = attendees.filter((a) => a.status === "confirmed");
+  const waitlisted  = attendees.filter((a) => a.status === "waitlisted");
+  const cancelled   = attendees.filter((a) => a.status === "cancelled");
   const transferred = attendees.filter((a) => a.status === "transferred");
 
   const printed = new Date().toLocaleDateString("en-US", {
@@ -146,7 +149,7 @@ export default function PrintRoster() {
   );
 }
 
-function AttendeeTable({ title, attendees }: { title: string; attendees: Attendee[] }) {
+function AttendeeTable({ title, attendees }: { title: string; attendees: Booking[] }) {
   if (attendees.length === 0) return null;
   return (
     <section className="print-table">
@@ -168,9 +171,9 @@ function AttendeeTable({ title, attendees }: { title: string; attendees: Attende
             <>
               <tr key={a.id}>
                 <td>{i + 1}</td>
-                <td>{a.firstName} {a.lastName}</td>
-                <td>{a.email}</td>
-                <td>{a.phone ?? "—"}</td>
+                <td>{a.attendee.firstName} {a.attendee.lastName}</td>
+                <td>{a.attendee.email}</td>
+                <td>{a.attendee.phone ?? "—"}</td>
                 <td>{a.paymentReference ?? "—"}</td>
               </tr>
               {a.notes && (

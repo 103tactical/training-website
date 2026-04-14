@@ -20,6 +20,7 @@ import { StorePage } from './globals/StorePage'
 import { CourseGroups } from './collections/CourseGroups'
 import { CourseSchedules } from './collections/CourseSchedules'
 import { Attendees } from './collections/Attendees'
+import { Bookings } from './collections/Bookings'
 import { Instructors } from './collections/Instructors'
 
 const filename = fileURLToPath(import.meta.url)
@@ -44,7 +45,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups, CourseSchedules, Attendees, Instructors],
+  collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors],
   globals: [HomePage, CoursesPage, ApplicationsPage, StorePage, SiteSettings, ContactSettings, Utility],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
