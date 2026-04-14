@@ -72,6 +72,104 @@ export async function getCourseSchedules(courseId: string) {
   );
 }
 
+export async function getCourseScheduleById(id: string) {
+  return fetchPayload<CourseSchedule>(`/course-schedules/${id}?depth=2`);
+}
+
+/** Find an attendee by email address. Returns null if none found. */
+export async function findAttendeeByEmail(email: string): Promise<Attendee | null> {
+  const res = await fetchPayload<{ docs: Attendee[] }>(
+    `/attendees?where[email][equals]=${encodeURIComponent(email)}&limit=1`
+  );
+  return res.docs[0] ?? null;
+}
+
+/**
+ * Create a new Attendee record via the Payload REST API.
+ * Requires CMS_WRITE_SECRET to be set — sent as the Authorization header.
+ */
+export async function createAttendee(data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+}): Promise<Attendee> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api/attendees`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`createAttendee failed: ${res.status} ${body}`);
+  }
+  const json = await res.json();
+  return json.doc ?? json;
+}
+
+/**
+ * Create a Booking record via the Payload REST API.
+ * Requires CMS_WRITE_SECRET.
+ */
+export async function createBookingRecord(data: {
+  attendee: string | number;
+  course: string | number;
+  courseSchedule: string | number;
+  status: "confirmed" | "waitlisted" | "cancelled";
+  squareOrderId?: string;
+  squarePaymentId?: string;
+  amountPaidCents?: number;
+  paymentReference?: string;
+}): Promise<{ id: number }> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api/bookings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`createBookingRecord failed: ${res.status} ${body}`);
+  }
+  const json = await res.json();
+  return json.doc ?? json;
+}
+
+/** Find a booking by its Square Order ID */
+export async function findBookingBySquareOrderId(orderId: string): Promise<{ id: number; status: string } | null> {
+  const res = await fetchPayload<{ docs: { id: number; status: string }[] }>(
+    `/bookings?where[squareOrderId][equals]=${encodeURIComponent(orderId)}&limit=1`
+  );
+  return res.docs[0] ?? null;
+}
+
+/** Update booking status via the Payload REST API */
+export async function updateBookingStatus(
+  bookingId: number,
+  status: "confirmed" | "waitlisted" | "cancelled",
+): Promise<void> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api/bookings/${bookingId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`updateBookingStatus failed: ${res.status} ${body}`);
+  }
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface SeoFields {
@@ -230,6 +328,14 @@ export interface CourseSession {
   date?: string;       // ISO timestamp (dayOnly picker)
   startTime?: string;  // ISO timestamp (timeOnly picker)
   endTime?: string;    // ISO timestamp (timeOnly picker)
+}
+
+export interface Attendee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
 }
 
 export interface Instructor {

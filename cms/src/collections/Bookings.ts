@@ -5,6 +5,46 @@ import type {
   CollectionBeforeDeleteHook,
   CollectionBeforeChangeHook,
 } from 'payload'
+import { Client, Environment } from 'square'
+
+function getSquareClient() {
+  const accessToken = process.env.SQUARE_ACCESS_TOKEN
+  if (!accessToken) return null
+  return new Client({
+    accessToken,
+    environment: process.env.SQUARE_ENVIRONMENT === 'sandbox'
+      ? Environment.Sandbox
+      : Environment.Production,
+  })
+}
+
+/**
+ * Issue a full refund via Square when an admin cancels a booking
+ * that was originally paid through Square checkout.
+ */
+async function issueSquareRefund(paymentId: string, amountCents: number): Promise<void> {
+  const client = getSquareClient()
+  if (!client) {
+    console.warn('[Bookings] SQUARE_ACCESS_TOKEN not set — skipping refund')
+    return
+  }
+  try {
+    const idempotencyKey = `refund-${paymentId}-${Date.now()}`
+    await client.refundsApi.refundPayment({
+      paymentId,
+      idempotencyKey,
+      amountMoney: {
+        amount: BigInt(amountCents),
+        currency: 'USD',
+      },
+      reason: 'Cancelled by admin via 103 Tactical CMS',
+    })
+    console.log(`[Bookings] Refund issued for payment ${paymentId}`)
+  } catch (err) {
+    // Log but do not throw — seat adjustment still runs even if refund fails
+    console.error('[Bookings] Square refund error:', err)
+  }
+}
 
 /** Statuses that count against a schedule's seat inventory */
 const ACTIVE_STATUSES = ['confirmed', 'waitlisted']
@@ -263,6 +303,18 @@ const afterChangeHook: CollectionAfterChangeHook = async ({ doc, previousDoc, op
     }
   }
 
+  // ── Square refund on admin cancellation ───────────────────────────────────
+  // Only when: status changed to 'cancelled', previous status was active,
+  // and the booking has a Square payment ID (i.e. it was paid online).
+  const wasCancelled =
+    doc.status === 'cancelled' &&
+    previousDoc?.status !== 'cancelled' &&
+    ACTIVE_STATUSES.includes(previousDoc?.status ?? '')
+
+  if (wasCancelled && doc.squarePaymentId && doc.amountPaidCents) {
+    await issueSquareRefund(doc.squarePaymentId, doc.amountPaidCents)
+  }
+
   return doc
 }
 
@@ -284,6 +336,18 @@ const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
   }
 }
 
+/**
+ * Allow writes from the website backend using the shared CMS_WRITE_SECRET.
+ * Logged-in admin users are always allowed.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function allowWriteAccess({ req }: { req: any }): boolean {
+  if (req?.user) return true
+  const auth: string = req?.headers?.get?.('authorization') ?? ''
+  const token = auth.replace(/^Bearer\s+/i, '').trim()
+  return Boolean(token && token === process.env.CMS_WRITE_SECRET)
+}
+
 export const Bookings: CollectionConfig = {
   slug: 'bookings',
   labels: {
@@ -302,6 +366,8 @@ export const Bookings: CollectionConfig = {
   },
   access: {
     read: () => true,
+    create: allowWriteAccess,
+    update: allowWriteAccess,
   },
   hooks: {
     beforeChange: [validateBookingRules, recordTransfer, syncBookingTitle],
@@ -379,6 +445,34 @@ export const Bookings: CollectionConfig = {
       label: 'Payment Reference',
       admin: {
         description: 'Optional transaction ID or receipt number from the payment processor.',
+      },
+    },
+    // ── Square-specific fields (auto-populated on online bookings) ──────────
+    {
+      name: 'squareOrderId',
+      type: 'text',
+      label: 'Square Order ID',
+      admin: {
+        hidden: true,
+        description: 'Auto-populated from Square when booked online. Used for refund lookups.',
+      },
+    },
+    {
+      name: 'squarePaymentId',
+      type: 'text',
+      label: 'Square Payment ID',
+      admin: {
+        hidden: true,
+        description: 'Auto-populated from Square when booked online. Used to issue refunds.',
+      },
+    },
+    {
+      name: 'amountPaidCents',
+      type: 'number',
+      label: 'Amount Paid (cents)',
+      admin: {
+        hidden: true,
+        description: 'Amount charged in cents (e.g. 20000 = $200.00). Auto-populated from Square.',
       },
     },
     {

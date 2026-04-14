@@ -1,5 +1,17 @@
 import type { CollectionConfig } from 'payload'
 
+/**
+ * Allow writes from the website backend using the shared CMS_WRITE_SECRET.
+ * Logged-in admin users are always allowed.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function allowWriteAccess({ req }: { req: any }): boolean {
+  if (req?.user) return true
+  const auth: string = req?.headers?.get?.('authorization') ?? ''
+  const token = auth.replace(/^Bearer\s+/i, '').trim()
+  return Boolean(token && token === process.env.CMS_WRITE_SECRET)
+}
+
 export const Attendees: CollectionConfig = {
   slug: 'attendees',
   labels: {
@@ -15,6 +27,8 @@ export const Attendees: CollectionConfig = {
   },
   access: {
     read: () => true,
+    create: allowWriteAccess,
+    update: allowWriteAccess,
   },
   fields: [
     {

@@ -1,5 +1,5 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
-import { useLoaderData, Link } from "@remix-run/react";
+import { useLoaderData, Link, useNavigate } from "@remix-run/react";
 import { useEffect } from "react";
 import { getCourseBySlug, getCourseSchedules, resolveMediaUrl } from "~/lib/payload";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
@@ -71,6 +71,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 export default function CourseSchedulePage() {
   const { course, schedules } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
   const imageUrl = resolveMediaUrl(course.thumbnail?.url);
   const activeSchedules = schedules as CourseSchedule[];
 
@@ -179,7 +180,10 @@ export default function CourseSchedulePage() {
                       disabled={full}
                       aria-disabled={full}
                       onClick={() => {
-                        if (!full) trackScheduleNowClick(course.title, course.slug, "schedule_page");
+                        if (!full) {
+                          trackScheduleNowClick(course.title, course.slug, "schedule_page");
+                          navigate(`/book/${slot.id}`);
+                        }
                       }}
                     >
                       {full ? "Unavailable" : "Schedule Now"}

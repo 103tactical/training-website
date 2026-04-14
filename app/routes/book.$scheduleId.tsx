@@ -1,0 +1,405 @@
+import {
+  json,
+  redirect,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
+  type MetaFunction,
+} from "@remix-run/node";
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
+import {
+  getCourseScheduleById,
+  findAttendeeByEmail,
+  createAttendee,
+  resolveMediaUrl,
+} from "~/lib/payload";
+import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
+import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
+
+// ── Meta ─────────────────────────────────────────────────────────────────────
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const title = data?.courseName
+    ? `Book: ${data.courseName} | 103 Tactical`
+    : "Book a Session | 103 Tactical";
+  return [{ title }, { name: "robots", content: "noindex" }];
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatDate(iso?: string): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatTime(iso?: string): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+// ── Loader ────────────────────────────────────────────────────────────────────
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { scheduleId } = params;
+  if (!scheduleId) throw new Response("Not found", { status: 404 });
+
+  let schedule: CourseSchedule;
+  try {
+    schedule = await getCourseScheduleById(scheduleId);
+  } catch {
+    throw new Response("Session not found", { status: 404 });
+  }
+
+  if (!schedule || !schedule.isActive) {
+    throw new Response("Session not available", { status: 404 });
+  }
+
+  const course = schedule.course as Course;
+  const instructor = schedule.instructor as Instructor | undefined;
+  const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0);
+
+  return json({
+    scheduleId,
+    courseName: course?.title ?? "Course",
+    courseSlug: course?.slug ?? "",
+    courseId: String(course?.id ?? ""),
+    price: course?.price ?? 0,
+    durationHours: course?.durationHours,
+    durationDays: course?.durationDays,
+    sessions: schedule.sessions ?? [],
+    instructorName: instructor?.name ?? null,
+    displayLabel: schedule.displayLabel ?? schedule.label ?? null,
+    maxSeats: schedule.maxSeats,
+    seatsBooked: schedule.seatsBooked ?? 0,
+    remaining,
+    full: remaining <= 0,
+    squareConfigured: SQUARE_CONFIGURED,
+  });
+}
+
+// ── Action ────────────────────────────────────────────────────────────────────
+
+export async function action({ request, params }: ActionFunctionArgs) {
+  const { scheduleId } = params;
+  if (!scheduleId) throw new Response("Not found", { status: 404 });
+
+  const formData = await request.formData();
+  const firstName = (formData.get("firstName") as string | null)?.trim() ?? "";
+  const lastName  = (formData.get("lastName")  as string | null)?.trim() ?? "";
+  const email     = (formData.get("email")     as string | null)?.trim() ?? "";
+  const phone     = (formData.get("phone")     as string | null)?.trim() ?? "";
+
+  // ── Validation ──────────────────────────────────────────────────────────────
+  const errors: Record<string, string> = {};
+  if (!firstName) errors.firstName = "First name is required.";
+  if (!lastName)  errors.lastName  = "Last name is required.";
+  if (!email)     errors.email     = "Email address is required.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    errors.email = "Please enter a valid email address.";
+
+  if (Object.keys(errors).length > 0) {
+    return json({ errors, formError: null }, { status: 422 });
+  }
+
+  if (!SQUARE_CONFIGURED || !squareClient) {
+    return json(
+      { errors: {}, formError: "Online booking is not available right now. Please contact us directly." },
+      { status: 503 },
+    );
+  }
+
+  try {
+    // ── Re-check seat availability ──────────────────────────────────────────
+    const schedule = await getCourseScheduleById(scheduleId);
+    if (!schedule || !schedule.isActive) {
+      return json({ errors: {}, formError: "This session is no longer available." }, { status: 410 });
+    }
+    const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0);
+    if (remaining <= 0) {
+      return json({ errors: {}, formError: "Sorry, this session just filled up." }, { status: 409 });
+    }
+
+    const course = schedule.course as Course;
+    const priceInCents = Math.round((course?.price ?? 0) * 100);
+
+    // ── Find or create Attendee ─────────────────────────────────────────────
+    let attendee = await findAttendeeByEmail(email);
+    if (!attendee) {
+      attendee = await createAttendee({ firstName, lastName, email, phone: phone || undefined });
+    }
+
+    // ── Create Square Payment Link ──────────────────────────────────────────
+    const siteUrl = process.env.PUBLIC_SITE_URL ?? "";
+    const idempotencyKey = `book-${scheduleId}-${attendee.id}-${Date.now()}`;
+
+    const { result } = await squareClient.checkoutApi.createPaymentLink({
+      idempotencyKey,
+      order: {
+        locationId: SQUARE_LOCATION_ID,
+        referenceId: `${scheduleId}:${attendee.id}`,
+        lineItems: [
+          {
+            name: course?.title ?? "Course Registration",
+            quantity: "1",
+            note: schedule.displayLabel ?? schedule.label ?? undefined,
+            basePriceMoney: {
+              amount: BigInt(priceInCents),
+              currency: "USD",
+            },
+          },
+        ],
+      },
+      checkoutOptions: {
+        redirectUrl: `${siteUrl}/booking-confirmation`,
+        merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL,
+      },
+      prePopulatedData: {
+        buyerEmail: email,
+        ...(phone ? { buyerPhoneNumber: phone } : {}),
+      },
+    });
+
+    const checkoutUrl = result.paymentLink?.url;
+    if (!checkoutUrl) {
+      throw new Error("Square did not return a checkout URL");
+    }
+
+    return redirect(checkoutUrl);
+  } catch (err) {
+    console.error("[book] action error:", err);
+    return json(
+      { errors: {}, formError: "Something went wrong creating your booking. Please try again or contact us." },
+      { status: 500 },
+    );
+  }
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default function BookSessionPage() {
+  const data = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const submitting = navigation.state === "submitting";
+
+  const {
+    courseName, courseSlug, price, durationHours, durationDays,
+    sessions, instructorName, displayLabel, remaining, full,
+    squareConfigured,
+  } = data;
+
+  const errors = actionData?.errors ?? {};
+  const formError = actionData?.formError ?? null;
+
+  function field(name: string) {
+    return errors[name]
+      ? "booking-form__input booking-form__input--error"
+      : "booking-form__input";
+  }
+
+  return (
+    <div className="booking-page">
+      <div className="booking-page__inner container">
+
+        {/* ── Session Summary ── */}
+        <div className="booking-summary">
+          <div className="booking-summary__header">
+            <div>
+              <h1 className="booking-summary__course">{courseName}</h1>
+              {displayLabel && (
+                <p className="booking-summary__label">{displayLabel}</p>
+              )}
+            </div>
+            {price > 0 && (
+              <div className="booking-summary__price">
+                ${price.toLocaleString()}
+              </div>
+            )}
+          </div>
+
+          <div className="booking-summary__details">
+            {sessions.length > 0 && (
+              <div className="booking-summary__sessions">
+                <span className="booking-summary__detail-label">
+                  {sessions.length === 1 ? "Date" : "Dates"}
+                </span>
+                <div className="booking-summary__dates">
+                  {sessions.map((s, i) => (
+                    <div key={s.id ?? i} className="booking-summary__date-row">
+                      {sessions.length > 1 && (
+                        <span className="booking-summary__day-num">Day {i + 1}:</span>
+                      )}
+                      <span>{formatDate(s.date)}</span>
+                      {(s.startTime || s.endTime) && (
+                        <span className="booking-summary__time">
+                          {s.startTime && formatTime(s.startTime)}
+                          {s.startTime && s.endTime && " – "}
+                          {s.endTime && formatTime(s.endTime)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="booking-summary__meta-row">
+              {(durationHours != null || durationDays != null) && (
+                <span className="booking-summary__meta-chip">
+                  {durationHours != null && `${durationHours}h`}
+                  {durationHours != null && durationDays != null && " · "}
+                  {durationDays != null && `${durationDays} day${durationDays !== 1 ? "s" : ""}`}
+                </span>
+              )}
+              {instructorName && (
+                <span className="booking-summary__meta-chip">
+                  Instructor: {instructorName}
+                </span>
+              )}
+              <span className={`booking-summary__seats${full ? " booking-summary__seats--full" : ""}`}>
+                {full
+                  ? "Session Full"
+                  : remaining === 1
+                    ? "1 seat remaining"
+                    : `${remaining} seats remaining`}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Booking Form ── */}
+        <div className="booking-form-wrap">
+          {full ? (
+            <div className="booking-form__full-notice">
+              <p>This session is fully booked.</p>
+              <a href={`/courses/${courseSlug}/schedule`} className="btn btn--outline">
+                ← See Other Sessions
+              </a>
+            </div>
+          ) : !squareConfigured ? (
+            <div className="booking-form__full-notice">
+              <p>Online booking is not available at this time. Please contact us to register.</p>
+              <a href="/contact" className="btn btn--outline">Contact Us</a>
+            </div>
+          ) : (
+            <Form method="post" className="booking-form" noValidate>
+              <h2 className="booking-form__heading">Your Information</h2>
+              <p className="booking-form__subtext">
+                You'll be redirected to our secure checkout to complete payment.
+              </p>
+
+              {formError && (
+                <div className="booking-form__error-banner" role="alert">
+                  {formError}
+                </div>
+              )}
+
+              <div className="booking-form__row">
+                <div className="booking-form__field">
+                  <label className="booking-form__label" htmlFor="firstName">
+                    First Name <span className="booking-form__required">*</span>
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    autoComplete="given-name"
+                    className={field("firstName")}
+                    aria-describedby={errors.firstName ? "firstName-error" : undefined}
+                  />
+                  {errors.firstName && (
+                    <span id="firstName-error" className="booking-form__field-error">
+                      {errors.firstName}
+                    </span>
+                  )}
+                </div>
+
+                <div className="booking-form__field">
+                  <label className="booking-form__label" htmlFor="lastName">
+                    Last Name <span className="booking-form__required">*</span>
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    autoComplete="family-name"
+                    className={field("lastName")}
+                    aria-describedby={errors.lastName ? "lastName-error" : undefined}
+                  />
+                  {errors.lastName && (
+                    <span id="lastName-error" className="booking-form__field-error">
+                      {errors.lastName}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="booking-form__field">
+                <label className="booking-form__label" htmlFor="email">
+                  Email Address <span className="booking-form__required">*</span>
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  className={field("email")}
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                />
+                {errors.email && (
+                  <span id="email-error" className="booking-form__field-error">
+                    {errors.email}
+                  </span>
+                )}
+              </div>
+
+              <div className="booking-form__field">
+                <label className="booking-form__label" htmlFor="phone">
+                  Phone Number
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  className="booking-form__input"
+                />
+              </div>
+
+              <div className="booking-form__summary-line">
+                <span>Total due today</span>
+                <span className="booking-form__total">${price.toLocaleString()}.00</span>
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn--primary btn--lg booking-form__submit"
+                disabled={submitting}
+              >
+                {submitting ? "Preparing checkout…" : "Proceed to Payment →"}
+              </button>
+
+              <p className="booking-form__secure-note">
+                Secured by Square. Your payment info is never stored on this site.
+              </p>
+            </Form>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
