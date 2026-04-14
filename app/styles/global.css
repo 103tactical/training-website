@@ -4414,7 +4414,7 @@ body.layout-print .app-content { transform: none !important; }
 .booking-summary__header {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
+  gap: 4px;
   margin-bottom: var(--spacing-6);
   padding-bottom: var(--spacing-6);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -4431,7 +4431,7 @@ body.layout-print .app-content { transform: none !important; }
 .booking-summary__label {
   font-size: var(--text-base);
   color: var(--color-text-muted);
-  margin: var(--spacing-1) 0 0;
+  margin: 0;
 }
 
 .booking-summary__price {
