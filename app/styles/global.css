@@ -488,23 +488,23 @@ body.menu-open .app-content {
 
 /* ── Logo elements (shared between mobile/desktop) ───────────────────────── */
 
+/*
+ * Base values apply to the flush-left desktop navbar layout only.
+ * The overlay (centered) layout overrides these explicitly via
+ * body.layout-overlay .navbar-desktop__logo-link rules below.
+ * clamp ensures the logo scales down proportionally as the viewport
+ * narrows so nav links are never cut off.
+ */
 .nav-logo {
-  height: 94px;
+  height: clamp(52px, 8.5vw, 84px);
   width: auto;
   object-fit: contain;
   display: block;
 }
 
-@media (min-width: 1024px) {
-  .nav-logo {
-    height: 110px;
-  }
-}
-
-/* Wide (horizontal) logo — desktop navbar only.
-   clamp: 82px floor at 768px viewport, scales up to 112px cap at ~1080px. */
+/* Wide (horizontal) logo — desktop navbar only (flush-left layout). */
 .nav-logo--wide {
-  height: clamp(82px, 8.5vw, 112px);
+  height: clamp(44px, 7vw, 84px);
   width: auto;
 }
 
