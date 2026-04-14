@@ -320,19 +320,28 @@ const afterChangeHook: CollectionAfterChangeHook = async ({ doc, previousDoc, op
 
 const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
   const { payload } = req
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = payload as any
+
+  let booking: Record<string, unknown>
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const p = payload as any
-    const booking = await p.findByID({ collection: 'bookings', id, req })
-    if (ACTIVE_STATUSES.includes(booking.status)) {
-      const scheduleId = resolveId(booking.courseSchedule)
-      if (scheduleId) {
-        await adjustSeats(payload, req, scheduleId, -1)
-        await promoteFromWaitlist(payload, req, scheduleId)
-      }
-    }
+    booking = await p.findByID({ collection: 'bookings', id, req })
   } catch (err) {
-    console.error('[Bookings] beforeDelete hook error:', err)
+    console.error('[Bookings] beforeDelete — could not load booking:', err)
+    return
+  }
+
+  // ── Guard: only allow deleting cancelled bookings ─────────────────────────
+  // Cancelling a booking (via the status field) triggers the Square refund and
+  // frees the seat automatically. Hard-deleting an active booking would skip
+  // both. Admins must cancel first, then delete if they want to remove the record.
+  if (booking.status !== 'cancelled') {
+    throw new APIError(
+      `Cannot delete a booking with status "${booking.status}". ` +
+      `Set the status to Cancelled first — this will automatically issue any Square refund and free the seat. ` +
+      `You can then delete the record.`,
+      400, undefined, true,
+    )
   }
 }
 
