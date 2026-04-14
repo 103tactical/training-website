@@ -22,6 +22,19 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           padding-bottom: 0.6rem;
         }
 
+        /* Save button — orange only when there are unsaved changes.
+           Uses the id + :not([disabled]) so the clean/saved greyscale
+           state (disabled attribute present) is left completely alone. */
+        #action-save:not([disabled]) {
+          background-color: #ea580c !important;
+          border-color: #c2410c !important;
+          color: #ffffff !important;
+        }
+        #action-save:not([disabled]):hover {
+          background-color: #c2410c !important;
+          border-color: #9a3412 !important;
+        }
+
         /* Hide the clear (×) button on read-only date fields */
         .date-time-picker__clear-button { display: none !important; }
 
