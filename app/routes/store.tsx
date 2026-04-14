@@ -173,7 +173,7 @@ export default function StoreRoute() {
           {cta?.directionsUrl && (
             <a
               href={cta.directionsUrl}
-              className="btn store-visit-cta__btn store-visit-cta__btn--directions"
+              className="btn btn--outline store-visit-cta__btn store-visit-cta__btn--directions"
               target="_blank"
               rel="noopener noreferrer"
             >
