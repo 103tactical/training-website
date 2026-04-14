@@ -4406,7 +4406,6 @@ body.layout-print .app-content { transform: none !important; }
 
 .booking-summary {
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   padding: var(--spacing-8);
 }
@@ -4428,7 +4427,7 @@ body.layout-print .app-content { transform: none !important; }
 
 .booking-summary__label {
   font-size: var(--text-base);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.55);
   margin: 0;
 }
 
@@ -4462,7 +4461,7 @@ body.layout-print .app-content { transform: none !important; }
   font-weight: var(--font-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.55);
   display: block;
 }
 
@@ -4484,7 +4483,7 @@ body.layout-print .app-content { transform: none !important; }
   font-weight: var(--font-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .booking-summary__date-text {
@@ -4514,7 +4513,7 @@ body.layout-print .app-content { transform: none !important; }
 }
 
 .booking-summary__meta-key {
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.55);
   min-width: 5.5rem;
   flex-shrink: 0;
 }
@@ -4524,13 +4523,13 @@ body.layout-print .app-content { transform: none !important; }
 }
 
 .booking-summary__seats {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  margin-top: var(--spacing-1);
+  font-size: var(--text-base);
+  color: rgba(255, 255, 255, 0.55);
+  padding-top: var(--spacing-3);
 }
 
 .booking-summary__seats--full {
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 /* ── Booking form card ── */
