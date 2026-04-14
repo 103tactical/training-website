@@ -251,7 +251,7 @@ export default function BookSessionPage() {
                 <span className="booking-summary__detail-label">
                   {sessions.length === 1 ? "Date" : "Dates"}
                 </span>
-                <div className="booking-summary__dates">
+                <div className="booking-summary__dates course-detail__info-box">
                   {sessions.map((s, i) => (
                     <div key={s.id ?? i} className="booking-summary__session-block">
                       {sessions.length > 1 && (
@@ -271,7 +271,7 @@ export default function BookSessionPage() {
               </div>
             )}
 
-            <div className="booking-summary__meta-row">
+            <div className="booking-summary__meta-row course-detail__info-box">
               {(durationHours != null || durationDays != null) && (
                 <div className="booking-summary__meta-item">
                   <span className="booking-summary__meta-key">Duration</span>

@@ -4416,8 +4416,6 @@ body.layout-print .app-content { transform: none !important; }
   flex-direction: column;
   gap: 4px;
   margin-bottom: var(--spacing-6);
-  padding-bottom: var(--spacing-6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .booking-summary__course {
@@ -4444,14 +4442,19 @@ body.layout-print .app-content { transform: none !important; }
 .booking-summary__details {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--spacing-3);
+}
+
+/* Override info-box positional defaults when used inside booking summary */
+.booking-summary .course-detail__info-box {
+  align-self: stretch;
+  margin-left: 0;
 }
 
 .booking-summary__sessions {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
-  margin-bottom: var(--spacing-5);
 }
 
 .booking-summary__detail-label {
@@ -4496,14 +4499,11 @@ body.layout-print .app-content { transform: none !important; }
   color: var(--color-text-primary);
 }
 
-/* Meta: label/value rows, separated from dates section */
 .booking-summary__meta-row {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
   align-items: flex-start;
-  padding-top: var(--spacing-5);
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .booking-summary__meta-item {
