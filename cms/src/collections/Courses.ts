@@ -140,6 +140,19 @@ export const Courses: CollectionConfig = {
       type: "checkbox",
       label: "Active (show on site)",
       defaultValue: true,
+      validate: (value, { data }) => {
+        if (value !== true) return true;
+        const missing: string[] = [];
+        if (!data.title) missing.push("Course Title");
+        if (data.price == null) missing.push("Price");
+        if (data.durationHours == null) missing.push("Total Hours");
+        if (data.durationDays == null) missing.push("Total Days");
+        if (!data.thumbnail) missing.push("Card Image");
+        if (missing.length > 0) {
+          return `Cannot mark as Active until the following ${missing.length === 1 ? "field is" : "fields are"} filled in: ${missing.join(", ")}.`;
+        }
+        return true;
+      },
     },
   ],
 };
