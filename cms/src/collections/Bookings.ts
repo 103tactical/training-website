@@ -163,6 +163,46 @@ const validateBookingRules: CollectionBeforeChangeHook = async ({ data, original
 }
 
 /**
+ * When the Session (courseSchedule) changes on an update, appends a record to
+ * transferHistory with the human-readable names of the old and new sessions.
+ * Reads originalDoc.transferHistory so existing history is preserved.
+ */
+const recordTransfer: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  if (operation !== 'update') return data
+
+  const prevScheduleId = resolveId(originalDoc?.courseSchedule)
+  const newScheduleId = resolveId(data.courseSchedule)
+
+  if (!prevScheduleId || !newScheduleId || prevScheduleId === newScheduleId) return data
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = req.payload as any
+    const [fromSchedule, toSchedule] = await Promise.all([
+      p.findByID({ collection: 'course-schedules', id: prevScheduleId, req }),
+      p.findByID({ collection: 'course-schedules', id: newScheduleId, req }),
+    ])
+
+    const fromLabel: string = fromSchedule?.adminTitle ?? fromSchedule?.label ?? `Session ${prevScheduleId}`
+    const toLabel: string = toSchedule?.adminTitle ?? toSchedule?.label ?? `Session ${newScheduleId}`
+
+    const existing = Array.isArray(originalDoc?.transferHistory) ? originalDoc.transferHistory : []
+    data.transferHistory = [
+      ...existing,
+      {
+        fromSession: fromLabel,
+        toSession: toLabel,
+        transferredAt: new Date().toISOString(),
+      },
+    ]
+  } catch (err) {
+    console.error('[Bookings] recordTransfer error:', err)
+  }
+
+  return data
+}
+
+/**
  * Computes a human-readable adminTitle from the linked attendee's name.
  * Used as the document title in the CMS and in relationship dropdowns.
  */
@@ -253,7 +293,7 @@ export const Bookings: CollectionConfig = {
   admin: {
     useAsTitle: 'adminTitle',
     group: 'Course Management',
-    defaultColumns: ['adminTitle', 'courseSchedule', 'status'],
+    defaultColumns: ['adminTitle', 'courseSchedule', 'status', 'transferHistory'],
     description:
       'Course registrations. Each booking links an Attendee to a specific course session.',
     components: {
@@ -264,7 +304,7 @@ export const Bookings: CollectionConfig = {
     read: () => true,
   },
   hooks: {
-    beforeChange: [validateBookingRules, syncBookingTitle],
+    beforeChange: [validateBookingRules, recordTransfer, syncBookingTitle],
     afterChange: [afterChangeHook],
     beforeDelete: [beforeDeleteHook],
   },
@@ -348,6 +388,45 @@ export const Bookings: CollectionConfig = {
       admin: {
         description: 'Internal notes visible only to admins (e.g. special accommodations).',
       },
+    },
+    {
+      name: 'transferHistory',
+      type: 'array',
+      label: 'Transfer History',
+      admin: {
+        readOnly: true,
+        description: 'Automatically recorded each time this booking is moved to a different session. Cannot be edited manually.',
+        initCollapsed: true,
+        components: {
+          RowLabel: './components/TransferCountCell',
+        },
+      },
+      fields: [
+        {
+          name: 'fromSession',
+          type: 'text',
+          label: 'From Session',
+          admin: { readOnly: true },
+        },
+        {
+          name: 'toSession',
+          type: 'text',
+          label: 'To Session',
+          admin: { readOnly: true },
+        },
+        {
+          name: 'transferredAt',
+          type: 'date',
+          label: 'Date & Time',
+          admin: {
+            readOnly: true,
+            date: {
+              pickerAppearance: 'dayAndTime',
+              displayFormat: 'MMM d, yyyy  h:mm aa',
+            },
+          },
+        },
+      ],
     },
   ],
 }
