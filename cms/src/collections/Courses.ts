@@ -62,6 +62,7 @@ export const Courses: CollectionConfig = {
       name: "thumbnail",
       type: "upload",
       relationTo: "media",
+      required: true,
       label: "Card Image",
       admin: {
         description: "Image shown on course cards (home page and courses page).",
@@ -113,6 +114,7 @@ export const Courses: CollectionConfig = {
     {
       name: "durationHours",
       type: "number",
+      required: true,
       label: "Total Hours",
       min: 0,
       admin: {
@@ -122,6 +124,7 @@ export const Courses: CollectionConfig = {
     {
       name: "durationDays",
       type: "number",
+      required: true,
       label: "Total Days",
       min: 1,
       admin: {
@@ -131,6 +134,7 @@ export const Courses: CollectionConfig = {
     {
       name: "price",
       type: "number",
+      required: true,
       label: "Price ($)",
       min: 0,
     },
