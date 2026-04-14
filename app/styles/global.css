@@ -4594,6 +4594,13 @@ body.layout-print .app-content { transform: none !important; }
   color: var(--color-red-tint);
 }
 
+.booking-form__field-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-1);
+  display: block;
+}
+
 .booking-form__error-banner {
   background: rgba(220, 38, 38, 0.15);
   border: 1px solid rgba(220, 38, 38, 0.4);

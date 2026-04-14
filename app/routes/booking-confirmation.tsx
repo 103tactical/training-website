@@ -84,13 +84,14 @@ export default function BookingConfirmationPage() {
           </div>
 
           <h1 className="confirmation-card__heading">
-            {confirmed ? "You're Registered!" : "Booking Received"}
+            {confirmed ? "You're All Set!" : "Booking Received"}
           </h1>
 
           {confirmed && order ? (
             <>
               <p className="confirmation-card__subtext">
-                Your payment was successful. A receipt has been sent to your email by Square.
+                Your payment was processed and your spot is confirmed.
+                A booking confirmation email is on its way to your inbox.
               </p>
 
               <div className="confirmation-card__details">
@@ -108,7 +109,7 @@ export default function BookingConfirmationPage() {
                 )}
                 {order.createdAt && (
                   <div className="confirmation-detail">
-                    <span className="confirmation-detail__label">Booked On</span>
+                    <span className="confirmation-detail__label">Date Booked</span>
                     <span className="confirmation-detail__value">{formatDate(order.createdAt)}</span>
                   </div>
                 )}
@@ -126,12 +127,14 @@ export default function BookingConfirmationPage() {
             </>
           ) : confirmed ? (
             <p className="confirmation-card__subtext">
-              Your payment was accepted. A receipt has been sent to your email.
+              Your payment was accepted and your spot is confirmed.
+              Check your inbox for a booking confirmation email.
               Your confirmation number is: <strong>{orderId}</strong>
             </p>
           ) : (
             <p className="confirmation-card__subtext">
-              Thank you. If you just completed checkout, your booking is being processed.
+              Thank you. If you just completed checkout, your booking is being processed
+              and a confirmation email will arrive shortly.
             </p>
           )}
 

@@ -112,8 +112,13 @@ export async function action({ request, params }: ActionFunctionArgs) {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     errors.email = "Please enter a valid email address.";
 
-  // Strip any non-digit/non-punctuation characters from phone to prevent injection
+  // Sanitize and convert phone to E.164 for Square pre-population
+  const phoneDigits = phone.replace(/\D/g, "");
   const sanitizedPhone = phone.replace(/[^0-9\s().+\-x]/gi, "").slice(0, 30);
+  const e164Phone =
+    phoneDigits.length === 10 ? `+1${phoneDigits}` :
+    phoneDigits.length === 11 && phoneDigits.startsWith("1") ? `+${phoneDigits}` :
+    undefined;
 
   if (Object.keys(errors).length > 0) {
     return json<BookActionData>({ errors, formError: null }, { status: 422 });
@@ -180,7 +185,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       },
       prePopulatedData: {
         buyerEmail: email,
-        ...(phone ? { buyerPhoneNumber: phone } : {}),
+        ...(e164Phone ? { buyerPhoneNumber: e164Phone } : {}),
       },
     });
 
@@ -308,9 +313,10 @@ export default function BookSessionPage() {
             </div>
           ) : (
             <Form method="post" className="booking-form" noValidate>
-              <h2 className="booking-form__heading">Your Information</h2>
+              <h2 className="booking-form__heading">Reserve Your Spot</h2>
               <p className="booking-form__subtext">
-                You&apos;ll be redirected to our secure checkout to complete payment.
+                Enter your contact details below. You&apos;ll then be taken to
+                Square&apos;s secure checkout to complete payment.
               </p>
 
               {formError && (
@@ -323,18 +329,22 @@ export default function BookSessionPage() {
                 <label className="booking-form__label" htmlFor="email">
                   Email Address <span className="booking-form__required">*</span>
                 </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    maxLength={254}
-                    autoComplete="email"
-                    className={inputClass("email")}
-                    aria-describedby={errors.email ? "email-error" : undefined}
-                  />
-                {errors.email && (
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  maxLength={254}
+                  autoComplete="email"
+                  className={inputClass("email")}
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                />
+                {errors.email ? (
                   <span id="email-error" className="booking-form__field-error">
                     {errors.email}
+                  </span>
+                ) : (
+                  <span className="booking-form__field-hint">
+                    Your booking confirmation will be sent here.
                   </span>
                 )}
               </div>
@@ -351,6 +361,9 @@ export default function BookSessionPage() {
                   autoComplete="tel"
                   className="booking-form__input"
                 />
+                <span className="booking-form__field-hint">
+                  Used only for urgent session updates.
+                </span>
               </div>
 
               <div className="booking-form__summary-line">
@@ -363,11 +376,11 @@ export default function BookSessionPage() {
                 className="btn btn--primary btn--lg booking-form__submit"
                 disabled={submitting}
               >
-                {submitting ? "Preparing checkout…" : "Proceed to Payment →"}
+                {submitting ? "Preparing checkout…" : "Continue to Payment →"}
               </button>
 
               <p className="booking-form__secure-note">
-                Secured by Square. Your payment info is never stored on this site.
+                Secured by Square. Your card details are never stored on this site.
               </p>
             </Form>
           )}

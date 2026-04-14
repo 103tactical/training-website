@@ -198,7 +198,9 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     const cardholderName: string = payment.card_details?.card?.card_holder_name ?? "";
     const { firstName, lastName } = cardholderName
       ? parseCardholderName(cardholderName)
-      : { firstName: pending.firstName, lastName: pending.lastName };
+      : pending.firstName
+        ? { firstName: pending.firstName as string, lastName: (pending.lastName ?? "") as string }
+        : { firstName: "Customer", lastName: "" };
 
     const buyerEmail: string = payment.buyer_email_address ?? pending.email;
 
