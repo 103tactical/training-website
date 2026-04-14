@@ -22,13 +22,8 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           padding-bottom: 0.6rem;
         }
 
-        /* Hide the clear (×) button on read-only / disabled date fields.
-           Payload marks read-only date inputs as disabled, so we use :has()
-           to detect a disabled input and hide the sibling close icon. */
-        .react-datepicker-wrapper:has(input:disabled) ~ .react-datepicker__close-icon,
-        .react-datepicker-wrapper:has(input[readonly]) ~ .react-datepicker__close-icon,
-        .read-only .react-datepicker__close-icon,
-        [class*="read-only"] .react-datepicker__close-icon { display: none !important; }
+        /* Hide the clear (×) button on read-only date fields */
+        .date-time-picker__clear-button { display: none !important; }
       `}</style>
       {children}
     </>
