@@ -4413,9 +4413,8 @@ body.layout-print .app-content { transform: none !important; }
 
 .booking-summary__header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-5);
+  flex-direction: column;
+  gap: var(--spacing-2);
   margin-bottom: var(--spacing-6);
   padding-bottom: var(--spacing-6);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);

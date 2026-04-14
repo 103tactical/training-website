@@ -234,12 +234,10 @@ export default function BookSessionPage() {
         {/* ── Session Summary ── */}
         <div className="booking-summary">
           <div className="booking-summary__header">
-            <div>
-              <h1 className="booking-summary__course">{courseName}</h1>
-              {displayLabel && (
-                <p className="booking-summary__label">{displayLabel}</p>
-              )}
-            </div>
+            <h1 className="booking-summary__course">{courseName}</h1>
+            {displayLabel && (
+              <p className="booking-summary__label">{displayLabel}</p>
+            )}
             {price > 0 && (
               <div className="booking-summary__price">
                 ${price.toLocaleString()}
