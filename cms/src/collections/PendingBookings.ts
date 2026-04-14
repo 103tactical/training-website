@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
+import { sendBulkEmail } from '../lib/email'
 
 // ── Access control (same pattern as Attendees / Bookings) ─────────────────────
 
@@ -22,6 +23,51 @@ function allowAccess({ req }: { req: any }): boolean {
   const token = auth.replace(/^Bearer\s+/i, '').trim()
   const secret = process.env.CMS_WRITE_SECRET ?? ''
   return safeCompare(token, secret)
+}
+
+// ── Email expired leads endpoint ──────────────────────────────────────────────
+
+async function emailExpiredHandler(req: PayloadRequest): Promise<Response> {
+  if (!req.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  let body: { subject?: string; message?: string }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body = (await (req as any).json()) as { subject?: string; message?: string }
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const { subject, message } = body
+  if (!subject?.trim() || !message?.trim()) {
+    return Response.json({ error: 'subject and message are required' }, { status: 400 })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+
+  const result = await p.find({
+    collection: 'pending-bookings',
+    where: { status: { equals: 'expired' } },
+    limit: 1000,
+    req,
+  })
+
+  if (result.totalDocs === 0) {
+    return Response.json({ sent: 0, failed: 0, errors: [], note: 'No expired leads found.' })
+  }
+
+  const emails: string[] = result.docs.map((doc: { email: string }) => doc.email).filter(Boolean)
+
+  try {
+    const sendResult = await sendBulkEmail({ recipients: emails, subject: subject.trim(), message: message.trim() })
+    return Response.json(sendResult)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return Response.json({ error: msg }, { status: 500 })
+  }
 }
 
 // ── Retry endpoint handler ────────────────────────────────────────────────────
@@ -177,6 +223,9 @@ export const PendingBookings: CollectionConfig = {
       'Short-lived checkout sessions created when a visitor starts the booking flow. ' +
       'Completed once payment is confirmed. ' +
       'Expired records are visitors who started checkout but did not pay — useful as a prospecting list.',
+    components: {
+      beforeList: ['./components/EmailExpiredLeadsButton'],
+    },
   },
   access: {
     read:   allowAccess,
@@ -185,6 +234,11 @@ export const PendingBookings: CollectionConfig = {
     delete: ({ req }) => Boolean(req?.user), // only logged-in admins can delete
   },
   endpoints: [
+    {
+      path: '/email-expired',
+      method: 'post',
+      handler: emailExpiredHandler,
+    },
     {
       path: '/:id/retry',
       method: 'post',

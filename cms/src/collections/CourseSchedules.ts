@@ -1,4 +1,5 @@
-import type { CollectionConfig, CollectionBeforeChangeHook } from "payload";
+import type { CollectionConfig, CollectionBeforeChangeHook, PayloadRequest } from "payload";
+import { sendBulkEmail } from "../lib/email";
 
 /**
  * Auto-populates adminTitle as "Course Name: Internal Label" on every save.
@@ -34,6 +35,78 @@ const syncAdminTitle: CollectionBeforeChangeHook = async ({
   return data
 }
 
+// ── Email attendees endpoint ──────────────────────────────────────────────────
+
+async function emailAttendeesHandler(req: PayloadRequest): Promise<Response> {
+  if (!req.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const scheduleId = req.routeParams?.id
+  if (!scheduleId) {
+    return Response.json({ error: 'Missing schedule id' }, { status: 400 })
+  }
+
+  let body: { subject?: string; message?: string }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body = (await (req as any).json()) as { subject?: string; message?: string }
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const { subject, message } = body
+  if (!subject?.trim() || !message?.trim()) {
+    return Response.json({ error: 'subject and message are required' }, { status: 400 })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+
+  // Find all confirmed + waitlisted bookings for this session
+  const bookingsResult = await p.find({
+    collection: 'bookings',
+    where: {
+      and: [
+        { courseSchedule: { equals: scheduleId } },
+        { status: { in: ['confirmed', 'waitlisted'] } },
+      ],
+    },
+    limit: 500,
+    depth: 1,
+    req,
+  })
+
+  if (bookingsResult.totalDocs === 0) {
+    return Response.json({ sent: 0, failed: 0, errors: [], note: 'No confirmed or waitlisted attendees found for this session.' })
+  }
+
+  // Collect unique email addresses from the resolved attendee relationship
+  const emails: string[] = []
+  for (const booking of bookingsResult.docs) {
+    const attendee = booking.attendee
+    const email: string | undefined =
+      typeof attendee === 'object' && attendee !== null
+        ? (attendee as { email?: string }).email
+        : undefined
+    if (email) emails.push(email)
+  }
+
+  if (emails.length === 0) {
+    return Response.json({ sent: 0, failed: 0, errors: [], note: 'Bookings found but no attendee email addresses could be resolved.' })
+  }
+
+  try {
+    const result = await sendBulkEmail({ recipients: emails, subject: subject.trim(), message: message.trim() })
+    return Response.json(result)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return Response.json({ error: msg }, { status: 500 })
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const CourseSchedules: CollectionConfig = {
   slug: "course-schedules",
   admin: {
@@ -49,6 +122,13 @@ export const CourseSchedules: CollectionConfig = {
   hooks: {
     beforeChange: [syncAdminTitle],
   },
+  endpoints: [
+    {
+      path: '/:id/email-attendees',
+      method: 'post',
+      handler: emailAttendeesHandler,
+    },
+  ],
   fields: [
     // Auto-managed — hidden from UI, used as the document title in dropdowns
     {
@@ -63,6 +143,16 @@ export const CourseSchedules: CollectionConfig = {
       admin: {
         components: {
           Field: "./components/PrintRosterButton",
+        },
+      },
+    },
+    // ── Email Attendees ───────────────────────────────────────────────────────
+    {
+      name: "emailAttendeesAction",
+      type: "ui",
+      admin: {
+        components: {
+          Field: "./components/EmailAttendeesButton",
         },
       },
     },
