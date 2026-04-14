@@ -4444,10 +4444,11 @@ body.layout-print .app-content { transform: none !important; }
   gap: var(--spacing-3);
 }
 
-/* Override info-box positional defaults when used inside booking summary */
+/* Override info-box positional and background defaults inside booking summary */
 .booking-summary .course-detail__info-box {
   align-self: stretch;
   margin-left: 0;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .booking-summary__sessions {
