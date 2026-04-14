@@ -44,6 +44,112 @@ async function adjustSeats(
 }
 
 /**
+ * When a seat is freed from a session, promote the oldest waitlisted booking
+ * to Confirmed so the spot doesn't go to waste.
+ * Waitlisted → Confirmed is both-active so no second seat adjustment fires.
+ */
+async function promoteFromWaitlist(
+  payload: Parameters<CollectionAfterChangeHook>[0]['req']['payload'],
+  req: Parameters<CollectionAfterChangeHook>[0]['req'],
+  scheduleId: number,
+): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = payload as any
+    const result = await p.find({
+      collection: 'bookings',
+      where: {
+        and: [
+          { courseSchedule: { equals: scheduleId } },
+          { status: { equals: 'waitlisted' } },
+        ],
+      },
+      sort: 'createdAt',
+      limit: 1,
+      req,
+    })
+    if (result.docs.length > 0) {
+      await p.update({
+        collection: 'bookings',
+        id: result.docs[0].id,
+        data: { status: 'confirmed' },
+        req,
+      })
+    }
+  } catch (err) {
+    console.error(`[Bookings] promoteFromWaitlist error (scheduleId=${scheduleId}):`, err)
+  }
+}
+
+/**
+ * Blocks saving if:
+ *   1. The same attendee is already booked into the same session (duplicate).
+ *   2. The session is full and the booking is being set to an active status
+ *      that would add a new confirmed/waitlisted count (overbooking).
+ */
+const validateBookingRules: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+
+  const attendeeId = resolveId(data.attendee ?? originalDoc?.attendee)
+  const scheduleId = resolveId(data.courseSchedule ?? originalDoc?.courseSchedule)
+  const newStatus: string = data.status ?? originalDoc?.status ?? 'confirmed'
+  const prevStatus: string | undefined = originalDoc?.status
+
+  // ── #1: Duplicate booking check ─────────────────────────────────────────────
+  if (attendeeId && scheduleId) {
+    const whereClause =
+      operation === 'update'
+        ? {
+            and: [
+              { attendee: { equals: attendeeId } },
+              { courseSchedule: { equals: scheduleId } },
+              { id: { not_equals: originalDoc?.id } },
+            ],
+          }
+        : {
+            and: [
+              { attendee: { equals: attendeeId } },
+              { courseSchedule: { equals: scheduleId } },
+            ],
+          }
+
+    const existing = await p.find({
+      collection: 'bookings',
+      where: whereClause,
+      limit: 1,
+      req,
+    })
+
+    if (existing.totalDocs > 0) {
+      throw new Error('This attendee already has a booking for this session.')
+    }
+  }
+
+  // ── #2: Overbooking guard ────────────────────────────────────────────────────
+  // Only check if the booking is newly becoming active (wasn't active before).
+  const becomingActive =
+    ACTIVE_STATUSES.includes(newStatus) &&
+    (operation === 'create' || !ACTIVE_STATUSES.includes(prevStatus ?? ''))
+
+  if (becomingActive && scheduleId) {
+    const schedule = await p.findByID({ collection: 'course-schedules', id: scheduleId, req })
+    const maxSeats: number = schedule?.maxSeats ?? 0
+    const seatsBooked: number = schedule?.seatsBooked ?? 0
+    const available = maxSeats - seatsBooked
+
+    if (available <= 0) {
+      throw new Error(
+        `This session is full (${seatsBooked} of ${maxSeats} seats taken). ` +
+        `Set the status to Waitlisted to add this person to the waitlist.`,
+      )
+    }
+  }
+
+  return data
+}
+
+/**
  * Computes a human-readable adminTitle from the linked attendee's name.
  * Used as the document title in the CMS and in relationship dropdowns.
  */
@@ -86,13 +192,18 @@ const afterChangeHook: CollectionAfterChangeHook = async ({ doc, previousDoc, op
       prevScheduleId !== newScheduleId
 
     if (scheduleChanged) {
-      // Booking transferred to a different session
-      if (prevActive && prevScheduleId) await adjustSeats(payload, req, prevScheduleId, -1)
+      // Booking transferred to a different session — free old seat, claim new one
+      if (prevActive && prevScheduleId) {
+        await adjustSeats(payload, req, prevScheduleId, -1)
+        await promoteFromWaitlist(payload, req, prevScheduleId)
+      }
       if (newActive && newScheduleId) await adjustSeats(payload, req, newScheduleId, +1)
     } else if (newScheduleId && previousDoc?.status !== doc.status) {
       // Same session, status changed
       if (prevActive && !newActive) {
+        // Seat freed — decrement and promote oldest waitlisted person
         await adjustSeats(payload, req, newScheduleId, -1)
+        await promoteFromWaitlist(payload, req, newScheduleId)
       } else if (!prevActive && newActive) {
         await adjustSeats(payload, req, newScheduleId, +1)
       }
@@ -110,7 +221,10 @@ const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
     const booking = await p.findByID({ collection: 'bookings', id, req })
     if (ACTIVE_STATUSES.includes(booking.status)) {
       const scheduleId = resolveId(booking.courseSchedule)
-      if (scheduleId) await adjustSeats(payload, req, scheduleId, -1)
+      if (scheduleId) {
+        await adjustSeats(payload, req, scheduleId, -1)
+        await promoteFromWaitlist(payload, req, scheduleId)
+      }
     }
   } catch (err) {
     console.error('[Bookings] beforeDelete hook error:', err)
@@ -137,7 +251,7 @@ export const Bookings: CollectionConfig = {
     read: () => true,
   },
   hooks: {
-    beforeChange: [syncBookingTitle],
+    beforeChange: [validateBookingRules, syncBookingTitle],
     afterChange: [afterChangeHook],
     beforeDelete: [beforeDeleteHook],
   },
@@ -201,7 +315,7 @@ export const Bookings: CollectionConfig = {
       ],
       admin: {
         description:
-          'Confirmed and Waitlisted count against available seats. Cancelled and Transferred free the seat automatically.',
+          'Confirmed and Waitlisted count against available seats. Cancelled and Transferred free the seat and automatically promote the next Waitlisted person.',
         components: {
           Cell: './components/StatusBadge',
         },
