@@ -4392,14 +4392,13 @@ body.layout-print .app-content { transform: none !important; }
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--spacing-6);
-  max-width: 780px;
 }
 
 @media (min-width: 768px) {
   .booking-page__inner {
     grid-template-columns: 1fr 1.2fr;
     align-items: start;
-    gap: var(--spacing-8);
+    gap: var(--spacing-10);
   }
 }
 
