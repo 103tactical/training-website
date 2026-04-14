@@ -272,10 +272,18 @@ export async function createBookingRecord(data: {
   return json.doc ?? json;
 }
 
-/** Find a booking by its Square Order ID */
-export async function findBookingBySquareOrderId(orderId: string): Promise<{ id: number; status: string } | null> {
-  const res = await fetchPayloadAuth<{ docs: { id: number; status: string }[] }>(
-    `/bookings?where[squareOrderId][equals]=${encodeURIComponent(orderId)}&limit=1`
+export interface BookingRecord {
+  id: number;
+  status: string;
+  amountPaidCents?: number;
+  attendee?: { id: number; firstName: string; lastName: string; email: string } | null;
+  course?: { id: string; title: string } | null;
+}
+
+/** Find a booking by its Square Order ID (depth=2 to populate attendee + course) */
+export async function findBookingBySquareOrderId(orderId: string): Promise<BookingRecord | null> {
+  const res = await fetchPayloadAuth<{ docs: BookingRecord[] }>(
+    `/bookings?where[squareOrderId][equals]=${encodeURIComponent(orderId)}&depth=2&limit=1`
   );
   return res.docs[0] ?? null;
 }

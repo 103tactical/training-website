@@ -6,6 +6,7 @@ import { getContactSettings, getSiteSettings, PAYLOAD_API_URL, resolveMediaUrl }
 import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 import { trackContactFormSubmit } from "~/lib/analytics";
+import { sendAdminContactFormEmail } from "~/lib/email.server";
 
 export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
   const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
@@ -73,6 +74,12 @@ export async function action({ request }: ActionFunctionArgs) {
       body: JSON.stringify({ name, email, phone, topic, message }),
     });
     if (!res.ok) throw new Error(`Payload responded with ${res.status}`);
+
+    // Notify admin — non-fatal, never block the success response
+    sendAdminContactFormEmail({ name, email, phone, topic, message }).catch((err) => {
+      console.error("Admin contact form notification failed:", err);
+    });
+
     return json({ success: true, errors: {} });
   } catch (err) {
     console.error("Contact form submission error:", err);

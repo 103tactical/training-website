@@ -6,6 +6,7 @@ import type {
   CollectionBeforeChangeHook,
 } from 'payload'
 import { SquareClient, SquareEnvironment } from 'square'
+import { sendEmail } from '../lib/email'
 
 function getSquareClient() {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
@@ -48,6 +49,18 @@ async function issueSquareRefund(paymentId: string, amountCents: number): Promis
 
 /** Statuses that count against a schedule's seat inventory */
 const ACTIVE_STATUSES = ['confirmed', 'waitlisted']
+
+/** Format session date strings for use in emails */
+function formatSessionDates(sessions: { date?: string }[]): string {
+  if (!sessions?.length) return ''
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  })
+  return sessions
+    .filter((s) => s.date)
+    .map((s) => { try { return fmt.format(new Date(s.date!)) } catch { return s.date! } })
+    .join(', ')
+}
 
 /**
  * Resolve a relationship field value to a numeric ID.
@@ -110,12 +123,48 @@ async function promoteFromWaitlist(
       req,
     })
     if (result.docs.length > 0) {
+      const promoted = result.docs[0]
       await p.update({
         collection: 'bookings',
-        id: result.docs[0].id,
+        id: promoted.id,
         data: { status: 'confirmed' },
         req,
       })
+
+      // Send waitlist-to-confirmed notification to the attendee
+      try {
+        const attendeeId = resolveId(promoted.attendee)
+        if (attendeeId) {
+          const [attendee, schedule] = await Promise.all([
+            p.findByID({ collection: 'attendees', id: attendeeId, req }),
+            p.findByID({ collection: 'course-schedules', id: scheduleId, depth: 2, req }),
+          ])
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const course = typeof schedule?.course === 'object' ? (schedule.course as any) : null
+          const courseTitle: string = course?.title ?? 'your course'
+          const sessionDates = formatSessionDates(schedule?.sessions ?? [])
+
+          if (attendee?.email) {
+            await sendEmail({
+              to: attendee.email,
+              subject: `You're In — A Seat Has Opened for ${courseTitle}`,
+              message: [
+                `Hi ${attendee.firstName ?? 'there'},`,
+                ``,
+                `Great news! A seat has opened up for ${courseTitle}${sessionDates ? ` on ${sessionDates}` : ''} and your waitlist spot has been confirmed.`,
+                ``,
+                `You're all set — we'll see you there!`,
+                ``,
+                `Questions? Reply to this email.`,
+              ].join('\n'),
+            })
+            console.log(`[Bookings] Waitlist promotion email sent to ${attendee.email}`)
+          }
+        }
+      } catch (emailErr) {
+        // Email failure is non-fatal — the promotion already succeeded
+        console.error('[Bookings] Waitlist promotion email failed:', emailErr)
+      }
     }
   } catch (err) {
     console.error(`[Bookings] promoteFromWaitlist error (scheduleId=${scheduleId}):`, err)

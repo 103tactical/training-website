@@ -35,7 +35,16 @@ import {
   resolveMediaUrl,
 } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
-import { sendEnrollmentEmail } from "~/lib/email.server";
+import {
+  formatCents,
+  formatSessionDates,
+  sendEnrollmentEmail,
+  sendBookingConfirmationEmail,
+  sendCancellationEmail,
+  sendAdminBookingNotification,
+  sendAdminBookingFailureAlert,
+  sendAdminCancellationAlert,
+} from "~/lib/email.server";
 
 export async function action({ request }: ActionFunctionArgs) {
   const rawBody = await request.text();
@@ -222,7 +231,26 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       `[webhook] Booking created — pendingId=${pending.id} attendee=${attendee.id} order=${orderId}`,
     );
 
-    // ── Send enrollment email if the course has one configured ──────────────
+    // ── Compute session dates string (used in multiple emails below) ─────────
+    const sessionDates = formatSessionDates(schedule.sessions ?? []);
+    const amountDollars = formatCents(amountCents);
+
+    // ── Booking confirmation email (always sent) ──────────────────────────────
+    try {
+      await sendBookingConfirmationEmail({
+        to: buyerEmail,
+        firstName,
+        courseTitle: course.title,
+        sessionDates,
+        amountDollars,
+        orderId,
+      });
+      console.log(`[webhook] Confirmation email sent to ${buyerEmail}`);
+    } catch (emailErr) {
+      console.error("[webhook] Confirmation email failed:", emailErr);
+    }
+
+    // ── Enrollment forms email (only if the course has one configured) ────────
     if (course?.enrollmentMessage) {
       try {
         const fileUrl  = course.enrollmentFile?.url
@@ -241,10 +269,21 @@ async function handlePaymentUpdated(event: Record<string, any>) {
         });
         console.log(`[webhook] Enrollment email sent to ${buyerEmail}`);
       } catch (emailErr) {
-        // Email failure is non-fatal — the booking was already created successfully.
         console.error("[webhook] Enrollment email failed:", emailErr);
       }
     }
+
+    // ── Admin new booking notification ────────────────────────────────────────
+    await sendAdminBookingNotification({
+      firstName,
+      lastName,
+      email: buyerEmail,
+      courseTitle: course.title,
+      sessionDates,
+      amountDollars,
+      orderId,
+    });
+
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
     console.error(`[webhook] Booking creation failed for pending ${pending.id}:`, reason);
@@ -254,6 +293,13 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       status: "failed",
       failureReason: reason,
       attemptedAt: new Date().toISOString(),
+    });
+
+    // Alert the admin immediately — silent failure is easy to miss
+    await sendAdminBookingFailureAlert({
+      email: pending.email ?? "unknown",
+      pendingId: pending.id,
+      reason,
     });
   }
 }
@@ -339,4 +385,35 @@ async function handleRefundUpdated(event: Record<string, any>) {
 
   await updateBookingStatus(booking.id, "cancelled");
   console.log(`[webhook] Booking ${booking.id} cancelled via Square refund on order ${orderId}`);
+
+  // ── Cancellation email to attendee ──────────────────────────────────────────
+  const attendee = booking.attendee as { firstName?: string; lastName?: string; email?: string } | null | undefined;
+  const course   = booking.course   as { title?: string } | null | undefined;
+  const attendeeEmail     = attendee?.email;
+  const attendeeFirstName = attendee?.firstName ?? "";
+  const attendeeName      = [attendeeFirstName, attendee?.lastName].filter(Boolean).join(" ");
+  const courseTitle       = course?.title ?? "your course";
+  const amountDollars     = booking.amountPaidCents ? formatCents(booking.amountPaidCents) : "";
+
+  if (attendeeEmail) {
+    try {
+      await sendCancellationEmail({
+        to: attendeeEmail,
+        firstName: attendeeFirstName,
+        courseTitle,
+        amountDollars,
+      });
+      console.log(`[webhook] Cancellation email sent to ${attendeeEmail}`);
+    } catch (emailErr) {
+      console.error("[webhook] Cancellation email failed:", emailErr);
+    }
+  }
+
+  // ── Admin cancellation alert ────────────────────────────────────────────────
+  await sendAdminCancellationAlert({
+    bookingId: booking.id,
+    orderId,
+    attendeeName: attendeeName || "Unknown",
+    courseTitle,
+  });
 }
