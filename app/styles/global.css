@@ -3070,16 +3070,29 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   max-width: 560px;
 }
 
-.store-visit-cta__actions {
-  display: flex;
-  gap: var(--spacing-4);
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
 .store-visit-cta__btn {
   --btn-px: 22px;
   --btn-py: 14px;
+}
+
+.store-visit-cta__btn--directions {
+  display: block;
+  margin: 0 auto;
+  background: #fff;
+  color: var(--color-bg-dark);
+  border: 2px solid #fff;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: var(--btn-py, 14px) var(--btn-px, 22px);
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  transition: background 0.18s, color 0.18s;
+}
+
+.store-visit-cta__btn--directions:hover {
+  background: transparent;
+  color: #fff;
 }
 
 .store-visit-cta__note {

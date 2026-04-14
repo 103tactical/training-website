@@ -108,9 +108,16 @@ export default function StoreRoute() {
                 <span className="store-featured__in-store-tag">
                   <InStoreIcon /> In-Store Only
                 </span>
-                <Link to="/contact" className="btn btn--outline store-featured__cta-btn">
-                  Schedule a Visit
-                </Link>
+                {cta?.directionsUrl && (
+                  <a
+                    href={cta.directionsUrl}
+                    className="btn btn--outline store-featured__cta-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Visit Us
+                  </a>
+                )}
               </div>
             </div>
             </div>{/* end store-featured__inner */}
@@ -163,21 +170,16 @@ export default function StoreRoute() {
           {cta?.subtext && (
             <p className="store-visit-cta__subtext">{cta.subtext}</p>
           )}
-          <div className="store-visit-cta__actions">
-            {cta?.directionsUrl && (
-              <a
-                href={cta.directionsUrl}
-                className="btn btn--accent store-visit-cta__btn"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Get Directions
-              </a>
-            )}
-            <Link to="/contact" className="btn btn--outline store-visit-cta__btn">
-              Schedule a Visit
-            </Link>
-          </div>
+          {cta?.directionsUrl && (
+            <a
+              href={cta.directionsUrl}
+              className="btn store-visit-cta__btn store-visit-cta__btn--directions"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Get Directions
+            </a>
+          )}
           <p className="store-visit-cta__note">
             Our experts are here to guide you through every option — no obligation, just answers.
           </p>
