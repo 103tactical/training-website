@@ -4589,25 +4589,25 @@ body.layout-print .app-content { transform: none !important; }
 
 .booking-form__input {
   background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: none;
   border-radius: var(--radius-sm);
   padding: var(--spacing-3) var(--spacing-4);
   font-size: var(--text-base);
   color: var(--color-white);
   width: 100%;
   box-sizing: border-box;
-  transition: border-color var(--transition-fast);
 }
 
 .booking-form__input::placeholder { color: rgba(255,255,255,0.3); }
 
 .booking-form__input:focus {
-  outline: none;
-  border-color: var(--color-red);
+  outline: 2px solid var(--color-red);
+  outline-offset: 0;
 }
 
 .booking-form__input--error {
-  border-color: var(--color-red-tint);
+  outline: 2px solid var(--color-red-tint);
+  outline-offset: 0;
 }
 
 .booking-form__field-error {
