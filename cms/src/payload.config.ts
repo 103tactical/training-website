@@ -39,6 +39,10 @@ export default buildConfig({
     },
     components: {
       providers: ['./providers/AdminStyles'],
+      graphics: {
+        Logo: './components/AdminLogo',
+        Icon: './components/AdminLogo',
+      },
     },
   },
   collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups, CourseSchedules, Attendees, Instructors],
