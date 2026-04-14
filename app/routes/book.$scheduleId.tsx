@@ -15,10 +15,16 @@ import {
   getCourseScheduleById,
   findAttendeeByEmail,
   createAttendee,
-  resolveMediaUrl,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type BookActionData = {
+  errors: Record<string, string>;
+  formError: string | null;
+};
 
 // ── Meta ─────────────────────────────────────────────────────────────────────
 
@@ -75,7 +81,6 @@ export async function loader({ params }: LoaderFunctionArgs) {
     scheduleId,
     courseName: course?.title ?? "Course",
     courseSlug: course?.slug ?? "",
-    courseId: String(course?.id ?? ""),
     price: course?.price ?? 0,
     durationHours: course?.durationHours,
     durationDays: course?.durationDays,
@@ -111,11 +116,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
     errors.email = "Please enter a valid email address.";
 
   if (Object.keys(errors).length > 0) {
-    return json({ errors, formError: null }, { status: 422 });
+    return json<BookActionData>({ errors, formError: null }, { status: 422 });
   }
 
   if (!SQUARE_CONFIGURED || !squareClient) {
-    return json(
+    return json<BookActionData>(
       { errors: {}, formError: "Online booking is not available right now. Please contact us directly." },
       { status: 503 },
     );
@@ -125,11 +130,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
     // ── Re-check seat availability ──────────────────────────────────────────
     const schedule = await getCourseScheduleById(scheduleId);
     if (!schedule || !schedule.isActive) {
-      return json({ errors: {}, formError: "This session is no longer available." }, { status: 410 });
+      return json<BookActionData>({ errors: {}, formError: "This session is no longer available." }, { status: 410 });
     }
     const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0);
     if (remaining <= 0) {
-      return json({ errors: {}, formError: "Sorry, this session just filled up." }, { status: 409 });
+      return json<BookActionData>({ errors: {}, formError: "Sorry, this session just filled up." }, { status: 409 });
     }
 
     const course = schedule.course as Course;
@@ -145,7 +150,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const siteUrl = process.env.PUBLIC_SITE_URL ?? "";
     const idempotencyKey = `book-${scheduleId}-${attendee.id}-${Date.now()}`;
 
-    const { result } = await squareClient.checkoutApi.createPaymentLink({
+    const response = await squareClient.checkout.paymentLinks.create({
       idempotencyKey,
       order: {
         locationId: SQUARE_LOCATION_ID,
@@ -172,7 +177,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       },
     });
 
-    const checkoutUrl = result.paymentLink?.url;
+    const checkoutUrl = response.paymentLink?.url;
     if (!checkoutUrl) {
       throw new Error("Square did not return a checkout URL");
     }
@@ -180,7 +185,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return redirect(checkoutUrl);
   } catch (err) {
     console.error("[book] action error:", err);
-    return json(
+    return json<BookActionData>(
       { errors: {}, formError: "Something went wrong creating your booking. Please try again or contact us." },
       { status: 500 },
     );
@@ -191,7 +196,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export default function BookSessionPage() {
   const data = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData() as BookActionData | undefined;
   const navigation = useNavigation();
   const submitting = navigation.state === "submitting";
 
@@ -204,7 +209,7 @@ export default function BookSessionPage() {
   const errors = actionData?.errors ?? {};
   const formError = actionData?.formError ?? null;
 
-  function field(name: string) {
+  function inputClass(name: string) {
     return errors[name]
       ? "booking-form__input booking-form__input--error"
       : "booking-form__input";
@@ -298,7 +303,7 @@ export default function BookSessionPage() {
             <Form method="post" className="booking-form" noValidate>
               <h2 className="booking-form__heading">Your Information</h2>
               <p className="booking-form__subtext">
-                You'll be redirected to our secure checkout to complete payment.
+                You&apos;ll be redirected to our secure checkout to complete payment.
               </p>
 
               {formError && (
@@ -317,7 +322,7 @@ export default function BookSessionPage() {
                     name="firstName"
                     type="text"
                     autoComplete="given-name"
-                    className={field("firstName")}
+                    className={inputClass("firstName")}
                     aria-describedby={errors.firstName ? "firstName-error" : undefined}
                   />
                   {errors.firstName && (
@@ -336,7 +341,7 @@ export default function BookSessionPage() {
                     name="lastName"
                     type="text"
                     autoComplete="family-name"
-                    className={field("lastName")}
+                    className={inputClass("lastName")}
                     aria-describedby={errors.lastName ? "lastName-error" : undefined}
                   />
                   {errors.lastName && (
@@ -356,7 +361,7 @@ export default function BookSessionPage() {
                   name="email"
                   type="email"
                   autoComplete="email"
-                  className={field("email")}
+                  className={inputClass("email")}
                   aria-describedby={errors.email ? "email-error" : undefined}
                 />
                 {errors.email && (

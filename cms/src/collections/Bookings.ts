@@ -5,16 +5,16 @@ import type {
   CollectionBeforeDeleteHook,
   CollectionBeforeChangeHook,
 } from 'payload'
-import { Client, Environment } from 'square'
+import { SquareClient, SquareEnvironment } from 'square'
 
 function getSquareClient() {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
   if (!accessToken) return null
-  return new Client({
-    accessToken,
+  return new SquareClient({
+    token: accessToken,
     environment: process.env.SQUARE_ENVIRONMENT === 'sandbox'
-      ? Environment.Sandbox
-      : Environment.Production,
+      ? SquareEnvironment.Sandbox
+      : SquareEnvironment.Production,
   })
 }
 
@@ -30,7 +30,7 @@ async function issueSquareRefund(paymentId: string, amountCents: number): Promis
   }
   try {
     const idempotencyKey = `refund-${paymentId}-${Date.now()}`
-    await client.refundsApi.refundPayment({
+    await client.refunds.refundPayment({
       paymentId,
       idempotencyKey,
       amountMoney: {

@@ -11,8 +11,8 @@
  *     → Mark the matching Booking as cancelled
  *       (seat adjustment + waitlist promotion run via the CMS afterChange hook)
  *
- * The endpoint always responds 200 as quickly as possible so Square doesn't
- * retry. Errors are logged but never surface a 5xx to Square.
+ * The endpoint always responds 200 as quickly as possible.
+ * Errors are logged but never surface a 5xx — Square would retry on non-2xx.
  */
 import { type ActionFunctionArgs } from "@remix-run/node";
 import {
@@ -39,7 +39,7 @@ export async function action({ request }: ActionFunctionArgs) {
   if (SQUARE_CONFIGURED) {
     const sigHeader = request.headers.get("x-square-hmacsha256-signature") ?? "";
     const webhookUrl = `${process.env.PUBLIC_SITE_URL ?? ""}/api/square-webhook`;
-    const valid = verifySquareWebhook(rawBody, sigHeader, webhookUrl);
+    const valid = await verifySquareWebhook(rawBody, sigHeader, webhookUrl);
     if (!valid) {
       console.warn("[webhook] Invalid Square signature — ignoring");
       return new Response("Unauthorized", { status: 401 });
@@ -49,7 +49,8 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   // ── Parse event ───────────────────────────────────────────────────────────
-  let event: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let event: Record<string, any>;
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -67,7 +68,6 @@ export async function action({ request }: ActionFunctionArgs) {
       await handleRefundUpdated(event);
     }
   } catch (err) {
-    // Log but always return 200 — Square will retry on non-2xx
     console.error("[webhook] Handler error:", err);
   }
 
@@ -76,9 +76,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
 
-async function handlePaymentUpdated(event: Record<string, unknown>) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const payment = (event as any)?.data?.object?.payment;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handlePaymentUpdated(event: Record<string, any>) {
+  const payment = event?.data?.object?.payment;
   if (!payment) return;
   if (payment.status !== "COMPLETED") return;
 
@@ -104,8 +104,8 @@ async function handlePaymentUpdated(event: Record<string, unknown>) {
     return;
   }
 
-  const { result } = await squareClient.ordersApi.retrieveOrder(orderId);
-  const order = result.order;
+  const orderResponse = await squareClient.orders.get({ orderId });
+  const order = orderResponse.order;
   if (!order) {
     console.warn(`[webhook] Could not retrieve Square order ${orderId}`);
     return;
@@ -139,26 +139,16 @@ async function handlePaymentUpdated(event: Record<string, unknown>) {
   // ── Resolve Attendee ─────────────────────────────────────────────────────
   let attendeeId = parseInt(attendeeIdStr ?? "", 10);
 
-  // If the attendee ID in the reference is invalid, fall back to creating by email
   if (isNaN(attendeeId)) {
-    const buyerEmail: string =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (order as any).fulfillments?.[0]?.digitalDetails?.email ??
-      payment.buyer_email_address ??
-      "";
-
+    // Fallback: look up by buyer email from the payment
+    const buyerEmail: string = payment.buyer_email_address ?? "";
     if (!buyerEmail) {
       console.warn(`[webhook] Cannot resolve attendee for order ${orderId}`);
       return;
     }
-
     let attendee = await findAttendeeByEmail(buyerEmail);
     if (!attendee) {
-      attendee = await createAttendee({
-        firstName: "Unknown",
-        lastName: "Attendee",
-        email: buyerEmail,
-      });
+      attendee = await createAttendee({ firstName: "Unknown", lastName: "Attendee", email: buyerEmail });
     }
     attendeeId = attendee.id;
   }
@@ -180,21 +170,20 @@ async function handlePaymentUpdated(event: Record<string, unknown>) {
   );
 }
 
-async function handleRefundUpdated(event: Record<string, unknown>) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const refund = (event as any)?.data?.object?.refund;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleRefundUpdated(event: Record<string, any>) {
+  const refund = event?.data?.object?.refund;
   if (!refund) return;
   if (refund.status !== "COMPLETED") return;
 
   const paymentId: string = refund.payment_id;
-  if (!paymentId) return;
+  if (!paymentId || !squareClient) return;
 
   // Fetch payment to get the order ID
-  if (!squareClient) return;
   let orderId: string | undefined;
   try {
-    const { result } = await squareClient.paymentsApi.getPayment(paymentId);
-    orderId = result.payment?.orderId ?? undefined;
+    const paymentResponse = await squareClient.payments.get({ paymentId });
+    orderId = paymentResponse.payment?.orderId ?? undefined;
   } catch (err) {
     console.warn("[webhook] Could not retrieve payment for refund:", err);
     return;
@@ -202,14 +191,12 @@ async function handleRefundUpdated(event: Record<string, unknown>) {
 
   if (!orderId) return;
 
-  // Find our booking
   const booking = await findBookingBySquareOrderId(orderId);
   if (!booking) {
-    console.log(`[webhook] No booking found for refunded order ${orderId} — nothing to cancel`);
+    console.log(`[webhook] No booking found for refunded order ${orderId}`);
     return;
   }
 
-  // Already cancelled — idempotent
   if (booking.status === "cancelled") {
     console.log(`[webhook] Booking ${booking.id} already cancelled — skipping`);
     return;

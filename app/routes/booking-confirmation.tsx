@@ -43,8 +43,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   if (squareClient) {
     try {
-      const { result } = await squareClient.ordersApi.retrieveOrder(orderId);
-      const o = result.order;
+      const orderResp = await squareClient.orders.get({ orderId });
+      const o = orderResp.order;
       if (o) {
         const totalCents = o.totalMoney?.amount ?? BigInt(0);
         const li = o.lineItems?.[0];
