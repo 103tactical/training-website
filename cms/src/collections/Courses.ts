@@ -144,9 +144,6 @@ export const Courses: CollectionConfig = {
       label: "Enrollment Forms",
       admin: {
         initCollapsed: true,
-        description:
-          "Optional. When configured, a branded email containing this message and the attached PDF " +
-          "will be sent automatically to every attendee upon payment confirmation.",
       },
       fields: [
         {
@@ -155,8 +152,9 @@ export const Courses: CollectionConfig = {
           label: "Message / Instructions",
           admin: {
             description:
-              "What the attendee needs to know — e.g. instructions for completing the attached form " +
-              "and returning it before the course date.",
+              "Optional. When filled in, a branded email with this message (and the PDF below if provided) " +
+              "will be sent automatically to every attendee upon payment confirmation. " +
+              "e.g. instructions for completing the attached form before the course date.",
           },
         },
         {
