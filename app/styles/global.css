@@ -4485,9 +4485,9 @@ body.layout-print .app-content { transform: none !important; }
 
 .booking-summary__meta-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--spacing-2);
-  align-items: center;
+  align-items: flex-start;
 }
 
 .booking-summary__meta-chip {
