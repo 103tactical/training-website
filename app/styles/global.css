@@ -4525,13 +4525,12 @@ body.layout-print .app-content { transform: none !important; }
 
 .booking-summary__seats {
   font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--color-green, #22c55e);
+  color: var(--color-text-muted);
   margin-top: var(--spacing-1);
 }
 
 .booking-summary__seats--full {
-  color: var(--color-red-tint);
+  color: var(--color-text-muted);
 }
 
 /* ── Booking form card ── */
