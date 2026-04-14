@@ -399,7 +399,7 @@ export const Bookings: CollectionConfig = {
         initCollapsed: true,
         condition: (data) => Array.isArray(data.transferHistory) && data.transferHistory.length > 0,
         components: {
-          RowLabel: './components/TransferCountCell',
+          RowLabel: './components/TransferRowLabel',
         },
       },
       fields: [

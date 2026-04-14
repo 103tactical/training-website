@@ -21,6 +21,9 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           padding-top: 0.6rem;
           padding-bottom: 0.6rem;
         }
+
+        /* Hide the clear (×) button on read-only date fields */
+        .read-only .react-datepicker__close-icon { display: none !important; }
       `}</style>
       {children}
     </>
