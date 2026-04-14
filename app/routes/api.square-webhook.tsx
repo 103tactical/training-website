@@ -36,16 +36,31 @@ export async function action({ request }: ActionFunctionArgs) {
   const rawBody = await request.text();
 
   // ── Signature verification ────────────────────────────────────────────────
-  if (SQUARE_CONFIGURED) {
+  // The signature key is the only requirement for verification.
+  // If it is set, we ALWAYS verify — regardless of other Square env vars.
+  // If it is not set and we are in production, we reject ALL requests to
+  // prevent an attacker from injecting fake booking events.
+  const sigKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+  const isSandbox = process.env.SQUARE_ENVIRONMENT === "sandbox";
+
+  if (sigKey) {
     const sigHeader = request.headers.get("x-square-hmacsha256-signature") ?? "";
     const webhookUrl = `${process.env.PUBLIC_SITE_URL ?? ""}/api/square-webhook`;
     const valid = await verifySquareWebhook(rawBody, sigHeader, webhookUrl);
     if (!valid) {
-      console.warn("[webhook] Invalid Square signature — ignoring");
+      console.warn("[webhook] Invalid Square signature — request rejected");
       return new Response("Unauthorized", { status: 401 });
     }
+  } else if (!isSandbox) {
+    // No signature key in a production environment — refuse all traffic
+    console.error(
+      "[webhook] SQUARE_WEBHOOK_SIGNATURE_KEY is not set in production. " +
+      "All webhook requests are rejected until the key is configured.",
+    );
+    return new Response("Service Unavailable", { status: 503 });
   } else {
-    console.warn("[webhook] Square not configured — skipping signature check (dev mode)");
+    // Sandbox + no key — allowed for local development / testing only
+    console.warn("[webhook] Signature check skipped (sandbox dev mode — no signature key set)");
   }
 
   // ── Parse event ───────────────────────────────────────────────────────────

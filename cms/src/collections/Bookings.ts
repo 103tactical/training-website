@@ -336,17 +336,37 @@ const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
   }
 }
 
+import { timingSafeEqual } from 'crypto'
+
 /**
- * Allow writes from the website backend using the shared CMS_WRITE_SECRET.
- * Logged-in admin users are always allowed.
+ * Constant-time string comparison to prevent timing-based secret extraction.
+ */
+function safeCompare(a: string, b: string): boolean {
+  if (!a || !b) return false
+  try {
+    const bufA = Buffer.from(a)
+    const bufB = Buffer.from(b)
+    if (bufA.length !== bufB.length) return false
+    return timingSafeEqual(bufA, bufB)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Allow access (read or write) from a logged-in Payload admin user, or
+ * from the website backend presenting the shared CMS_WRITE_SECRET bearer token.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function allowWriteAccess({ req }: { req: any }): boolean {
+function allowAccess({ req }: { req: any }): boolean {
   if (req?.user) return true
   const auth: string = req?.headers?.get?.('authorization') ?? ''
   const token = auth.replace(/^Bearer\s+/i, '').trim()
-  return Boolean(token && token === process.env.CMS_WRITE_SECRET)
+  const secret = process.env.CMS_WRITE_SECRET ?? ''
+  return safeCompare(token, secret)
 }
+
+const allowWriteAccess = allowAccess
 
 export const Bookings: CollectionConfig = {
   slug: 'bookings',
@@ -365,9 +385,9 @@ export const Bookings: CollectionConfig = {
     },
   },
   access: {
-    read: () => true,
-    create: allowWriteAccess,
-    update: allowWriteAccess,
+    read: allowAccess,
+    create: allowAccess,
+    update: allowAccess,
   },
   hooks: {
     beforeChange: [validateBookingRules, recordTransfer, syncBookingTitle],

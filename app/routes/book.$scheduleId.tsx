@@ -109,11 +109,19 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   // ── Validation ──────────────────────────────────────────────────────────────
   const errors: Record<string, string> = {};
-  if (!firstName) errors.firstName = "First name is required.";
-  if (!lastName)  errors.lastName  = "Last name is required.";
-  if (!email)     errors.email     = "Email address is required.";
+  if (!firstName)           errors.firstName = "First name is required.";
+  else if (firstName.length > 100) errors.firstName = "First name is too long.";
+
+  if (!lastName)            errors.lastName  = "Last name is required.";
+  else if (lastName.length > 100)  errors.lastName  = "Last name is too long.";
+
+  if (!email)               errors.email     = "Email address is required.";
+  else if (email.length > 254) errors.email  = "Email address is too long.";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     errors.email = "Please enter a valid email address.";
+
+  // Strip any non-digit/non-punctuation characters from phone to prevent injection
+  const sanitizedPhone = phone.replace(/[^0-9\s().+\-x]/gi, "").slice(0, 30);
 
   if (Object.keys(errors).length > 0) {
     return json<BookActionData>({ errors, formError: null }, { status: 422 });
@@ -143,7 +151,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     // ── Find or create Attendee ─────────────────────────────────────────────
     let attendee = await findAttendeeByEmail(email);
     if (!attendee) {
-      attendee = await createAttendee({ firstName, lastName, email, phone: phone || undefined });
+      attendee = await createAttendee({ firstName, lastName, email, phone: sanitizedPhone || undefined });
     }
 
     // ── Create Square Payment Link ──────────────────────────────────────────
@@ -321,6 +329,7 @@ export default function BookSessionPage() {
                     id="firstName"
                     name="firstName"
                     type="text"
+                    maxLength={100}
                     autoComplete="given-name"
                     className={inputClass("firstName")}
                     aria-describedby={errors.firstName ? "firstName-error" : undefined}
@@ -340,6 +349,7 @@ export default function BookSessionPage() {
                     id="lastName"
                     name="lastName"
                     type="text"
+                    maxLength={100}
                     autoComplete="family-name"
                     className={inputClass("lastName")}
                     aria-describedby={errors.lastName ? "lastName-error" : undefined}
@@ -356,14 +366,15 @@ export default function BookSessionPage() {
                 <label className="booking-form__label" htmlFor="email">
                   Email Address <span className="booking-form__required">*</span>
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  className={inputClass("email")}
-                  aria-describedby={errors.email ? "email-error" : undefined}
-                />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    maxLength={254}
+                    autoComplete="email"
+                    className={inputClass("email")}
+                    aria-describedby={errors.email ? "email-error" : undefined}
+                  />
                 {errors.email && (
                   <span id="email-error" className="booking-form__field-error">
                     {errors.email}
@@ -379,6 +390,7 @@ export default function BookSessionPage() {
                   id="phone"
                   name="phone"
                   type="tel"
+                  maxLength={30}
                   autoComplete="tel"
                   className="booking-form__input"
                 />

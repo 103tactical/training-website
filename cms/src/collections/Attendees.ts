@@ -1,16 +1,41 @@
+import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig } from 'payload'
 
 /**
- * Allow writes from the website backend using the shared CMS_WRITE_SECRET.
- * Logged-in admin users are always allowed.
+ * Constant-time comparison of two strings to prevent timing attacks.
+ * Returns true only if both strings are identical in length and content.
+ */
+function safeCompare(a: string, b: string): boolean {
+  if (!a || !b) return false
+  try {
+    const bufA = Buffer.from(a)
+    const bufB = Buffer.from(b)
+    if (bufA.length !== bufB.length) return false
+    return timingSafeEqual(bufA, bufB)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Allow access (read or write) from:
+ *   1. A logged-in Payload admin user (admin UI / session)
+ *   2. The website backend presenting the shared CMS_WRITE_SECRET bearer token
+ *
+ * This prevents unauthenticated public access to sensitive collections
+ * (Attendees, Bookings) which contain PII.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function allowWriteAccess({ req }: { req: any }): boolean {
+function allowAccess({ req }: { req: any }): boolean {
   if (req?.user) return true
   const auth: string = req?.headers?.get?.('authorization') ?? ''
   const token = auth.replace(/^Bearer\s+/i, '').trim()
-  return Boolean(token && token === process.env.CMS_WRITE_SECRET)
+  const secret = process.env.CMS_WRITE_SECRET ?? ''
+  return safeCompare(token, secret)
 }
+
+/** Backwards-compat alias */
+const allowWriteAccess = allowAccess
 
 export const Attendees: CollectionConfig = {
   slug: 'attendees',
@@ -26,9 +51,9 @@ export const Attendees: CollectionConfig = {
       'One record per person. Create an Attendee here first, then add Bookings to link them to specific course sessions.',
   },
   access: {
-    read: () => true,
-    create: allowWriteAccess,
-    update: allowWriteAccess,
+    read: allowAccess,
+    create: allowAccess,
+    update: allowAccess,
   },
   fields: [
     {

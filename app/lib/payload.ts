@@ -8,6 +8,7 @@ export function resolveMediaUrl(url: string | undefined): string | undefined {
   return url.startsWith("http") ? url : `${PAYLOAD_API_URL}${url}`;
 }
 
+/** Fetch public Payload data (no auth required). */
 export async function fetchPayload<T>(path: string): Promise<T> {
   const res = await fetch(`${PAYLOAD_API_URL}/api${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -15,6 +16,26 @@ export async function fetchPayload<T>(path: string): Promise<T> {
 
   if (!res.ok) {
     throw new Error(`Payload fetch failed: ${res.status} ${res.statusText} (${path})`);
+  }
+
+  return res.json() as Promise<T>;
+}
+
+/**
+ * Fetch private Payload data using the CMS_WRITE_SECRET bearer token.
+ * Use for collections with restricted read access (Attendees, Bookings).
+ */
+async function fetchPayloadAuth<T>(path: string): Promise<T> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Payload auth fetch failed: ${res.status} ${res.statusText} (${path})`);
   }
 
   return res.json() as Promise<T>;
@@ -78,7 +99,7 @@ export async function getCourseScheduleById(id: string) {
 
 /** Find an attendee by email address. Returns null if none found. */
 export async function findAttendeeByEmail(email: string): Promise<Attendee | null> {
-  const res = await fetchPayload<{ docs: Attendee[] }>(
+  const res = await fetchPayloadAuth<{ docs: Attendee[] }>(
     `/attendees?where[email][equals]=${encodeURIComponent(email)}&limit=1`
   );
   return res.docs[0] ?? null;
@@ -144,7 +165,7 @@ export async function createBookingRecord(data: {
 
 /** Find a booking by its Square Order ID */
 export async function findBookingBySquareOrderId(orderId: string): Promise<{ id: number; status: string } | null> {
-  const res = await fetchPayload<{ docs: { id: number; status: string }[] }>(
+  const res = await fetchPayloadAuth<{ docs: { id: number; status: string }[] }>(
     `/bookings?where[squareOrderId][equals]=${encodeURIComponent(orderId)}&limit=1`
   );
   return res.docs[0] ?? null;

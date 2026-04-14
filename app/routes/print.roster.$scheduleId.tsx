@@ -20,9 +20,15 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   const id = params.scheduleId;
 
+  // Bookings are now protected — supply the CMS_WRITE_SECRET bearer token
+  const cmsSecret = process.env.CMS_WRITE_SECRET ?? "";
+  const authHeaders = cmsSecret ? { Authorization: `Bearer ${cmsSecret}` } : {};
+
   const [scheduleRes, attendeesRes, siteRes] = await Promise.all([
     fetch(`${API}/api/course-schedules/${id}?depth=2`),
-    fetch(`${API}/api/bookings?where[courseSchedule][equals]=${id}&limit=500&depth=1`),
+    fetch(`${API}/api/bookings?where[courseSchedule][equals]=${id}&limit=500&depth=1`, {
+      headers: authHeaders,
+    }),
     fetch(`${API}/api/globals/site-settings?depth=1`),
   ]);
 
