@@ -22,7 +22,7 @@ export default function PrintRosterListAction() {
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        padding: '10px 0 4px',
+        padding: '10px var(--gutter-h, 24px) 4px',
         borderBottom: '1px solid var(--theme-elevation-100)',
         marginBottom: 'var(--base)',
       }}

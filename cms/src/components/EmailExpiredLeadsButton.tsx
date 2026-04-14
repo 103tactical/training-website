@@ -83,7 +83,7 @@ export default function EmailExpiredLeadsButton() {
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        padding: '10px 0 14px',
+        padding: '10px var(--gutter-h, 24px) 14px',
         borderBottom: '1px solid var(--theme-elevation-100)',
         marginBottom: 'var(--base)',
       }}
