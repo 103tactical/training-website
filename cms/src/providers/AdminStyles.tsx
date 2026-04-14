@@ -50,8 +50,8 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           cursor: not-allowed;
         }
         .roster-btn__icon {
-          font-size: 17px;
-          line-height: 1;
+          display: flex;
+          align-items: center;
           flex-shrink: 0;
         }
         /* Dark mode — brighter text so it reads against a dark surface */
