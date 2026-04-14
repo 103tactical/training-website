@@ -101,18 +101,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
   if (!scheduleId) throw new Response("Not found", { status: 404 });
 
   const formData = await request.formData();
-  const firstName = (formData.get("firstName") as string | null)?.trim() ?? "";
-  const lastName  = (formData.get("lastName")  as string | null)?.trim() ?? "";
-  const email     = (formData.get("email")     as string | null)?.trim() ?? "";
-  const phone     = (formData.get("phone")     as string | null)?.trim() ?? "";
+  const email = (formData.get("email") as string | null)?.trim() ?? "";
+  const phone = (formData.get("phone") as string | null)?.trim() ?? "";
 
   // ── Validation ──────────────────────────────────────────────────────────────
   const errors: Record<string, string> = {};
-  if (!firstName)           errors.firstName = "First name is required.";
-  else if (firstName.length > 100) errors.firstName = "First name is too long.";
-
-  if (!lastName)            errors.lastName  = "Last name is required.";
-  else if (lastName.length > 100)  errors.lastName  = "Last name is too long.";
 
   if (!email)               errors.email     = "Email address is required.";
   else if (email.length > 254) errors.email  = "Email address is too long.";
@@ -157,8 +150,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
       token,
       courseSchedule: scheduleId,
       email,
-      firstName,
-      lastName,
       phone: sanitizedPhone || undefined,
     });
 
@@ -327,48 +318,6 @@ export default function BookSessionPage() {
                   {formError}
                 </div>
               )}
-
-              <div className="booking-form__row">
-                <div className="booking-form__field">
-                  <label className="booking-form__label" htmlFor="firstName">
-                    First Name <span className="booking-form__required">*</span>
-                  </label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    maxLength={100}
-                    autoComplete="given-name"
-                    className={inputClass("firstName")}
-                    aria-describedby={errors.firstName ? "firstName-error" : undefined}
-                  />
-                  {errors.firstName && (
-                    <span id="firstName-error" className="booking-form__field-error">
-                      {errors.firstName}
-                    </span>
-                  )}
-                </div>
-
-                <div className="booking-form__field">
-                  <label className="booking-form__label" htmlFor="lastName">
-                    Last Name <span className="booking-form__required">*</span>
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    maxLength={100}
-                    autoComplete="family-name"
-                    className={inputClass("lastName")}
-                    aria-describedby={errors.lastName ? "lastName-error" : undefined}
-                  />
-                  {errors.lastName && (
-                    <span id="lastName-error" className="booking-form__field-error">
-                      {errors.lastName}
-                    </span>
-                  )}
-                </div>
-              </div>
 
               <div className="booking-form__field">
                 <label className="booking-form__label" htmlFor="email">

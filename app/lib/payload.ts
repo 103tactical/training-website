@@ -155,8 +155,6 @@ export async function createPendingBooking(data: {
   token: string;
   courseSchedule: string | number;
   email: string;
-  firstName: string;
-  lastName: string;
   phone?: string;
 }): Promise<PendingBooking> {
   const secret = process.env.CMS_WRITE_SECRET;
