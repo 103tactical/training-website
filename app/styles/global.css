@@ -501,10 +501,11 @@ body.menu-open .app-content {
   }
 }
 
-/* Wide (horizontal) logo — desktop navbar only */
+/* Wide (horizontal) logo — desktop navbar only.
+   clamp: 64px floor at 768px viewport, scales up to 100px cap at ~1180px. */
 .nav-logo--wide {
-  height: 128px;
-  padding-top: 8px;
+  height: clamp(64px, 8.5vw, 100px);
+  width: auto;
 }
 
 .mobile-header .nav-logo,
@@ -831,10 +832,9 @@ body.layout-overlay .app-content {
   }
 }
 
-/* Wide logo stays 128px regardless of overlay layout */
+/* Wide logo uses the same responsive clamp in overlay layout */
 body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
-  height: 128px;
-  padding-top: 8px;
+  height: clamp(64px, 8.5vw, 100px);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
