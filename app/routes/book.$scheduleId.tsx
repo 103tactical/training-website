@@ -29,8 +29,8 @@ type BookActionData = {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const title = data?.courseName
-    ? `Book: ${data.courseName} | 103 Tactical`
-    : "Book a Session | 103 Tactical";
+    ? `Schedule: ${data.courseName} | 103 Tactical`
+    : "Schedule a Session | 103 Tactical";
   return [{ title }, { name: "robots", content: "noindex" }];
 };
 
@@ -313,7 +313,7 @@ export default function BookSessionPage() {
             </div>
           ) : (
             <Form method="post" className="booking-form" noValidate>
-              <h2 className="booking-form__heading">Reserve Your Spot</h2>
+              <h2 className="booking-form__heading">Schedule Your Session</h2>
               <p className="booking-form__subtext">
                 Enter your contact details below. You&apos;ll then be taken to
                 Square&apos;s secure checkout to complete payment.
@@ -344,7 +344,7 @@ export default function BookSessionPage() {
                   </span>
                 ) : (
                   <span className="booking-form__field-hint">
-                    Your booking confirmation will be sent here.
+                    Your registration confirmation will be sent here.
                   </span>
                 )}
               </div>
