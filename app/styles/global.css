@@ -4421,11 +4421,11 @@ body.layout-print .app-content { transform: none !important; }
 }
 
 .booking-summary__course {
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--font-bold);
   color: var(--color-white);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .booking-summary__label {
