@@ -1,3 +1,4 @@
+import { APIError } from 'payload'
 import type {
   CollectionConfig,
   CollectionAfterChangeHook,
@@ -122,7 +123,10 @@ const validateBookingRules: CollectionBeforeChangeHook = async ({ data, original
     })
 
     if (existing.totalDocs > 0) {
-      throw new Error('This attendee already has a booking for this session.')
+      throw new APIError(
+        'Duplicate booking: this attendee already has a booking for this session.',
+        400, undefined, true,
+      )
     }
   }
 
@@ -139,9 +143,10 @@ const validateBookingRules: CollectionBeforeChangeHook = async ({ data, original
     const available = maxSeats - seatsBooked
 
     if (available <= 0) {
-      throw new Error(
-        `This session is full (${seatsBooked} of ${maxSeats} seats taken). ` +
-        `Set the status to Waitlisted to add this person to the waitlist.`,
+      throw new APIError(
+        `Session full: ${seatsBooked} of ${maxSeats} seats are taken. ` +
+        `Set the status to Waitlisted to add this person to the waitlist instead.`,
+        400, undefined, true,
       )
     }
   }
