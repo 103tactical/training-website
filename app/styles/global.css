@@ -4409,21 +4409,21 @@ body.layout-print .app-content { transform: none !important; }
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  padding: var(--spacing-6);
+  padding: var(--spacing-8);
 }
 
 .booking-summary__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-5);
-  padding-bottom: var(--spacing-5);
+  gap: var(--spacing-5);
+  margin-bottom: var(--spacing-6);
+  padding-bottom: var(--spacing-6);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .booking-summary__course {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
   color: var(--color-white);
   margin: 0;
@@ -4431,7 +4431,7 @@ body.layout-print .app-content { transform: none !important; }
 }
 
 .booking-summary__label {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--color-text-muted);
   margin: var(--spacing-1) 0 0;
 }
@@ -4439,14 +4439,14 @@ body.layout-print .app-content { transform: none !important; }
 .booking-summary__price {
   font-size: var(--text-2xl);
   font-weight: var(--font-bold);
-  color: var(--color-red);
+  color: var(--color-white);
   white-space: nowrap;
 }
 
 .booking-summary__details {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: var(--spacing-5);
 }
 
 .booking-summary__sessions { display: flex; flex-direction: column; gap: var(--spacing-2); }
@@ -4458,17 +4458,17 @@ body.layout-print .app-content { transform: none !important; }
   text-transform: uppercase;
   color: var(--color-text-muted);
   display: block;
-  margin-bottom: var(--spacing-1);
+  margin-bottom: var(--spacing-2);
 }
 
-.booking-summary__dates { display: flex; flex-direction: column; gap: var(--spacing-1); }
+.booking-summary__dates { display: flex; flex-direction: column; gap: var(--spacing-2); }
 
 .booking-summary__date-row {
   display: flex;
   align-items: baseline;
   gap: var(--spacing-2);
   flex-wrap: wrap;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--color-text-primary);
 }
 
