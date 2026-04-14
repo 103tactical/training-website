@@ -2,11 +2,12 @@ import type { GlobalConfig } from "payload";
 
 export const ContactSettings: GlobalConfig = {
   slug: "contact-settings",
-  label: "Contact Settings",
+  label: "Contact Page",
   access: {
     read: () => true,
   },
   admin: {
+    group: "Pages",
     description: "Configure the contact form topics and other contact page settings.",
   },
   fields: [
