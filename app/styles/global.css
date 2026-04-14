@@ -503,14 +503,8 @@ body.menu-open .app-content {
 
 /* Wide (horizontal) logo — desktop navbar only */
 .nav-logo--wide {
-  height: 66px;
+  height: 128px;
   padding-top: 8px;
-}
-
-@media (min-width: 992px) {
-  .nav-logo--wide {
-    height: 88px;
-  }
 }
 
 .mobile-header .nav-logo,
@@ -529,7 +523,7 @@ body.menu-open .app-content {
 }
 
 .mobile-logo__img {
-  height: 134px;
+  height: 164px;
   width: auto;
   object-fit: contain;
 }
@@ -797,7 +791,7 @@ body.layout-overlay .app-content {
   }
 
   body.layout-overlay .mobile-logo .mobile-logo__img {
-    height: 132px;
+    height: 164px;
   }
 
   /* Home page: push spacer (and any headline inside) below the combined mobile overlay nav */
@@ -837,9 +831,9 @@ body.layout-overlay .app-content {
   }
 }
 
-/* Wide logo always stays 114px regardless of overlay layout */
+/* Wide logo stays 128px regardless of overlay layout */
 body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
-  height: 114px;
+  height: 128px;
   padding-top: 8px;
 }
 
