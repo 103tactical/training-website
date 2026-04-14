@@ -136,26 +136,6 @@ export const CourseSchedules: CollectionConfig = {
       type: "text",
       admin: { hidden: true },
     },
-    // ── Print Roster shortcut ─────────────────────────────────────────────────
-    {
-      name: "printRosterLink",
-      type: "ui",
-      admin: {
-        components: {
-          Field: "./components/PrintRosterButton",
-        },
-      },
-    },
-    // ── Email Attendees ───────────────────────────────────────────────────────
-    {
-      name: "emailAttendeesAction",
-      type: "ui",
-      admin: {
-        components: {
-          Field: "./components/EmailAttendeesButton",
-        },
-      },
-    },
     // ── 1. Course Info (collapsible) ─────────────────────────────────────────
     {
       type: "collapsible",
@@ -305,6 +285,16 @@ export const CourseSchedules: CollectionConfig = {
         initCollapsed: false,
       },
       fields: [
+        // ── Print + Email action buttons ────────────────────────────────────
+        {
+          name: "rosterActions",
+          type: "ui",
+          admin: {
+            components: {
+              Field: "./components/RosterActionsBar",
+            },
+          },
+        },
         {
           name: "roster",
           type: "join",

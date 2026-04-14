@@ -5,17 +5,22 @@ import { useDocumentInfo } from '@payloadcms/ui'
 type Phase = 'idle' | 'composing' | 'sending' | 'done' | 'error'
 
 /**
- * Shown on a CourseSchedule document.
- * Lets an admin compose and send an email to all confirmed/waitlisted
- * attendees for this session without leaving the CMS.
+ * Rendered inside the Attendee Roster section of a CourseSchedule.
+ * Shows a Print Roster link and an Email Attendees compose form side by side,
+ * both styled with the shared `.roster-btn` orange class from AdminStyles.tsx.
  */
-export default function EmailAttendeesButton() {
+export default function RosterActionsBar() {
   const { id } = useDocumentInfo()
 
-  const [phase, setPhase]     = useState<Phase>('idle')
-  const [subject, setSubject] = useState('')
-  const [message, setMessage] = useState('')
+  const [phase, setPhase]       = useState<Phase>('idle')
+  const [subject, setSubject]   = useState('')
+  const [message, setMessage]   = useState('')
   const [feedback, setFeedback] = useState('')
+
+  const webUrl  = process.env.NEXT_PUBLIC_WEB_URL ?? ''
+  const token   = process.env.NEXT_PUBLIC_PRINT_SECRET ?? ''
+  const query   = token ? `?token=${token}` : ''
+  const printHref = id ? `${webUrl}/print/roster/${id}${query}` : null
 
   if (!id) return null
 
@@ -36,10 +41,10 @@ export default function EmailAttendeesButton() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject: subject.trim(), message: message.trim() }),
       })
-      const json = await res.json() as { sent?: number; failed?: number; errors?: string[]; error?: string }
+      const json = await res.json() as { sent?: number; failed?: number; error?: string }
       if (res.ok) {
         const failNote = json.failed ? ` (${json.failed} failed)` : ''
-        setFeedback(`✓ Sent to ${json.sent} attendee${(json.sent ?? 0) === 1 ? '' : 's'}${failNote}.`)
+        setFeedback(`Sent to ${json.sent} attendee${(json.sent ?? 0) === 1 ? '' : 's'}${failNote}.`)
         setPhase('done')
       } else {
         setFeedback(json.error ?? 'Send failed. Check server logs.')
@@ -49,48 +54,6 @@ export default function EmailAttendeesButton() {
       setFeedback('Network error. Please try again.')
       setPhase('error')
     }
-  }
-
-  // ── Styles ────────────────────────────────────────────────────────────────
-
-  const containerStyle: React.CSSProperties = {
-    padding: '12px 0',
-    borderBottom: '1px solid var(--theme-elevation-100)',
-    marginBottom: 'var(--base)',
-  }
-
-  const btnBase: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 18px',
-    borderRadius: 'var(--style-radius-s)',
-    fontSize: '13px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    border: '1px solid',
-  }
-
-  const primaryBtn: React.CSSProperties = {
-    ...btnBase,
-    background: '#dbeafe',
-    borderColor: '#93c5fd',
-    color: '#1e40af',
-  }
-
-  const ghostBtn: React.CSSProperties = {
-    ...btnBase,
-    background: 'transparent',
-    borderColor: 'var(--theme-elevation-250)',
-    color: 'var(--theme-text)',
-  }
-
-  const sendBtn: React.CSSProperties = {
-    ...btnBase,
-    background: phase === 'sending' ? 'var(--theme-elevation-150)' : '#dbeafe',
-    borderColor: '#93c5fd',
-    color: '#1e40af',
-    cursor: phase === 'sending' ? 'not-allowed' : 'pointer',
   }
 
   const inputStyle: React.CSSProperties = {
@@ -104,16 +67,44 @@ export default function EmailAttendeesButton() {
     boxSizing: 'border-box',
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const ghostBtn: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '9px 18px',
+    borderRadius: 'var(--style-radius-s)',
+    fontSize: '13px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    border: '1px solid var(--theme-elevation-250)',
+    background: 'transparent',
+    color: 'var(--theme-text)',
+  }
 
   return (
-    <div style={containerStyle}>
+    <div style={{ paddingBottom: 'var(--base)' }}>
+
+      {/* ── Button row ────────────────────────────────────────────────────── */}
       {phase === 'idle' && (
-        <button type="button" onClick={open} style={primaryBtn}>
-          ✉ Email Attendees
-        </button>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {printHref && (
+            <a
+              href={printHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="roster-btn"
+            >
+              <span className="roster-btn__icon" aria-hidden="true">🖨</span>
+              Print Roster
+            </a>
+          )}
+          <button type="button" onClick={open} className="roster-btn">
+            <span className="roster-btn__icon" aria-hidden="true">✉</span>
+            Email Attendees
+          </button>
+        </div>
       )}
 
+      {/* ── Compose form ──────────────────────────────────────────────────── */}
       {(phase === 'composing' || phase === 'sending' || phase === 'error') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '560px' }}>
           <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--theme-text)' }}>
@@ -149,13 +140,19 @@ export default function EmailAttendeesButton() {
           </div>
 
           {feedback && (
-            <p style={{ margin: 0, fontSize: '12px', color: phase === 'error' ? '#991b1b' : '#065f46' }}>
+            <p style={{ margin: 0, fontSize: '12px', color: '#991b1b' }}>
               {feedback}
             </p>
           )}
 
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button type="button" onClick={send} disabled={phase === 'sending'} style={sendBtn}>
+            <button
+              type="button"
+              onClick={send}
+              disabled={phase === 'sending'}
+              className="roster-btn"
+              style={{ opacity: phase === 'sending' ? 0.55 : 1, cursor: phase === 'sending' ? 'not-allowed' : 'pointer' }}
+            >
               {phase === 'sending' ? 'Sending…' : 'Send'}
             </button>
             <button type="button" onClick={close} disabled={phase === 'sending'} style={ghostBtn}>
@@ -165,14 +162,14 @@ export default function EmailAttendeesButton() {
         </div>
       )}
 
+      {/* ── Success state ─────────────────────────────────────────────────── */}
       {phase === 'done' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', color: '#065f46', fontWeight: 500 }}>{feedback}</span>
-          <button type="button" onClick={close} style={ghostBtn}>
-            Close
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '13px', color: '#065f46', fontWeight: 500 }}>✓ {feedback}</span>
+          <button type="button" onClick={close} style={ghostBtn}>Close</button>
         </div>
       )}
+
     </div>
   )
 }

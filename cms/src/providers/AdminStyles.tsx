@@ -24,6 +24,46 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
 
         /* Hide the clear (×) button on read-only date fields */
         .date-time-picker__clear-button { display: none !important; }
+
+        /* ── Shared roster action button ──────────────────────────────────── */
+        .roster-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          padding: 9px 20px;
+          border-radius: var(--style-radius-s);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: none;
+          border: 1px solid rgba(249, 115, 22, 0.4);
+          background: rgba(249, 115, 22, 0.08);
+          color: #b45309;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .roster-btn:hover {
+          background: rgba(249, 115, 22, 0.16);
+          border-color: rgba(249, 115, 22, 0.65);
+        }
+        .roster-btn:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+        .roster-btn__icon {
+          font-size: 17px;
+          line-height: 1;
+          flex-shrink: 0;
+        }
+        /* Dark mode — brighter text so it reads against a dark surface */
+        [data-theme="dark"] .roster-btn {
+          color: #fb923c;
+          border-color: rgba(249, 115, 22, 0.45);
+          background: rgba(249, 115, 22, 0.1);
+        }
+        [data-theme="dark"] .roster-btn:hover {
+          background: rgba(249, 115, 22, 0.18);
+          border-color: rgba(249, 115, 22, 0.7);
+        }
       `}</style>
       {children}
     </>
