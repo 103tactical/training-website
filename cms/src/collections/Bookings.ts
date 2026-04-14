@@ -149,6 +149,14 @@ const validateBookingRules: CollectionBeforeChangeHook = async ({ data, original
         400, undefined, true,
       )
     }
+
+    if (newStatus === 'waitlisted' && available > 0) {
+      throw new APIError(
+        `${available} seat${available === 1 ? '' : 's'} are still available in this session. ` +
+        `Use Confirmed instead of Waitlisted.`,
+        400, undefined, true,
+      )
+    }
   }
 
   return data
