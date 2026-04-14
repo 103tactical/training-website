@@ -393,6 +393,9 @@ export interface Course {
   durationDays?: number;
   price?: number;
   isActive: boolean;
+  /** Optional enrollment email content — set by admin on the Course record */
+  enrollmentMessage?: string;
+  enrollmentFile?: { url: string; filename?: string; mimeType?: string };
 }
 
 export interface CoursesPage {

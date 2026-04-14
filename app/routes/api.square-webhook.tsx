@@ -32,8 +32,10 @@ import {
   createAttendee,
   findPendingBookingByToken,
   updatePendingBooking,
+  resolveMediaUrl,
 } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
+import { sendEnrollmentEmail } from "~/lib/email.server";
 
 export async function action({ request }: ActionFunctionArgs) {
   const rawBody = await request.text();
@@ -219,6 +221,30 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     console.log(
       `[webhook] Booking created — pendingId=${pending.id} attendee=${attendee.id} order=${orderId}`,
     );
+
+    // ── Send enrollment email if the course has one configured ──────────────
+    if (course?.enrollmentMessage) {
+      try {
+        const fileUrl  = course.enrollmentFile?.url
+          ? resolveMediaUrl(course.enrollmentFile.url)
+          : undefined;
+        const filename = course.enrollmentFile?.filename
+          ?? `${course.title.replace(/[^a-z0-9]/gi, "-")}-Enrollment-Form.pdf`;
+
+        await sendEnrollmentEmail({
+          to:               buyerEmail,
+          firstName,
+          courseTitle:      course.title,
+          message:          course.enrollmentMessage,
+          attachmentUrl:    fileUrl,
+          attachmentFilename: fileUrl ? filename : undefined,
+        });
+        console.log(`[webhook] Enrollment email sent to ${buyerEmail}`);
+      } catch (emailErr) {
+        // Email failure is non-fatal — the booking was already created successfully.
+        console.error("[webhook] Enrollment email failed:", emailErr);
+      }
+    }
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
     console.error(`[webhook] Booking creation failed for pending ${pending.id}:`, reason);

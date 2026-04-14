@@ -138,6 +138,58 @@ export const Courses: CollectionConfig = {
       label: "Price ($)",
       min: 0,
     },
+    // ── Enrollment Forms ──────────────────────────────────────────────────────
+    {
+      type: "collapsible",
+      label: "Enrollment Forms",
+      admin: {
+        initCollapsed: true,
+        description:
+          "Optional. When configured, a branded email containing this message and the attached PDF " +
+          "will be sent automatically to every attendee upon payment confirmation.",
+      },
+      fields: [
+        {
+          name: "enrollmentMessage",
+          type: "textarea",
+          label: "Message / Instructions",
+          admin: {
+            description:
+              "What the attendee needs to know — e.g. instructions for completing the attached form " +
+              "and returning it before the course date.",
+          },
+        },
+        {
+          name: "enrollmentFile",
+          type: "upload",
+          relationTo: "media",
+          label: "Enrollment Document (PDF)",
+          admin: {
+            description: "PDF only · Max 8 MB. This file will be attached to the enrollment email.",
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          validate: async (value: any, { req }: any) => {
+            if (!value) return true
+            try {
+              const id = typeof value === "object" ? value?.id : value
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const media = await (req?.payload as any)?.findByID({ collection: "media", id, req })
+              if (media?.mimeType && !media.mimeType.includes("pdf")) {
+                return "Only PDF files are accepted for the Enrollment Document."
+              }
+              const maxBytes = 8 * 1024 * 1024
+              if (media?.filesize && media.filesize > maxBytes) {
+                return `File exceeds the 8 MB limit (uploaded: ${(media.filesize / 1024 / 1024).toFixed(1)} MB).`
+              }
+            } catch {
+              // If the look-up fails, allow save — don't block on a network hiccup
+            }
+            return true
+          },
+        },
+      ],
+    },
+
     {
       name: "isActive",
       type: "checkbox",
