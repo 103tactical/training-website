@@ -397,6 +397,7 @@ export const Bookings: CollectionConfig = {
         readOnly: true,
         description: 'Automatically recorded each time this booking is moved to a different session. Cannot be edited manually.',
         initCollapsed: true,
+        condition: (data) => Array.isArray(data.transferHistory) && data.transferHistory.length > 0,
         components: {
           RowLabel: './components/TransferCountCell',
         },
