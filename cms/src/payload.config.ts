@@ -41,7 +41,6 @@ export default buildConfig({
       providers: ['./providers/AdminStyles'],
       graphics: {
         Logo: './components/AdminLogo',
-        Icon: './components/AdminLogo',
       },
     },
   },
