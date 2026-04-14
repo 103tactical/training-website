@@ -1,5 +1,4 @@
-import type { CollectionConfig } from "payload";
-import { slugField } from "payload";
+import type { CollectionConfig, CollectionBeforeChangeHook } from "payload";
 import {
   lexicalEditor,
   BoldFeature,
@@ -10,6 +9,22 @@ import {
   ParagraphFeature,
   FixedToolbarFeature,
 } from "@payloadcms/richtext-lexical";
+
+function toSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const generateSlug: CollectionBeforeChangeHook = ({ data }) => {
+  if (data.title) {
+    data.slug = toSlug(data.title);
+  }
+  return data;
+};
 
 export const Courses: CollectionConfig = {
   slug: "courses",
@@ -22,6 +37,9 @@ export const Courses: CollectionConfig = {
   access: {
     read: () => true,
   },
+  hooks: {
+    beforeChange: [generateSlug],
+  },
   fields: [
     {
       name: "title",
@@ -29,7 +47,18 @@ export const Courses: CollectionConfig = {
       required: true,
       label: "Course Title",
     },
-    slugField({ useAsSlug: "title" }),
+    {
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true,
+      label: "Slug",
+      admin: {
+        readOnly: true,
+        description: "Auto-generated from the course title. Cannot be edited manually.",
+        position: "sidebar",
+      },
+    },
     {
       name: "thumbnail",
       type: "upload",
