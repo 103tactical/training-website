@@ -107,7 +107,7 @@ export async function findAttendeeByEmail(email: string): Promise<Attendee | nul
 
 /**
  * Create a new Attendee record via the Payload REST API.
- * Requires CMS_WRITE_SECRET to be set — sent as the Authorization header.
+ * Requires CMS_WRITE_SECRET — used by the webhook handler only.
  */
 export async function createAttendee(data: {
   firstName: string;
@@ -130,6 +130,115 @@ export async function createAttendee(data: {
   }
   const json = await res.json();
   return json.doc ?? json;
+}
+
+// ── Pending Bookings ───────────────────────────────────────────────────────────
+
+export interface PendingBooking {
+  id: number;
+  token: string;
+  courseSchedule: string | number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  status: "pending" | "completed" | "failed" | "expired";
+  squareOrderId?: string;
+  squarePaymentId?: string;
+  amountPaidCents?: number;
+  failureReason?: string;
+  attemptedAt?: string;
+}
+
+/** Create a pending booking record (called by the booking form action). */
+export async function createPendingBooking(data: {
+  token: string;
+  courseSchedule: string | number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}): Promise<PendingBooking> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api/pending-bookings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`createPendingBooking failed: ${res.status} ${body}`);
+  }
+  const json = await res.json();
+  return json.doc ?? json;
+}
+
+/** Look up a pending booking by its unique token (used in the webhook). */
+export async function findPendingBookingByToken(
+  token: string,
+): Promise<PendingBooking | null> {
+  const res = await fetchPayloadAuth<{ docs: PendingBooking[] }>(
+    `/pending-bookings?where[token][equals]=${encodeURIComponent(token)}&limit=1`
+  );
+  return res.docs[0] ?? null;
+}
+
+/** Update a pending booking's status and Square payment fields. */
+export async function updatePendingBooking(
+  id: number,
+  data: Partial<Pick<
+    PendingBooking,
+    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt"
+  >>,
+): Promise<void> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api/pending-bookings/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`updatePendingBooking failed: ${res.status} ${body}`);
+  }
+}
+
+/**
+ * Mark all 'pending' records older than maxAgeHours as 'expired'.
+ * Called by the cleanup cron endpoint.
+ * Returns the list of expired record IDs.
+ */
+export async function expireStalePendingBookings(
+  maxAgeHours = 24,
+): Promise<number[]> {
+  const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000).toISOString();
+  const res = await fetchPayloadAuth<{ docs: { id: number }[] }>(
+    `/pending-bookings?where[status][equals]=pending&where[createdAt][less_than]=${encodeURIComponent(cutoff)}&limit=200`
+  );
+  const stale = res.docs ?? [];
+  if (stale.length === 0) return [];
+
+  const secret = process.env.CMS_WRITE_SECRET;
+  await Promise.all(
+    stale.map((rec) =>
+      fetch(`${PAYLOAD_API_URL}/api/pending-bookings/${rec.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+        },
+        body: JSON.stringify({ status: "expired" }),
+      }),
+    ),
+  );
+
+  return stale.map((r) => r.id);
 }
 
 /**

@@ -1,24 +1,27 @@
 /**
  * Square webhook receiver.
  *
- * Square will POST to this endpoint for every subscribed event.
- * We verify the signature, then act on:
+ * Square POSTs to this endpoint for every subscribed event.
+ * We verify the HMAC-SHA256 signature, then act on:
  *
  *   payment.updated  (status → COMPLETED)
- *     → Create Attendee (if new) + Booking in our DB
+ *     1. Look up the PendingBooking by the Order's referenceId (token)
+ *     2. Store Square IDs on the PendingBooking
+ *     3. Find or create the Attendee from Square's verified cardholder name + email
+ *     4. Create the confirmed Booking
+ *     5. Mark PendingBooking as completed (or failed, with reason)
  *
  *   refund.updated   (status → COMPLETED)
- *     → Mark the matching Booking as cancelled
+ *     → Find the Booking by squareOrderId and mark it cancelled
  *       (seat adjustment + waitlist promotion run via the CMS afterChange hook)
  *
- * The endpoint always responds 200 as quickly as possible.
- * Errors are logged but never surface a 5xx — Square would retry on non-2xx.
+ * We always respond 200 quickly — Square retries on non-2xx.
+ * Internal errors are logged and stored on the PendingBooking for admin review.
  */
 import { type ActionFunctionArgs } from "@remix-run/node";
 import {
   squareClient,
   verifySquareWebhook,
-  SQUARE_CONFIGURED,
 } from "~/lib/square.server";
 import {
   getCourseScheduleById,
@@ -27,19 +30,15 @@ import {
   updateBookingStatus,
   findAttendeeByEmail,
   createAttendee,
+  findPendingBookingByToken,
+  updatePendingBooking,
 } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
 
-// Square only POSTs to this endpoint
 export async function action({ request }: ActionFunctionArgs) {
-  // Read raw body once — needed for signature verification
   const rawBody = await request.text();
 
   // ── Signature verification ────────────────────────────────────────────────
-  // The signature key is the only requirement for verification.
-  // If it is set, we ALWAYS verify — regardless of other Square env vars.
-  // If it is not set and we are in production, we reject ALL requests to
-  // prevent an attacker from injecting fake booking events.
   const sigKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
   const isSandbox = process.env.SQUARE_ENVIRONMENT === "sandbox";
 
@@ -52,15 +51,10 @@ export async function action({ request }: ActionFunctionArgs) {
       return new Response("Unauthorized", { status: 401 });
     }
   } else if (!isSandbox) {
-    // No signature key in a production environment — refuse all traffic
-    console.error(
-      "[webhook] SQUARE_WEBHOOK_SIGNATURE_KEY is not set in production. " +
-      "All webhook requests are rejected until the key is configured.",
-    );
+    console.error("[webhook] SQUARE_WEBHOOK_SIGNATURE_KEY not set in production — rejecting all requests");
     return new Response("Service Unavailable", { status: 503 });
   } else {
-    // Sandbox + no key — allowed for local development / testing only
-    console.warn("[webhook] Signature check skipped (sandbox dev mode — no signature key set)");
+    console.warn("[webhook] Signature check skipped (sandbox dev mode)");
   }
 
   // ── Parse event ───────────────────────────────────────────────────────────
@@ -89,13 +83,32 @@ export async function action({ request }: ActionFunctionArgs) {
   return new Response("OK", { status: 200 });
 }
 
-// ── Handlers ──────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/**
+ * Parse "John Smith" or "JOHN SMITH" into { firstName, lastName }.
+ * Falls back to the full string in firstName if no space is found.
+ */
+function parseCardholderName(name: string): { firstName: string; lastName: string } {
+  const normalized = name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+  const spaceIdx = normalized.indexOf(" ");
+  if (spaceIdx === -1) return { firstName: normalized, lastName: "" };
+  return {
+    firstName: normalized.slice(0, spaceIdx),
+    lastName: normalized.slice(spaceIdx + 1),
+  };
+}
+
+// ── Payment handler ────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handlePaymentUpdated(event: Record<string, any>) {
   const payment = event?.data?.object?.payment;
-  if (!payment) return;
-  if (payment.status !== "COMPLETED") return;
+  if (!payment || payment.status !== "COMPLETED") return;
 
   const paymentId: string = payment.id;
   const orderId: string   = payment.order_id;
@@ -106,61 +119,146 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     return;
   }
 
-  // ── Idempotency: skip if booking already exists for this order ────────────
-  const existing = await findBookingBySquareOrderId(orderId);
-  if (existing) {
+  // ── Idempotency: skip if we already created a Booking for this order ──────
+  const existingBooking = await findBookingBySquareOrderId(orderId);
+  if (existingBooking) {
     console.log(`[webhook] Booking already exists for order ${orderId} — skipping`);
     return;
   }
 
-  // ── Fetch the Square Order to get referenceId ─────────────────────────────
+  // ── Fetch the Square Order to get the referenceId (token) ─────────────────
   if (!squareClient) {
-    console.warn("[webhook] squareClient not available — cannot fetch order");
+    console.warn("[webhook] squareClient not available");
     return;
   }
 
-  const orderResponse = await squareClient.orders.get({ orderId });
-  const order = orderResponse.order;
-  if (!order) {
-    console.warn(`[webhook] Could not retrieve Square order ${orderId}`);
-    return;
-  }
-
-  // referenceId format: "{scheduleId}:{attendeeId}"
-  const refId = order.referenceId ?? "";
-  const [scheduleId, attendeeIdStr] = refId.split(":");
-
-  if (!scheduleId) {
-    console.warn(`[webhook] Order ${orderId} has no recognisable referenceId: "${refId}"`);
-    return;
-  }
-
-  // ── Resolve the CourseSchedule ────────────────────────────────────────────
-  let schedule;
+  let orderRef: string | undefined;
   try {
-    schedule = await getCourseScheduleById(scheduleId);
-  } catch {
-    console.warn(`[webhook] Could not fetch schedule ${scheduleId}`);
+    const orderResp = await squareClient.orders.get({ orderId });
+    orderRef = orderResp.order?.referenceId ?? undefined;
+  } catch (err) {
+    console.warn(`[webhook] Could not retrieve Square order ${orderId}:`, err);
     return;
   }
+
+  if (!orderRef) {
+    console.warn(`[webhook] Order ${orderId} has no referenceId`);
+    return;
+  }
+
+  // ── Look up the PendingBooking by token ────────────────────────────────────
+  // Token format: 32-char hex (new flow)
+  // Legacy format: "scheduleId:attendeeId" — handled as a fallback below
+  const isLegacyRef = /^\d+:\d+$/.test(orderRef);
+
+  if (isLegacyRef) {
+    await handleLegacyPayment({ paymentId, orderId, amountCents, referenceId: orderRef, payment });
+    return;
+  }
+
+  const pending = await findPendingBookingByToken(orderRef);
+
+  if (!pending) {
+    console.warn(`[webhook] No PendingBooking found for token "${orderRef}" (order ${orderId})`);
+    return;
+  }
+
+  // Store Square IDs on the PendingBooking before attempting booking creation
+  // so the admin can see what Square gave us if something fails below.
+  await updatePendingBooking(pending.id, {
+    squareOrderId: orderId,
+    squarePaymentId: paymentId,
+    amountPaidCents: amountCents,
+    attemptedAt: new Date().toISOString(),
+  });
+
+  try {
+    // ── Resolve the CourseSchedule ──────────────────────────────────────────
+    const schedule = await getCourseScheduleById(String(pending.courseSchedule));
+    const course = schedule.course as Course;
+    const courseId = String(course?.id ?? "");
+    if (!courseId) {
+      throw new Error(`Schedule ${pending.courseSchedule} has no linked course`);
+    }
+
+    // ── Find or create Attendee ─────────────────────────────────────────────
+    // Prefer Square's cardholder name (verified at payment) over our form data.
+    // Fall back to form data if the cardholder name is unavailable.
+    const cardholderName: string = payment.card_details?.card?.card_holder_name ?? "";
+    const { firstName, lastName } = cardholderName
+      ? parseCardholderName(cardholderName)
+      : { firstName: pending.firstName, lastName: pending.lastName };
+
+    const buyerEmail: string = payment.buyer_email_address ?? pending.email;
+
+    let attendee = await findAttendeeByEmail(buyerEmail);
+    if (!attendee) {
+      attendee = await createAttendee({
+        firstName,
+        lastName,
+        email: buyerEmail,
+        phone: pending.phone ?? undefined,
+      });
+    }
+
+    // ── Create Booking ──────────────────────────────────────────────────────
+    await createBookingRecord({
+      attendee: attendee.id,
+      course: courseId,
+      courseSchedule: String(pending.courseSchedule),
+      status: "confirmed",
+      squareOrderId: orderId,
+      squarePaymentId: paymentId,
+      amountPaidCents: amountCents,
+      paymentReference: orderId,
+    });
+
+    // ── Mark PendingBooking completed ───────────────────────────────────────
+    await updatePendingBooking(pending.id, { status: "completed" });
+
+    console.log(
+      `[webhook] Booking created — pendingId=${pending.id} attendee=${attendee.id} order=${orderId}`,
+    );
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error(`[webhook] Booking creation failed for pending ${pending.id}:`, reason);
+
+    // Mark as failed so the admin can see it and use the Retry button
+    await updatePendingBooking(pending.id, {
+      status: "failed",
+      failureReason: reason,
+      attemptedAt: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Backward-compatible handler for orders created with the OLD referenceId
+ * format ("scheduleId:attendeeId") before PendingBookings was introduced.
+ */
+async function handleLegacyPayment(args: {
+  paymentId: string;
+  orderId: string;
+  amountCents: number;
+  referenceId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payment: Record<string, any>;
+}) {
+  const { paymentId, orderId, amountCents, referenceId, payment } = args;
+  const [scheduleId, attendeeIdStr] = referenceId.split(":");
+  if (!scheduleId) return;
+
+  const schedule = await getCourseScheduleById(scheduleId).catch(() => null);
+  if (!schedule) return;
 
   const course = schedule.course as Course;
   const courseId = String(course?.id ?? "");
-  if (!courseId) {
-    console.warn(`[webhook] Schedule ${scheduleId} has no course`);
-    return;
-  }
+  if (!courseId) return;
 
-  // ── Resolve Attendee ─────────────────────────────────────────────────────
   let attendeeId = parseInt(attendeeIdStr ?? "", 10);
-
   if (isNaN(attendeeId)) {
-    // Fallback: look up by buyer email from the payment
     const buyerEmail: string = payment.buyer_email_address ?? "";
-    if (!buyerEmail) {
-      console.warn(`[webhook] Cannot resolve attendee for order ${orderId}`);
-      return;
-    }
+    if (!buyerEmail) return;
     let attendee = await findAttendeeByEmail(buyerEmail);
     if (!attendee) {
       attendee = await createAttendee({ firstName: "Unknown", lastName: "Attendee", email: buyerEmail });
@@ -168,7 +266,6 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     attendeeId = attendee.id;
   }
 
-  // ── Create Booking ────────────────────────────────────────────────────────
   await createBookingRecord({
     attendee: attendeeId,
     course: courseId,
@@ -180,21 +277,19 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     paymentReference: orderId,
   });
 
-  console.log(
-    `[webhook] Booking created — schedule=${scheduleId} attendee=${attendeeId} order=${orderId}`,
-  );
+  console.log(`[webhook] Legacy booking created — schedule=${scheduleId} order=${orderId}`);
 }
+
+// ── Refund handler ─────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleRefundUpdated(event: Record<string, any>) {
   const refund = event?.data?.object?.refund;
-  if (!refund) return;
-  if (refund.status !== "COMPLETED") return;
+  if (!refund || refund.status !== "COMPLETED") return;
 
   const paymentId: string = refund.payment_id;
   if (!paymentId || !squareClient) return;
 
-  // Fetch payment to get the order ID
   let orderId: string | undefined;
   try {
     const paymentResponse = await squareClient.payments.get({ paymentId });
@@ -211,12 +306,11 @@ async function handleRefundUpdated(event: Record<string, any>) {
     console.log(`[webhook] No booking found for refunded order ${orderId}`);
     return;
   }
-
   if (booking.status === "cancelled") {
     console.log(`[webhook] Booking ${booking.id} already cancelled — skipping`);
     return;
   }
 
   await updateBookingStatus(booking.id, "cancelled");
-  console.log(`[webhook] Booking ${booking.id} marked cancelled via refund on order ${orderId}`);
+  console.log(`[webhook] Booking ${booking.id} cancelled via Square refund on order ${orderId}`);
 }

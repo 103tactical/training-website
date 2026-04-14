@@ -13,8 +13,7 @@ import {
 } from "@remix-run/react";
 import {
   getCourseScheduleById,
-  findAttendeeByEmail,
-  createAttendee,
+  createPendingBooking,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
@@ -148,21 +147,30 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const course = schedule.course as Course;
     const priceInCents = Math.round((course?.price ?? 0) * 100);
 
-    // ── Find or create Attendee ─────────────────────────────────────────────
-    let attendee = await findAttendeeByEmail(email);
-    if (!attendee) {
-      attendee = await createAttendee({ firstName, lastName, email, phone: sanitizedPhone || undefined });
-    }
+    // ── Create PendingBooking ───────────────────────────────────────────────
+    // We do NOT create an Attendee here. The Attendee is created only after
+    // Square confirms payment via webhook — using Square's verified name/email.
+    // The token is a 32-char hex string embedded in the Square Order referenceId
+    // so the webhook can look up this record.
+    const token = crypto.randomUUID().replace(/-/g, "");
+    await createPendingBooking({
+      token,
+      courseSchedule: scheduleId,
+      email,
+      firstName,
+      lastName,
+      phone: sanitizedPhone || undefined,
+    });
 
     // ── Create Square Payment Link ──────────────────────────────────────────
     const siteUrl = process.env.PUBLIC_SITE_URL ?? "";
-    const idempotencyKey = `book-${scheduleId}-${attendee.id}-${Date.now()}`;
+    const idempotencyKey = `book-${scheduleId}-${token}`;
 
     const response = await squareClient.checkout.paymentLinks.create({
       idempotencyKey,
       order: {
         locationId: SQUARE_LOCATION_ID,
-        referenceId: `${scheduleId}:${attendee.id}`,
+        referenceId: token, // 32-char hex — webhook uses this to look up the PendingBooking
         lineItems: [
           {
             name: course?.title ?? "Course Registration",
