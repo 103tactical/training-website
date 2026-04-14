@@ -1,4 +1,5 @@
-import type { CollectionConfig, CollectionBeforeChangeHook } from "payload";
+import { APIError } from "payload";
+import type { CollectionConfig, CollectionBeforeChangeHook, CollectionBeforeDeleteHook } from "payload";
 import {
   lexicalEditor,
   BoldFeature,
@@ -19,6 +20,28 @@ function toSlug(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/**
+ * Prevent deleting a course that still has sessions linked to it.
+ * The admin must remove all sessions first.
+ */
+const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+  const result = await p.find({
+    collection: 'course-schedules',
+    where: { course: { equals: id } },
+    limit: 1,
+    req,
+  })
+  if (result.totalDocs > 0) {
+    throw new APIError(
+      'Cannot delete this course — it has one or more sessions linked to it. ' +
+      'Delete all sessions for this course first, then delete the course.',
+      400, undefined, true,
+    )
+  }
+}
+
 const generateSlug: CollectionBeforeChangeHook = ({ data }) => {
   if (data.title) {
     data.slug = toSlug(data.title);
@@ -34,11 +57,13 @@ export const Courses: CollectionConfig = {
     description: "Manage courses. Fields will be expanded as the site grows.",
     group: "Course Management",
   },
+  disableDuplicate: true,
   access: {
     read: () => true,
   },
   hooks: {
     beforeChange: [generateSlug],
+    beforeDelete: [beforeDeleteHook],
   },
   fields: [
     {

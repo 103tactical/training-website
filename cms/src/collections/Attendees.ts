@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'crypto'
-import type { CollectionConfig } from 'payload'
+import { APIError } from 'payload'
+import type { CollectionConfig, CollectionBeforeDeleteHook } from 'payload'
 
 /**
  * Constant-time comparison of two strings to prevent timing attacks.
@@ -37,6 +38,33 @@ function allowAccess({ req }: { req: any }): boolean {
 /** Backwards-compat alias */
 const allowWriteAccess = allowAccess
 
+/**
+ * Prevent deleting an attendee who still has active bookings.
+ * The admin must cancel all bookings first.
+ */
+const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+  const result = await p.find({
+    collection: 'bookings',
+    where: {
+      and: [
+        { attendee: { equals: id } },
+        { status: { in: ['confirmed', 'waitlisted'] } },
+      ],
+    },
+    limit: 1,
+    req,
+  })
+  if (result.totalDocs > 0) {
+    throw new APIError(
+      'Cannot delete this attendee — they have one or more active bookings (Confirmed or Waitlisted). ' +
+      'Cancel all of their bookings first, then delete the attendee record.',
+      400, undefined, true,
+    )
+  }
+}
+
 export const Attendees: CollectionConfig = {
   slug: 'attendees',
   labels: {
@@ -50,10 +78,14 @@ export const Attendees: CollectionConfig = {
     description:
       'One record per person. Create an Attendee here first, then add Bookings to link them to specific course sessions.',
   },
+  disableDuplicate: true,
   access: {
     read: allowAccess,
     create: allowAccess,
     update: allowAccess,
+  },
+  hooks: {
+    beforeDelete: [beforeDeleteHook],
   },
   fields: [
     {

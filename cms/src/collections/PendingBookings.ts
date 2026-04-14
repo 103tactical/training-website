@@ -227,6 +227,7 @@ export const PendingBookings: CollectionConfig = {
       beforeList: ['./components/EmailExpiredLeadsButton'],
     },
   },
+  disableDuplicate: true,
   access: {
     read:   allowAccess,
     create: allowAccess,

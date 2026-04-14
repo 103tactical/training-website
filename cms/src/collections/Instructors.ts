@@ -8,6 +8,7 @@ export const Instructors: CollectionConfig = {
     defaultColumns: ['name', 'title'],
     description: 'Manage instructors. Once added here, they can be assigned to any course session.',
   },
+  disableDuplicate: true,
   access: {
     read: () => true,
   },

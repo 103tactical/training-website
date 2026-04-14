@@ -393,6 +393,7 @@ export const Bookings: CollectionConfig = {
       beforeList: ['./components/PrintRosterListAction'],
     },
   },
+  disableDuplicate: true,
   access: {
     read: allowAccess,
     create: allowAccess,

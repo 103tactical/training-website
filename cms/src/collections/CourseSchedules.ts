@@ -1,4 +1,5 @@
-import type { CollectionConfig, CollectionBeforeChangeHook, PayloadRequest } from "payload";
+import { APIError } from "payload";
+import type { CollectionConfig, CollectionBeforeChangeHook, CollectionBeforeDeleteHook, PayloadRequest } from "payload";
 import { sendBulkEmail } from "../lib/email";
 
 /**
@@ -33,6 +34,35 @@ const syncAdminTitle: CollectionBeforeChangeHook = async ({
   }
 
   return data
+}
+
+// ── Delete guard ──────────────────────────────────────────────────────────────
+
+/**
+ * Prevent deleting a session that still has confirmed or waitlisted bookings.
+ * The admin must cancel all bookings for this session first.
+ */
+const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+  const result = await p.find({
+    collection: 'bookings',
+    where: {
+      and: [
+        { courseSchedule: { equals: id } },
+        { status: { in: ['confirmed', 'waitlisted'] } },
+      ],
+    },
+    limit: 1,
+    req,
+  })
+  if (result.totalDocs > 0) {
+    throw new APIError(
+      'Cannot delete this session — it has active bookings (Confirmed or Waitlisted). ' +
+      'Cancel all bookings for this session first, then delete it.',
+      400, undefined, true,
+    )
+  }
 }
 
 // ── Email attendees endpoint ──────────────────────────────────────────────────
@@ -116,11 +146,13 @@ export const CourseSchedules: CollectionConfig = {
     description:
       "Define available date slots for each course. Each slot can contain one or more session dates (e.g. two non-adjacent Fridays for a 2-day course).",
   },
+  disableDuplicate: true,
   access: {
     read: () => true,
   },
   hooks: {
     beforeChange: [syncAdminTitle],
+    beforeDelete: [beforeDeleteHook],
   },
   endpoints: [
     {
