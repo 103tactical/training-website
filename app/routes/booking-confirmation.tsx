@@ -3,7 +3,7 @@ import { useLoaderData, Link } from "@remix-run/react";
 import { squareClient } from "~/lib/square.server";
 
 export const meta: MetaFunction = () => [
-  { title: "Registration Confirmed | 103 Tactical" },
+  { title: "Booking Confirmed | 103 Tactical" },
   { name: "robots", content: "noindex" },
 ];
 
@@ -90,7 +90,7 @@ export default function BookingConfirmationPage() {
           {confirmed && order ? (
             <>
               <p className="confirmation-card__subtext">
-                Your payment was processed and your registration is confirmed.
+                Your payment was processed and your booking is confirmed.
                 A confirmation email is on its way to your inbox.
               </p>
 
@@ -127,13 +127,13 @@ export default function BookingConfirmationPage() {
             </>
           ) : confirmed ? (
             <p className="confirmation-card__subtext">
-              Your payment was accepted and your registration is confirmed.
+              Your payment was accepted and your booking is confirmed.
               Check your inbox for a confirmation email.
               Your confirmation number is: <strong>{orderId}</strong>
             </p>
           ) : (
             <p className="confirmation-card__subtext">
-              Thank you. If you just completed checkout, your registration is being processed
+              Thank you. If you just completed checkout, your booking is being processed
               and a confirmation email will arrive shortly.
             </p>
           )}

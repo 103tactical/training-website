@@ -344,7 +344,7 @@ export default function BookSessionPage() {
                   </span>
                 ) : (
                   <span className="booking-form__field-hint">
-                    Your registration confirmation will be sent here.
+                    Your booking confirmation will be sent here.
                   </span>
                 )}
               </div>
