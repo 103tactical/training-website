@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { slugField } from "payload";
 import {
   lexicalEditor,
   BoldFeature,
@@ -28,16 +29,7 @@ export const Courses: CollectionConfig = {
       required: true,
       label: "Course Title",
     },
-    {
-      name: "slug",
-      type: "text",
-      required: true,
-      unique: true,
-      label: "Slug",
-      admin: {
-        description: "URL-friendly identifier, e.g. nys-ccw-class",
-      },
-    },
+    slugField({ useAsSlug: "title" }),
     {
       name: "thumbnail",
       type: "upload",

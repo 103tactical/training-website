@@ -33,6 +33,7 @@ import * as migration_20260325_course_schedules_admin_title from './20260325_cou
 import * as migration_20260325_site_settings_logo_print from './20260325_site_settings_logo_print';
 import * as migration_20260325_site_settings_logo_print_v2 from './20260325_site_settings_logo_print_v2';
 import * as migration_20260327_seo_fields from './20260327_seo_fields';
+import * as migration_20260414_courses_generate_slug from './20260414_courses_generate_slug';
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20260327_seo_fields.up,
     down: migration_20260327_seo_fields.down,
     name: '20260327_seo_fields'
+  },
+  {
+    up: migration_20260414_courses_generate_slug.up,
+    down: migration_20260414_courses_generate_slug.down,
+    name: '20260414_courses_generate_slug'
   },
 ];
