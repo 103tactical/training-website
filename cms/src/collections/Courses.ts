@@ -50,7 +50,6 @@ export const Courses: CollectionConfig = {
     {
       name: "slug",
       type: "text",
-      required: true,
       unique: true,
       label: "Slug",
       admin: {
