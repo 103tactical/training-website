@@ -1,6 +1,5 @@
 import React from 'react'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { DefaultTemplate } from '@payloadcms/next/templates'
 import CsvButton from './CsvButton'
 import {
   formatCents, formatDate, getDateRange, getCourseName,
@@ -11,15 +10,17 @@ import type { RawBooking } from './shared'
 
 const PERIODS = ['this-week', 'this-month', 'this-quarter', 'this-year', 'all-time']
 
-interface Props {
-  searchParams?: { period?: string; start?: string; end?: string }
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function RevenueReport(props: any) {
+  const { initPageResult } = props
+  const params       = await Promise.resolve(props.params)
+  const rawSP        = await Promise.resolve(props.searchParams ?? {})
+  const sp           = rawSP as Record<string, string | string[]>
+  const get          = (k: string) => Array.isArray(sp[k]) ? (sp[k] as string[])[0] : sp[k] as string | undefined
 
-export default async function RevenueReport({ searchParams }: Props) {
-  const period = searchParams?.period ?? 'all-time'
-  const { from, to } = getDateRange(period, searchParams?.start, searchParams?.end)
-
-  const payload = await getPayload({ config })
+  const period = get('period') ?? 'all-time'
+  const { from, to } = getDateRange(period, get('start'), get('end'))
+  const payload = initPageResult.req.payload
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const whereClause: any = period === 'all-time'
@@ -88,8 +89,21 @@ export default async function RevenueReport({ searchParams }: Props) {
 
   const periodLabel = PERIOD_LABELS[period] ?? 'Custom Range'
   const filename = `revenue-${period}-${new Date().toISOString().slice(0, 10)}.csv`
+  const customStart = get('start')
+  const customEnd   = get('end')
 
   return (
+    <DefaultTemplate
+      i18n={initPageResult.req.i18n}
+      locale={initPageResult.locale}
+      params={params}
+      payload={payload}
+      permissions={initPageResult.permissions}
+      req={initPageResult.req}
+      searchParams={rawSP}
+      user={initPageResult.req.user ?? undefined}
+      visibleEntities={initPageResult.visibleEntities}
+    >
     <div style={wrap}>
 
       {/* Header */}
@@ -128,14 +142,14 @@ export default async function RevenueReport({ searchParams }: Props) {
           <input
             type="date"
             name="start"
-            defaultValue={searchParams?.start ?? ''}
+            defaultValue={customStart ?? ''}
             style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--theme-elevation-300, #444)', background: 'var(--theme-elevation-100, #1a1a1a)', color: 'var(--theme-text)', fontSize: '12px' }}
           />
           <span style={{ color: 'var(--theme-elevation-500)', fontSize: '12px' }}>to</span>
           <input
             type="date"
             name="end"
-            defaultValue={searchParams?.end ?? ''}
+            defaultValue={customEnd ?? ''}
             style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--theme-elevation-300, #444)', background: 'var(--theme-elevation-100, #1a1a1a)', color: 'var(--theme-text)', fontSize: '12px' }}
           />
           <button type="submit" style={{ padding: '5px 12px', borderRadius: '4px', background: 'var(--theme-elevation-200, #333)', border: 'none', color: 'var(--theme-text)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -230,5 +244,6 @@ export default async function RevenueReport({ searchParams }: Props) {
         )}
       </div>
     </div>
+    </DefaultTemplate>
   )
 }

@@ -1,6 +1,5 @@
 import React from 'react'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { DefaultTemplate } from '@payloadcms/next/templates'
 import CsvButton from './CsvButton'
 import {
   formatCents, formatDate, getDateRange, getCourseName,
@@ -23,16 +22,19 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled:  '#b91c1c',
 }
 
-interface Props {
-  searchParams?: { period?: string; status?: string; start?: string; end?: string }
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function BookingsReport(props: any) {
+  const { initPageResult } = props
+  const params   = await Promise.resolve(props.params)
+  const rawSP    = await Promise.resolve(props.searchParams ?? {})
+  const sp       = rawSP as Record<string, string | string[]>
+  const get      = (k: string) => Array.isArray(sp[k]) ? (sp[k] as string[])[0] : sp[k] as string | undefined
 
-export default async function BookingsReport({ searchParams }: Props) {
-  const period = searchParams?.period ?? 'all-time'
-  const status = searchParams?.status ?? 'all'
-  const { from, to } = getDateRange(period, searchParams?.start, searchParams?.end)
+  const period = get('period') ?? 'all-time'
+  const status = get('status') ?? 'all'
+  const { from, to } = getDateRange(period, get('start'), get('end'))
 
-  const payload = await getPayload({ config })
+  const payload = initPageResult.req.payload
 
   const dateFilter = period !== 'all-time'
     ? [
@@ -76,7 +78,9 @@ export default async function BookingsReport({ searchParams }: Props) {
   ])
 
   const periodLabel = PERIOD_LABELS[period] ?? 'Custom Range'
-  const filename = `bookings-${period}-${status}-${new Date().toISOString().slice(0, 10)}.csv`
+  const filename    = `bookings-${period}-${status}-${new Date().toISOString().slice(0, 10)}.csv`
+  const customStart = get('start')
+  const customEnd   = get('end')
 
   const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: '13px' }
   const thStyle: React.CSSProperties = {
@@ -98,7 +102,18 @@ export default async function BookingsReport({ searchParams }: Props) {
   }
 
   return (
-    <div style={{ padding: '0 var(--gutter-h, 24px) 48px', maxWidth: '1400px' }}>
+    <DefaultTemplate
+      i18n={initPageResult.req.i18n}
+      locale={initPageResult.locale}
+      params={params}
+      payload={payload}
+      permissions={initPageResult.permissions}
+      req={initPageResult.req}
+      searchParams={rawSP}
+      user={initPageResult.req.user ?? undefined}
+      visibleEntities={initPageResult.visibleEntities}
+    >
+    <div style={{ maxWidth: '1400px', paddingBottom: '48px' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', paddingTop: '8px', gap: '16px' }}>
@@ -142,9 +157,9 @@ export default async function BookingsReport({ searchParams }: Props) {
         <form method="GET" style={{ display: 'flex', gap: '6px', alignItems: 'center', marginLeft: '8px' }}>
           <input type="hidden" name="period" value="custom" />
           <input type="hidden" name="status" value={status} />
-          <input type="date" name="start" defaultValue={searchParams?.start ?? ''} style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--theme-elevation-300)', background: 'var(--theme-elevation-100)', color: 'var(--theme-text)', fontSize: '12px' }} />
+          <input type="date" name="start" defaultValue={customStart ?? ''} style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--theme-elevation-300)', background: 'var(--theme-elevation-100)', color: 'var(--theme-text)', fontSize: '12px' }} />
           <span style={{ color: 'var(--theme-elevation-500)', fontSize: '12px' }}>to</span>
-          <input type="date" name="end" defaultValue={searchParams?.end ?? ''} style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--theme-elevation-300)', background: 'var(--theme-elevation-100)', color: 'var(--theme-text)', fontSize: '12px' }} />
+          <input type="date" name="end" defaultValue={customEnd ?? ''} style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--theme-elevation-300)', background: 'var(--theme-elevation-100)', color: 'var(--theme-text)', fontSize: '12px' }} />
           <button type="submit" style={{ padding: '5px 12px', borderRadius: '4px', background: 'var(--theme-elevation-200)', border: 'none', color: 'var(--theme-text)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>Apply</button>
         </form>
       </div>
@@ -211,5 +226,6 @@ export default async function BookingsReport({ searchParams }: Props) {
         )}
       </div>
     </div>
+    </DefaultTemplate>
   )
 }

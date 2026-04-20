@@ -1,6 +1,5 @@
 import React from 'react'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { DefaultTemplate } from '@payloadcms/next/templates'
 import DashboardCharts from './DashboardCharts'
 import type { RevenueMonth, CourseStat } from './DashboardCharts'
 import { formatCents, formatDate, getCourseName, getAttendeeName } from './shared'
@@ -86,8 +85,12 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
 
-export default async function Dashboard() {
-  const payload = await getPayload({ config })
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function Dashboard(props: any) {
+  const { initPageResult } = props
+  const params       = await Promise.resolve(props.params)
+  const searchParams = await Promise.resolve(props.searchParams)
+  const payload      = initPageResult.req.payload
 
   // Fetch all bookings with course + attendee populated
   const { docs: bookings } = await payload.find({
@@ -178,8 +181,8 @@ export default async function Dashboard() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const wrap: React.CSSProperties = {
-    padding: '0 var(--gutter-h, 24px) 48px',
     maxWidth: '1400px',
+    paddingBottom: '48px',
   }
 
   const grid4: React.CSSProperties = {
@@ -213,6 +216,17 @@ export default async function Dashboard() {
   }
 
   return (
+    <DefaultTemplate
+      i18n={initPageResult.req.i18n}
+      locale={initPageResult.locale}
+      params={params}
+      payload={payload}
+      permissions={initPageResult.permissions}
+      req={initPageResult.req}
+      searchParams={searchParams}
+      user={initPageResult.req.user ?? undefined}
+      visibleEntities={initPageResult.visibleEntities}
+    >
     <div style={wrap}>
       <div style={{ marginBottom: '28px', paddingTop: '8px' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: 700 }}>Accounting & Reports</h1>
@@ -319,5 +333,6 @@ export default async function Dashboard() {
         <QuickLink href="reporting/refunds"  label="Refunds & Cancellations" desc="Cancelled bookings and refund totals" />
       </div>
     </div>
+    </DefaultTemplate>
   )
 }
