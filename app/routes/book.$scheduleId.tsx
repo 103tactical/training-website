@@ -162,16 +162,41 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const siteUrl = process.env.PUBLIC_SITE_URL ?? "";
     const idempotencyKey = `book-${scheduleId}-${token}`;
 
+    // Format session dates for Square note and metadata
+    const sessionDateStr = (schedule.sessions ?? [])
+      .filter((s: { date?: string }) => s.date)
+      .map((s: { date?: string }) => {
+        try {
+          return new Date(s.date!).toLocaleDateString("en-US", {
+            weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+          });
+        } catch { return s.date!; }
+      })
+      .join(", ");
+
+    const lineItemNote = [
+      schedule.displayLabel ?? schedule.label ?? null,
+      sessionDateStr || null,
+    ].filter(Boolean).join(" — ");
+
     const response = await squareClient.checkout.paymentLinks.create({
       idempotencyKey,
       order: {
         locationId: SQUARE_LOCATION_ID,
         referenceId: token, // 32-char hex — webhook uses this to look up the PendingBooking
+        // Metadata links every Square transaction back to our CMS records
+        metadata: {
+          pendingBookingToken: token,
+          courseScheduleId:    String(scheduleId),
+          courseTitle:         course?.title ?? "",
+          sessionDates:        sessionDateStr,
+          attendeeEmail:       email,
+        },
         lineItems: [
           {
             name: course?.title ?? "Course Registration",
             quantity: "1",
-            note: schedule.displayLabel ?? schedule.label ?? undefined,
+            note: lineItemNote || undefined,
             basePriceMoney: {
               amount: BigInt(priceInCents),
               currency: "USD",

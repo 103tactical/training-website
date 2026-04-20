@@ -44,6 +44,25 @@ export default buildConfig({
       graphics: {
         Logo: './components/AdminLogo',
       },
+      afterNavLinks: ['./components/reporting/AccountingNav'],
+      views: {
+        reportingDashboard: {
+          Component: './components/reporting/Dashboard',
+          path: '/reporting/dashboard',
+        },
+        reportingRevenue: {
+          Component: './components/reporting/RevenueReport',
+          path: '/reporting/revenue',
+        },
+        reportingBookings: {
+          Component: './components/reporting/BookingsReport',
+          path: '/reporting/bookings',
+        },
+        reportingRefunds: {
+          Component: './components/reporting/RefundsReport',
+          path: '/reporting/refunds',
+        },
+      },
     },
   },
   collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors, PendingBookings],
