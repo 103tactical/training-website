@@ -113,7 +113,7 @@ export default async function BookingsReport(props: any) {
       user={initPageResult.req.user ?? undefined}
       visibleEntities={initPageResult.visibleEntities}
     >
-    <div style={{ maxWidth: '1400px', paddingBottom: '48px' }}>
+    <div style={{ maxWidth: '1400px', paddingLeft: 'var(--gutter-h, 24px)', paddingRight: 'var(--gutter-h, 24px)', paddingBottom: '48px' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', paddingTop: '8px', gap: '16px' }}>

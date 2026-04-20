@@ -70,7 +70,7 @@ export default async function RevenueReport(props: any) {
 
   // ── Styles ──────────────────────────────────────────────────────────────
 
-  const wrap: React.CSSProperties = { padding: '0 var(--gutter-h, 24px) 48px', maxWidth: '1400px' }
+  const wrap: React.CSSProperties = { maxWidth: '1400px', paddingLeft: 'var(--gutter-h, 24px)', paddingRight: 'var(--gutter-h, 24px)', paddingBottom: '48px' }
   const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: '13px' }
   const thStyle: React.CSSProperties = {
     textAlign: 'left', padding: '8px 12px', fontSize: '11px', fontWeight: 600,

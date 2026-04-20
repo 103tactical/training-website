@@ -182,6 +182,8 @@ export default async function Dashboard(props: any) {
 
   const wrap: React.CSSProperties = {
     maxWidth: '1400px',
+    paddingLeft: 'var(--gutter-h, 24px)',
+    paddingRight: 'var(--gutter-h, 24px)',
     paddingBottom: '48px',
   }
 
