@@ -202,19 +202,6 @@ export default function ResendQuotaWidget() {
           <span className="rq-loading">Could not retrieve quota: {quota.error}</span>
         ) : (
           <>
-            {/* ── Progress bar row ── */}
-            <div className="rq-bar-row">
-              <div className="rq-track">
-                <div
-                  className="rq-fill"
-                  style={{ width: `${worstPct}%`, background: color }}
-                />
-              </div>
-              <span className="rq-pct" style={{ color }}>
-                Usage: {worstPct}%
-              </span>
-            </div>
-
             {/* ── Title row ── */}
             <div className="rq-title-row">
               <div className="rq-left">
@@ -229,6 +216,19 @@ export default function ResendQuotaWidget() {
               >
                 Resend Dashboard →
               </a>
+            </div>
+
+            {/* ── Progress bar row ── */}
+            <div className="rq-bar-row">
+              <div className="rq-track">
+                <div
+                  className="rq-fill"
+                  style={{ width: `${worstPct}%`, background: color }}
+                />
+              </div>
+              <span className="rq-pct" style={{ color }}>
+                Usage: {worstPct}%
+              </span>
             </div>
 
             {/* ── Numbers ── */}
