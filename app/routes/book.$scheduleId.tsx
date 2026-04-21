@@ -15,6 +15,8 @@ import { useEffect } from "react";
 import {
   getCourseScheduleById,
   createPendingBooking,
+  findActivePendingBooking,
+  updatePendingBooking,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
@@ -156,18 +158,28 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const course = schedule.course as Course;
     const priceInCents = Math.round((course?.price ?? 0) * 100);
 
-    // ── Create PendingBooking ───────────────────────────────────────────────
-    // We do NOT create an Attendee here. The Attendee is created only after
-    // Square confirms payment via webhook — using Square's verified name/email.
-    // The token is a 32-char hex string embedded in the Square Order referenceId
-    // so the webhook can look up this record.
+    // ── Upsert PendingBooking ───────────────────────────────────────────────
+    // If this email already has a pending record for this schedule (e.g. the
+    // user hit back and resubmitted, or is returning later), refresh the token
+    // and phone on the existing record instead of creating a duplicate.
+    // A fresh token means a fresh Square payment link either way.
     const token = crypto.randomUUID().replace(/-/g, "");
-    await createPendingBooking({
-      token,
-      courseSchedule: parseInt(scheduleId, 10),
-      email,
-      phone: sanitizedPhone || undefined,
-    });
+    const scheduleIdInt = parseInt(scheduleId, 10);
+    const existing = await findActivePendingBooking(email, scheduleIdInt);
+
+    if (existing) {
+      await updatePendingBooking(existing.id, {
+        token,
+        ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
+      });
+    } else {
+      await createPendingBooking({
+        token,
+        courseSchedule: scheduleIdInt,
+        email,
+        phone: sanitizedPhone || undefined,
+      });
+    }
 
     // ── Create Square Payment Link ──────────────────────────────────────────
     const siteUrl = process.env.PUBLIC_SITE_URL ?? "";

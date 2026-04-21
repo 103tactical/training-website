@@ -174,6 +174,20 @@ export async function createPendingBooking(data: {
   return json.doc ?? json;
 }
 
+/**
+ * Find an active (status=pending) pending booking for a given email + schedule.
+ * Used to avoid creating duplicate pending records on resubmit.
+ */
+export async function findActivePendingBooking(
+  email: string,
+  courseScheduleId: number,
+): Promise<PendingBooking | null> {
+  const res = await fetchPayloadAuth<{ docs: PendingBooking[] }>(
+    `/pending-bookings?where[email][equals]=${encodeURIComponent(email)}&where[courseSchedule][equals]=${courseScheduleId}&where[status][equals]=pending&limit=1`
+  );
+  return res.docs[0] ?? null;
+}
+
 /** Look up a pending booking by its unique token (used in the webhook). */
 export async function findPendingBookingByToken(
   token: string,
@@ -184,12 +198,12 @@ export async function findPendingBookingByToken(
   return res.docs[0] ?? null;
 }
 
-/** Update a pending booking's status and Square payment fields. */
+/** Update a pending booking's status, Square payment fields, or token/phone. */
 export async function updatePendingBooking(
   id: number,
   data: Partial<Pick<
     PendingBooking,
-    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt"
+    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt" | "token" | "phone"
   >>,
 ): Promise<void> {
   const secret = process.env.CMS_WRITE_SECRET;
