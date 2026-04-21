@@ -260,31 +260,6 @@ export default async function Dashboard(props: any) {
       <SectionHeading>Trends</SectionHeading>
       <DashboardCharts revenueByMonth={revenueByMonth} bookingsByCourse={bookingsByCourse} />
 
-      {/* ── Google Analytics link ── */}
-      <div style={{
-        marginTop: '12px',
-        marginBottom: '8px',
-        padding: '12px 16px',
-        borderRadius: 'var(--style-radius-s, 4px)',
-        background: 'var(--theme-elevation-100)',
-        border: '1px solid var(--theme-elevation-200)',
-        fontSize: '13px',
-        color: 'var(--theme-elevation-700)',
-        lineHeight: 1.5,
-      }}>
-        For detailed traffic and behaviour analytics, visit{' '}
-        <a
-          href="https://analytics.google.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: '#ea580c', textDecoration: 'underline' }}
-        >
-          Google Analytics
-        </a>
-        .{' '}
-        You must be signed in with <strong style={{ color: 'var(--theme-elevation-900)' }}>103tactical.developer@gmail.com</strong> to access the property.
-      </div>
-
       {/* ── Upcoming sessions ── */}
       <SectionHeading>Upcoming Sessions (Next 60 Days)</SectionHeading>
       <div style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden', marginBottom: '28px' }}>

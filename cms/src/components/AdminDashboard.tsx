@@ -76,6 +76,30 @@ export default function AdminDashboard() {
 
       <ResendQuotaWidget />
 
+      {/* Google Analytics link */}
+      <div style={{
+        marginBottom: '28px',
+        padding: '12px 16px',
+        borderRadius: '8px',
+        border: '1px solid var(--theme-elevation-200)',
+        background: 'var(--theme-elevation-50)',
+        fontSize: '13px',
+        lineHeight: 1.5,
+        color: 'var(--theme-elevation-700)',
+      }}>
+        For detailed traffic and behaviour analytics, visit{' '}
+        <a
+          href="https://analytics.google.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#ea580c', textDecoration: 'underline' }}
+        >
+          Google Analytics
+        </a>
+        .{' '}
+        You must be signed in with <strong>103tactical.developer@gmail.com</strong> to access the property.
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         {SECTIONS.map((section) => (
           <div key={section.label}>
