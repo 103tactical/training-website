@@ -1,20 +1,76 @@
-import { Resend } from 'resend'
-
-let _client: Resend | null = null
-
-function getClient(): Resend {
-  if (!_client) {
-    const key = process.env.RESEND_API_KEY
-    if (!key) throw new Error('RESEND_API_KEY is not set')
-    _client = new Resend(key)
-  }
-  return _client
-}
+import { saveQuota } from './resend-quota-cache'
 
 function getFromAddress(): string {
   const name  = process.env.FROM_NAME  || '103 Tactical Training'
   const email = process.env.FROM_EMAIL || 'onboarding@resend.dev'
   return `${name} <${email}>`
+}
+
+// ── Raw fetch wrapper ─────────────────────────────────────────────────────────
+// Uses fetch directly instead of the Resend SDK so we can read response headers
+// and persist the quota counts after every send.
+
+interface RawSendParams {
+  from:         string
+  to:           string
+  subject:      string
+  html:         string
+  text:         string
+  attachments?: EmailAttachment[]
+}
+
+interface RawSendError {
+  message:    string | null
+  name:       string | null
+  statusCode: number | null
+}
+
+async function rawSend(params: RawSendParams): Promise<{ error: RawSendError | null }> {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) return { error: { message: 'RESEND_API_KEY is not set', name: null, statusCode: null } }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: Record<string, any> = {
+    from:    params.from,
+    to:      params.to,
+    subject: params.subject,
+    html:    params.html,
+    text:    params.text,
+  }
+
+  if (params.attachments && params.attachments.length > 0) {
+    body.attachments = params.attachments.map(a => ({
+      filename: a.filename,
+      content:  a.content.toString('base64'),
+    }))
+  }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method:  'POST',
+    headers: {
+      Authorization:  `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  // Capture quota headers from every send and persist to disk
+  const daily   = res.headers.get('x-resend-daily-quota')
+  const monthly = res.headers.get('x-resend-monthly-quota')
+  if (daily !== null || monthly !== null) {
+    saveQuota(
+      daily   !== null ? parseInt(daily,   10) : null,
+      monthly !== null ? parseInt(monthly, 10) : null,
+    ).catch(() => {})
+  }
+
+  if (!res.ok) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const json: any = await res.json().catch(() => ({}))
+    return { error: { message: json?.message ?? `HTTP ${res.status}`, name: json?.name ?? null, statusCode: res.status } }
+  }
+
+  return { error: null }
 }
 
 /**
@@ -146,16 +202,15 @@ export async function sendEmail({
   message: string
   attachments?: EmailAttachment[]
 }): Promise<void> {
-  const resend = getClient()
-  const { error } = await resend.emails.send({
-    from: getFromAddress(),
+  const { error } = await rawSend({
+    from:        getFromAddress(),
     to,
     subject,
-    html: buildHtml(message),
-    text: message,
-    ...(attachments.length > 0 && { attachments }),
+    html:        buildHtml(message),
+    text:        message,
+    attachments,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(error.message ?? 'Resend send failed')
 }
 
 /**
@@ -173,7 +228,6 @@ export async function sendBulkEmail({
   message: string
   attachments?: EmailAttachment[]
 }): Promise<SendResult> {
-  const resend  = getClient()
   const from    = getFromAddress()
   const html    = buildHtml(message)
   const unique  = [...new Set(recipients.map((r) => r.toLowerCase().trim()).filter(Boolean))]
@@ -192,7 +246,7 @@ export async function sendBulkEmail({
     await Promise.all(
       batch.map(async (to) => {
         if (result.quotaError) return  // another in this batch already hit quota
-        const { error } = await resend.emails.send({
+        const { error } = await rawSend({
           from,
           to,
           subject,
