@@ -229,7 +229,7 @@ export default async function Dashboard(props: any) {
       user={initPageResult.req.user ?? undefined}
       visibleEntities={initPageResult.visibleEntities}
     >
-    <SetStepNav nav={[]} />
+    <SetStepNav nav={[{ label: 'Accounting Overview' }]} />
     <div style={wrap}>
       <div style={{ marginBottom: '28px', paddingTop: '8px' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: 700 }}>Accounting Overview</h1>

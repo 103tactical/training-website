@@ -72,7 +72,7 @@ export default async function ScheduleOverviewPage(props: any) {
       user={initPageResult.req.user ?? undefined}
       visibleEntities={initPageResult.visibleEntities}
     >
-      <SetStepNav nav={[]} />
+      <SetStepNav nav={[{ label: 'Course Calendar' }]} />
       <div style={{
         paddingLeft:   'var(--gutter-h, 24px)',
         paddingRight:  'var(--gutter-h, 24px)',

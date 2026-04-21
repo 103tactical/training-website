@@ -1,5 +1,6 @@
 import React from 'react'
 import { DefaultTemplate } from '@payloadcms/next/templates'
+import { SetStepNav } from '@payloadcms/ui'
 import CsvButton from './CsvButton'
 import {
   formatCents, formatDate, getDateRange, getCourseName,
@@ -91,6 +92,7 @@ export default async function RefundsReport(props: any) {
       user={initPageResult.req.user ?? undefined}
       visibleEntities={initPageResult.visibleEntities}
     >
+    <SetStepNav nav={[{ label: 'Refunds & Cancellations' }]} />
     <div style={{ maxWidth: '1400px', paddingLeft: 'var(--gutter-h, 24px)', paddingRight: 'var(--gutter-h, 24px)', paddingBottom: '48px' }}>
 
       {/* Header */}

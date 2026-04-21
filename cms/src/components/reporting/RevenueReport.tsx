@@ -1,5 +1,6 @@
 import React from 'react'
 import { DefaultTemplate } from '@payloadcms/next/templates'
+import { SetStepNav } from '@payloadcms/ui'
 import CsvButton from './CsvButton'
 import {
   formatCents, formatDate, getDateRange, getCourseName,
@@ -103,6 +104,7 @@ export default async function RevenueReport(props: any) {
       user={initPageResult.req.user ?? undefined}
       visibleEntities={initPageResult.visibleEntities}
     >
+    <SetStepNav nav={[{ label: 'Revenue Report' }]} />
     <div style={wrap}>
 
       {/* Header */}
