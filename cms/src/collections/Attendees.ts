@@ -101,7 +101,6 @@ export const Attendees: CollectionConfig = {
           name: 'lastName',
           type: 'text',
           label: 'Last Name',
-          required: true,
         },
       ],
     },

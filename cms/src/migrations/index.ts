@@ -42,6 +42,7 @@ import * as migration_20260414_courses_enrollment_forms from './20260414_courses
 import * as migration_20260421_private_group_bookings from './20260421_private_group_bookings';
 import * as migration_20260304_testimonials_heading_update from './20260304_testimonials_heading_update';
 import * as migration_20260304_testimonials_heading_update_v2 from './20260304_testimonials_heading_update_v2';
+import * as migration_20260421_attendees_lastname_nullable from './20260421_attendees_lastname_nullable';
 
 export const migrations = [
   {
@@ -263,5 +264,10 @@ export const migrations = [
     up: migration_20260304_testimonials_heading_update_v2.up,
     down: migration_20260304_testimonials_heading_update_v2.down,
     name: '20260304_testimonials_heading_update_v2'
+  },
+  {
+    up: migration_20260421_attendees_lastname_nullable.up,
+    down: migration_20260421_attendees_lastname_nullable.down,
+    name: '20260421_attendees_lastname_nullable'
   },
 ];

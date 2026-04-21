@@ -111,18 +111,21 @@ export async function findAttendeeByEmail(email: string): Promise<Attendee | nul
  */
 export async function createAttendee(data: {
   firstName: string;
-  lastName: string;
+  lastName?: string;
   email: string;
   phone?: string;
 }): Promise<Attendee> {
   const secret = process.env.CMS_WRITE_SECRET;
+  // Strip empty-string lastName so Payload doesn't receive "" for an optional field
+  const payload = { ...data };
+  if (!payload.lastName) delete payload.lastName;
   const res = await fetch(`${PAYLOAD_API_URL}/api/attendees`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const body = await res.text();
