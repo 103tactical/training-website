@@ -259,7 +259,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
           ? resolveMediaUrl(course.enrollmentFile.url)
           : undefined;
         const filename = course.enrollmentFile?.filename
-          ?? `${course.title.replace(/[^a-z0-9]/gi, "-")}-Enrollment-Form.pdf`;
+          ?? `${course.title.replace(/[^a-z0-9]/gi, "-")}-Enrollment-Form`;
 
         await sendEnrollmentEmail({
           to:               buyerEmail,

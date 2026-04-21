@@ -94,7 +94,13 @@ async function emailAttendeesHandler(req: PayloadRequest): Promise<Response> {
   }
 
   // ── Attachment validation ──────────────────────────────────────────────────
-  const ALLOWED_TYPES  = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+  const ALLOWED_TYPES  = new Set([
+    'application/pdf',
+    'image/jpeg',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+  ])
   const MAX_PER_FILE   = 5  * 1024 * 1024  // 5 MB
   const MAX_TOTAL      = 10 * 1024 * 1024  // 10 MB
   const MAX_FILES      = 5
@@ -110,7 +116,7 @@ async function emailAttendeesHandler(req: PayloadRequest): Promise<Response> {
   for (const file of rawFiles) {
     if (!ALLOWED_TYPES.has(file.type)) {
       return Response.json(
-        { error: `"${file.name}" is not an allowed file type. Only PDF, JPEG, and PNG are accepted.` },
+        { error: `"${file.name}" is not an allowed file type. Only PDF, JPG, Word (.doc/.docx), and TXT are accepted.` },
         { status: 400 },
       )
     }

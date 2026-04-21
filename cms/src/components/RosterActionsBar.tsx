@@ -4,8 +4,14 @@ import { useDocumentInfo } from '@payloadcms/ui'
 
 type Phase = 'idle' | 'composing' | 'sending' | 'done' | 'error'
 
-const ALLOWED_TYPES  = ['application/pdf', 'image/jpeg', 'image/png']
-const ALLOWED_ACCEPT = '.pdf,.jpg,.jpeg,.png'
+const ALLOWED_TYPES  = [
+  'application/pdf',
+  'image/jpeg',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+]
+const ALLOWED_ACCEPT = '.pdf,.jpg,.jpeg,.doc,.docx,.txt'
 const MAX_PER_FILE   = 5  * 1024 * 1024  // 5 MB
 const MAX_TOTAL      = 10 * 1024 * 1024  // 10 MB
 const MAX_FILES      = 5
@@ -50,7 +56,7 @@ export default function RosterActionsBar() {
 
     const valid = selected.filter((f) => {
       if (!ALLOWED_TYPES.includes(f.type)) {
-        errors.push(`"${f.name}" is not allowed (PDF, JPEG, PNG only).`)
+        errors.push(`"${f.name}" is not allowed (PDF, JPG, Word, or TXT only).`)
         return false
       }
       if (f.size > MAX_PER_FILE) {
@@ -211,7 +217,7 @@ export default function RosterActionsBar() {
           {/* ── Attachments ─────────────────────────────────────────────────── */}
           <div>
             <label style={{ display: 'block', fontSize: '12px', marginBottom: '6px', color: 'var(--theme-elevation-700)' }}>
-              Attachments <span style={{ fontWeight: 400 }}>(PDF, JPEG, PNG — 5 MB per file, 10 MB total, max {MAX_FILES})</span>
+              Attachments <span style={{ fontWeight: 400 }}>(PDF, JPG, Word, TXT — 5 MB per file, 10 MB total, max {MAX_FILES})</span>
             </label>
 
             {/* Selected file list */}

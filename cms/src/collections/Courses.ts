@@ -186,19 +186,26 @@ export const Courses: CollectionConfig = {
           name: "enrollmentFile",
           type: "upload",
           relationTo: "media",
-          label: "Enrollment Document (PDF)",
+          label: "Enrollment Document",
           admin: {
-            description: "PDF only · Max 8 MB. This file will be attached to the enrollment email.",
+            description: "PDF, JPG, Word (.doc/.docx), or TXT · Max 8 MB. This file will be attached to the enrollment email.",
           },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           validate: async (value: any, { req }: any) => {
             if (!value) return true
+            const allowed = new Set([
+              'application/pdf',
+              'image/jpeg',
+              'application/msword',
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              'text/plain',
+            ])
             try {
               const id = typeof value === "object" ? value?.id : value
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const media = await (req?.payload as any)?.findByID({ collection: "media", id, req })
-              if (media?.mimeType && !media.mimeType.includes("pdf")) {
-                return "Only PDF files are accepted for the Enrollment Document."
+              if (media?.mimeType && !allowed.has(media.mimeType)) {
+                return "Only PDF, JPG, Word (.doc/.docx), and TXT files are accepted for the Enrollment Document."
               }
               const maxBytes = 8 * 1024 * 1024
               if (media?.filesize && media.filesize > maxBytes) {
