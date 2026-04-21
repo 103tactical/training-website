@@ -91,7 +91,7 @@ export interface SendResult {
  * Classify a Resend error and return a human-readable message.
  * For quota errors, includes an estimated reset time.
  */
-function describeResendError(error: { message?: string; name?: string; statusCode?: number }): {
+function describeResendError(error: { message?: string | null; name?: string | null; statusCode?: number | null }): {
   display: string
   isQuota: boolean
   isRateLimit: boolean
