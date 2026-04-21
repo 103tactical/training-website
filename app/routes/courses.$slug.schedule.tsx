@@ -62,7 +62,18 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   const course = result.docs[0] as Course;
   const schedulesResult = await getCourseSchedules(course.id);
-  const schedules = schedulesResult?.docs ?? [];
+  const allSchedules = (schedulesResult?.docs ?? []) as CourseSchedule[];
+
+  // Filter out schedules whose first session date (Day 1) has already passed.
+  // Compare against midnight UTC today so today's sessions still appear.
+  const todayUTC = new Date();
+  todayUTC.setUTCHours(0, 0, 0, 0);
+
+  const schedules = allSchedules.filter((s) => {
+    const firstDate = s.sessions?.[0]?.date;
+    if (!firstDate) return false;
+    return new Date(firstDate) >= todayUTC;
+  });
 
   return json({ course, schedules, canonicalUrl: new URL(request.url).toString() });
 }
@@ -73,7 +84,7 @@ export default function CourseSchedulePage() {
   const { course, schedules } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const imageUrl = resolveMediaUrl(course.thumbnail?.url);
-  const activeSchedules = schedules as CourseSchedule[];
+  const activeSchedules = schedules;
 
   useEffect(() => {
     trackScheduleView(course.title, course.slug);
