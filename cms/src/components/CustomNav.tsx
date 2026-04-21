@@ -78,8 +78,13 @@ export default function CustomNav() {
             <NavLink href="/admin/collections/badges" label="Badges" />
           </NavGroup>
 
-          <div className="nav__controls">
-            <Logout />
+          <div className="nav-group">
+            <div className="nav-group__toggle" style={{ cursor: 'default', pointerEvents: 'none' }}>
+              <div className="nav-group__label">Logout</div>
+            </div>
+            <div className="nav-group__content">
+              <Logout />
+            </div>
           </div>
 
         </nav>
