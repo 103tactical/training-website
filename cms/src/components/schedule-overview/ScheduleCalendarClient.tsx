@@ -278,10 +278,12 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         .cal-pill-text { color: #374151; }
         [data-theme="dark"] .cal-pill-text { color: rgba(255,255,255,0.78); }
 
-        /* Schedule list — alternating rows, theme-aware */
+        /* Schedule list — alternating rows, theme-aware, no hover background */
         .sch-row:nth-child(odd)  { background: var(--theme-elevation-0); }
         .sch-row:nth-child(even) { background: var(--theme-elevation-100); }
-        .sch-row:hover           { background: var(--theme-elevation-200) !important; transition: background .1s; }
+
+        /* Course title link — underlined to signal it's clickable */
+        .sch-title-link { text-decoration: underline !important; }
 
         /* Table header text */
         .sch-th {
@@ -498,7 +500,8 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                         <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px' }}>
                           <Link
                             href={`/admin/collections/course-schedules/${s.id}`}
-                            style={{ color:'var(--theme-text)', fontWeight:500, textDecoration:'none' }}
+                            className="sch-title-link"
+                            style={{ color:'var(--theme-text)', fontWeight:500 }}
                           >
                             {s.courseTitle}
                           </Link>
