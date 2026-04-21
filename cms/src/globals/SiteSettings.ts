@@ -7,7 +7,6 @@ export const SiteSettings: GlobalConfig = {
     read: () => true,
   },
   admin: {
-    group: 'Pages',
     description: "Global site configuration: navigation, footer content, and contact info.",
   },
   fields: [

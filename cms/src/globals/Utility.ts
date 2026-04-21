@@ -7,7 +7,6 @@ export const Utility: GlobalConfig = {
     read: () => true,
   },
   admin: {
-    group: 'Pages',
     description: "Miscellaneous site behaviour controls.",
   },
   fields: [

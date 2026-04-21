@@ -3,7 +3,6 @@ import type { CollectionConfig } from "payload";
 export const Badges: CollectionConfig = {
   slug: "badges",
   admin: {
-    group: 'Pages',
     useAsTitle: "name",
     defaultColumns: ["name", "url"],
     description: "Partner/affiliation badges shown on the home page. Each links to an external site.",

@@ -7,9 +7,6 @@ const dirname = path.dirname(filename);
 
 export const Media: CollectionConfig = {
   slug: "media",
-  admin: {
-    group: 'Data',
-  },
   access: {
     read: () => true,
   },
