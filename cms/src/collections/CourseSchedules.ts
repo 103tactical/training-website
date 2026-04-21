@@ -341,6 +341,7 @@ export const CourseSchedules: CollectionConfig = {
               name: "startTime",
               type: "date",
               label: "Start Time",
+              required: true,
               admin: {
                 date: {
                   pickerAppearance: "timeOnly",
@@ -352,6 +353,7 @@ export const CourseSchedules: CollectionConfig = {
               name: "endTime",
               type: "date",
               label: "End Time",
+              required: true,
               admin: {
                 date: {
                   pickerAppearance: "timeOnly",
