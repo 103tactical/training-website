@@ -11,6 +11,7 @@ import {
   useLoaderData,
   useNavigation,
 } from "@remix-run/react";
+import { useEffect } from "react";
 import {
   getCourseScheduleById,
   createPendingBooking,
@@ -255,6 +256,17 @@ export default function BookSessionPage() {
 
   const errors = actionData?.errors ?? {};
   const formError = actionData?.formError ?? null;
+
+  // When the user clicks back from Square checkout, the browser may restore
+  // this page from bfcache with the button frozen in "Preparing checkout…".
+  // Reloading on pageshow with persisted=true gives them a clean form.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) window.location.reload();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   function inputClass(name: string) {
     return errors[name]
