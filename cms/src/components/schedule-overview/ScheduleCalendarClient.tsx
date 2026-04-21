@@ -399,7 +399,15 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                   </div>
                 ))}
                 {overflow > 0 && (
-                  <div className="cal-pill" style={{ fontSize:'10px', color:'var(--theme-text)', opacity:.4, paddingLeft:'2px' }}>
+                  <div className="cal-pill" style={{
+                    fontSize: '10px', lineHeight: 1.3,
+                    background: 'var(--theme-elevation-200)',
+                    color: 'var(--theme-elevation-800)',
+                    borderRadius: 'var(--style-radius-s,3px)',
+                    padding: '2px 5px', marginBottom: '2px',
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
                     +{overflow} more
                   </div>
                 )}
