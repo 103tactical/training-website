@@ -233,18 +233,14 @@ export default function ResendQuotaWidget() {
 
             {/* ── Numbers ── */}
             <div className="rq-numbers">
-              {isFreePlan && quota.dailyUsed !== null && (
-                <span className="rq-num-line">
-                  <span className="rq-num-label">Daily: </span>
-                  {quota.dailyUsed} of {FREE_DAILY_LIMIT}
-                </span>
-              )}
-              {quota.monthlyUsed !== null && (
-                <span className="rq-num-line">
-                  <span className="rq-num-label">Monthly: </span>
-                  {quota.monthlyUsed.toLocaleString()} of {FREE_MONTHLY_LIMIT.toLocaleString()}
-                </span>
-              )}
+              <span className="rq-num-line">
+                <span className="rq-num-label">Daily: </span>
+                {(quota.dailyUsed ?? 0)} of {FREE_DAILY_LIMIT}
+              </span>
+              <span className="rq-num-line">
+                <span className="rq-num-label">Monthly: </span>
+                {(quota.monthlyUsed ?? 0).toLocaleString()} of {FREE_MONTHLY_LIMIT.toLocaleString()}
+              </span>
             </div>
 
             {/* ── Status message ── */}
