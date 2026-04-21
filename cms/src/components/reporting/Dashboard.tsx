@@ -330,9 +330,9 @@ export default async function Dashboard(props: any) {
       {/* ── Quick links to reports ── */}
       <SectionHeading>Reports</SectionHeading>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-        <QuickLink href="reporting/revenue"  label="Revenue Report"         desc="Revenue by period with CSV export" />
-        <QuickLink href="reporting/bookings" label="Bookings Report"        desc="All bookings filtered by status and date" />
-        <QuickLink href="reporting/refunds"  label="Refunds & Cancellations" desc="Cancelled bookings and refund totals" />
+        <QuickLink href="/admin/reporting/revenue"  label="Revenue Report"          desc="Revenue by period with CSV export" />
+        <QuickLink href="/admin/reporting/bookings" label="Bookings Report"         desc="All bookings filtered by status and date" />
+        <QuickLink href="/admin/reporting/refunds"  label="Refunds & Cancellations" desc="Cancelled bookings and refund totals" />
       </div>
     </div>
     </DefaultTemplate>
