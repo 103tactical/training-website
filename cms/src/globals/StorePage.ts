@@ -60,7 +60,6 @@ export const StorePage: GlobalConfig = {
   admin: {
     group: "Pages",
     description: "Manage content for the Store page.",
-    hidden: true,
   },
   fields: [
     // ── Hero ──────────────────────────────────────────────────────────────

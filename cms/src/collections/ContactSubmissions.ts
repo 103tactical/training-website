@@ -7,7 +7,6 @@ export const ContactSubmissions: CollectionConfig = {
     useAsTitle: "name",
     defaultColumns: ["name", "email", "topic", "status", "createdAt"],
     description: "Submissions from the Contact Us form.",
-    hidden: true,
   },
   access: {
     create: () => true,

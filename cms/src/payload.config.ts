@@ -5,24 +5,25 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-import { Users } from './collections/Users'
-import { Media } from './collections/Media'
 import { Courses } from './collections/Courses'
-import { Badges } from './collections/Badges'
-import { ContactSubmissions } from './collections/ContactSubmissions'
-import { SiteSettings } from './globals/SiteSettings'
-import { HomePage } from './globals/HomePage'
-import { Utility } from './globals/Utility'
-import { ContactSettings } from './globals/ContactSettings'
-import { CoursesPage } from './globals/CoursesPage'
-import { ApplicationsPage } from './globals/ApplicationsPage'
-import { StorePage } from './globals/StorePage'
 import { CourseGroups } from './collections/CourseGroups'
 import { CourseSchedules } from './collections/CourseSchedules'
 import { Attendees } from './collections/Attendees'
 import { Bookings } from './collections/Bookings'
 import { Instructors } from './collections/Instructors'
 import { PendingBookings } from './collections/PendingBookings'
+import { ContactSubmissions } from './collections/ContactSubmissions'
+import { Users } from './collections/Users'
+import { Media } from './collections/Media'
+import { Badges } from './collections/Badges'
+import { ScheduleDashboard } from './globals/ScheduleDashboard'
+import { HomePage } from './globals/HomePage'
+import { CoursesPage } from './globals/CoursesPage'
+import { ApplicationsPage } from './globals/ApplicationsPage'
+import { StorePage } from './globals/StorePage'
+import { ContactSettings } from './globals/ContactSettings'
+import { SiteSettings } from './globals/SiteSettings'
+import { Utility } from './globals/Utility'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -45,16 +46,9 @@ export default buildConfig({
         Logo: './components/AdminLogo',
       },
       afterNavLinks: [
-        './components/CourseOverviewNav',
         './components/reporting/AccountingNav',
-        './components/PagesNav',
-        './components/DataNav',
       ],
       views: {
-        scheduleOverview: {
-          Component: './components/schedule-overview/ScheduleOverviewPage',
-          path: '/schedule-dashboard',
-        },
         reportingDashboard: {
           Component: './components/reporting/Dashboard',
           path: '/reporting/dashboard',
@@ -74,8 +68,8 @@ export default buildConfig({
       },
     },
   },
-  collections: [ContactSubmissions, Users, Media, Courses, Badges, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors, PendingBookings],
-  globals: [HomePage, CoursesPage, ApplicationsPage, StorePage, SiteSettings, ContactSettings, Utility],
+  collections: [Courses, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors, PendingBookings, ContactSubmissions, Users, Media, Badges],
+  globals: [ScheduleDashboard, HomePage, CoursesPage, ApplicationsPage, StorePage, ContactSettings, SiteSettings, Utility],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

@@ -1,5 +1,4 @@
 import React from 'react'
-import { DefaultTemplate } from '@payloadcms/next/templates'
 import ScheduleCalendarClient from './ScheduleCalendarClient'
 
 // ── Serialisable types shared with the client component ──────────────────────
@@ -27,9 +26,7 @@ export type ScheduleItem = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function ScheduleOverviewPage(props: any) {
   const { initPageResult } = props
-  const params       = await Promise.resolve(props.params       ?? {})
-  const searchParams = await Promise.resolve(props.searchParams ?? {})
-  const payload      = initPageResult.req.payload
+  const payload = initPageResult.req.payload
 
   // Fetch ALL schedules — read-only, no migrations, depth=1 populates course.title
   const { docs } = await payload.find({
@@ -61,31 +58,20 @@ export default async function ScheduleOverviewPage(props: any) {
   })
 
   return (
-    <DefaultTemplate
-      i18n={initPageResult.req.i18n}
-      locale={initPageResult.locale}
-      params={params}
-      payload={initPageResult.req.payload}
-      permissions={initPageResult.permissions}
-      searchParams={searchParams}
-      user={initPageResult.req.user ?? undefined}
-      visibleEntities={initPageResult.visibleEntities}
-    >
-      <div style={{
-        paddingLeft:   'var(--gutter-h, 24px)',
-        paddingRight:  'var(--gutter-h, 24px)',
-        paddingBottom: '60px',
-        paddingTop:    '20px',
+    <div style={{
+      paddingLeft:   'var(--gutter-h, 24px)',
+      paddingRight:  'var(--gutter-h, 24px)',
+      paddingBottom: '60px',
+      paddingTop:    '20px',
+    }}>
+      <h1 style={{
+        fontSize: '22px', fontWeight: 700,
+        color: 'var(--theme-text)',
+        margin: '0 0 28px',
       }}>
-        <h1 style={{
-          fontSize: '22px', fontWeight: 700,
-          color: 'var(--theme-text)',
-          margin: '0 0 28px',
-        }}>
-          Schedule Dashboard
-        </h1>
-        <ScheduleCalendarClient schedules={schedules} />
-      </div>
-    </DefaultTemplate>
+        Schedule Dashboard
+      </h1>
+      <ScheduleCalendarClient schedules={schedules} />
+    </div>
   )
 }
