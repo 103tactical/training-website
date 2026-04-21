@@ -46,6 +46,9 @@ export default buildConfig({
       },
       Nav: './components/CustomNav',
       views: {
+        dashboard: {
+          Component: './components/AdminDashboard',
+        },
         scheduleDashboard: {
           Component: './components/schedule-overview/ScheduleOverviewPage',
           path: '/schedule-dashboard',

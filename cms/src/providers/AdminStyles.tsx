@@ -120,6 +120,28 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           transition: background .12s;
         }
         .rpt-apply-btn:hover { background: var(--theme-elevation-300); }
+
+        /* ── Nav group spacing ─────────────────────────────────────────────── */
+        .nav-group { padding-bottom: 24px !important; margin-bottom: 0 !important; }
+
+        /* ── Admin dashboard cards ─────────────────────────────────────────── */
+        .adash-card {
+          display: block;
+          padding: 10px 14px;
+          border-radius: var(--style-radius-s, 4px);
+          background: var(--theme-elevation-100);
+          color: var(--theme-text);
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 500;
+          transition: background 0.12s, color 0.12s;
+          border: 1px solid var(--theme-elevation-200);
+        }
+        .adash-card:hover {
+          background: var(--theme-elevation-200);
+          color: var(--theme-text);
+          text-decoration: none;
+        }
       `}</style>
       {children}
     </>
