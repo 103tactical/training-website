@@ -222,23 +222,42 @@ export async function updatePendingBooking(
 }
 
 /**
- * Mark all 'pending' records older than maxAgeHours as 'expired'.
+ * Mark all 'pending' records as 'expired' when the first session day of the
+ * linked course schedule has arrived or passed. A pending booking is no longer
+ * actionable once the course has started.
  * Called by the cleanup cron endpoint.
  * Returns the list of expired record IDs.
  */
-export async function expireStalePendingBookings(
-  maxAgeHours = 24,
-): Promise<number[]> {
-  const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000).toISOString();
-  const res = await fetchPayloadAuth<{ docs: { id: number }[] }>(
-    `/pending-bookings?where[status][equals]=pending&where[createdAt][less_than]=${encodeURIComponent(cutoff)}&limit=200`
+export async function expireStalePendingBookings(): Promise<number[]> {
+  // Fetch all pending bookings with schedule data populated (depth=1)
+  const res = await fetchPayloadAuth<{ docs: any[] }>(
+    `/pending-bookings?where[status][equals]=pending&depth=1&limit=200`
   );
-  const stale = res.docs ?? [];
-  if (stale.length === 0) return [];
+  const all = res.docs ?? [];
+  if (all.length === 0) return [];
+
+  // Today's date at midnight UTC — compare date strings only, no time component
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const toExpire = all.filter((booking) => {
+    const schedule = booking.courseSchedule;
+    if (!schedule || typeof schedule !== "object") return false;
+    const sessions: { date?: string }[] = schedule.sessions ?? [];
+    if (sessions.length === 0) return false;
+    // Sort ascending and take the first session date
+    const firstDate = sessions
+      .map((s) => s.date ?? "")
+      .filter(Boolean)
+      .sort()[0];
+    // Expire if the first session day is today or in the past
+    return firstDate <= todayStr;
+  });
+
+  if (toExpire.length === 0) return [];
 
   const secret = process.env.CMS_WRITE_SECRET;
   await Promise.all(
-    stale.map((rec) =>
+    toExpire.map((rec) =>
       fetch(`${PAYLOAD_API_URL}/api/pending-bookings/${rec.id}`, {
         method: "PATCH",
         headers: {
@@ -250,7 +269,7 @@ export async function expireStalePendingBookings(
     ),
   );
 
-  return stale.map((r) => r.id);
+  return toExpire.map((r) => r.id);
 }
 
 /**

@@ -4,9 +4,9 @@
  * Call this on a schedule (e.g. every hour via cron-job.org).
  * Protected by CRON_SECRET to prevent unauthorized calls.
  *
- * Any PendingBooking with status="pending" and createdAt older than 24 hours
- * is marked "expired". These represent visitors who started checkout but
- * never completed payment — a useful prospecting list for the admin.
+ * A PendingBooking is marked "expired" when the first session date of its
+ * linked course schedule has arrived or passed — i.e. the course has started
+ * and the booking can no longer be completed.
  *
  * Example cron URL:
  *   POST https://your-site.com/api/expire-pending-bookings
@@ -27,7 +27,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    const expiredIds = await expireStalePendingBookings(24);
+    const expiredIds = await expireStalePendingBookings();
     console.log(`[expire-pending] Expired ${expiredIds.length} pending booking(s):`, expiredIds);
     return json({ expired: expiredIds.length, ids: expiredIds });
   } catch (err) {
