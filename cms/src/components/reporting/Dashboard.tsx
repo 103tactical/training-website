@@ -283,7 +283,7 @@ export default async function Dashboard(props: any) {
                 const booked = s.seatsBooked ?? 0
                 const max    = s.maxSeats ?? 0
                 return (
-                  <tr key={i}>
+                  <tr key={i} className="rpt-row">
                     <td style={tdStyle}>{course}</td>
                     <td style={tdStyle}>{label}</td>
                     <td style={tdStyle}>{firstDate}</td>

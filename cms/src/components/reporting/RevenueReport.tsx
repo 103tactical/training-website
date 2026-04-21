@@ -195,7 +195,7 @@ export default async function RevenueReport(props: any) {
               </tr></thead>
               <tbody>
                 {courseBreakdown.map(([name, { count, revenue }], i) => (
-                  <tr key={i}>
+                  <tr key={i} className="rpt-row">
                     <td style={tdStyle}>{name}</td>
                     <td style={tdStyle}>{count}</td>
                     <td style={tdStyle}>{formatCents(revenue)}</td>
@@ -228,7 +228,7 @@ export default async function RevenueReport(props: any) {
             </tr></thead>
             <tbody>
               {bookings.map((b, i) => (
-                <tr key={i}>
+                <tr key={i} className="rpt-row">
                   <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDate(b.createdAt)}</td>
                   <td style={tdStyle}>{getAttendeeName(b)}</td>
                   <td style={tdStyle}>{getCourseName(b)}</td>

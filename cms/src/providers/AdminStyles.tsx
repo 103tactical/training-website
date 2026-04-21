@@ -77,6 +77,49 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           background: rgba(249, 115, 22, 0.18);
           border-color: rgba(249, 115, 22, 0.7);
         }
+
+        /* ── Reporting / Schedule table rows — alternating, theme-aware ──────── */
+        .rpt-row:nth-child(odd)  { background: transparent; }
+        .rpt-row:nth-child(even) { background: var(--theme-elevation-0); }
+        .rpt-row:hover           { background: var(--theme-elevation-200) !important; transition: background .1s; }
+
+        /* Period / filter tab pills used in report pages */
+        .rpt-tab {
+          padding: 6px 14px;
+          border-radius: var(--style-radius-s, 4px);
+          font-size: 13px;
+          text-decoration: none;
+          background: var(--theme-elevation-100);
+          color: var(--theme-text);
+          font-weight: 400;
+          transition: background .12s;
+        }
+        .rpt-tab:hover         { background: var(--theme-elevation-200); }
+        .rpt-tab--active       { background: #b91c1c; color: #fff; font-weight: 600; }
+        .rpt-tab--active:hover { background: #991b1b; }
+
+        /* Date range inputs in report pages */
+        .rpt-date-input {
+          padding: 5px 8px;
+          border-radius: var(--style-radius-s, 4px);
+          border: 1px solid var(--theme-elevation-300);
+          background: var(--theme-elevation-100);
+          color: var(--theme-text);
+          font-size: 12px;
+          font-family: inherit;
+        }
+        .rpt-apply-btn {
+          padding: 5px 12px;
+          border-radius: var(--style-radius-s, 4px);
+          background: var(--theme-elevation-200);
+          border: none;
+          color: var(--theme-text);
+          font-size: 12px;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background .12s;
+        }
+        .rpt-apply-btn:hover { background: var(--theme-elevation-300); }
       `}</style>
       {children}
     </>

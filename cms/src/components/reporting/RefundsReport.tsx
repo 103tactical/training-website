@@ -166,7 +166,7 @@ export default async function RefundsReport(props: any) {
             </tr></thead>
             <tbody>
               {cancellations.map((b, i) => (
-                <tr key={i}>
+                <tr key={i} className="rpt-row">
                   <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDate(b.updatedAt)}</td>
                   <td style={tdStyle}>{getAttendeeName(b)}</td>
                   <td style={tdStyle}>{getCourseName(b)}</td>

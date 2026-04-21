@@ -108,7 +108,7 @@ function generatePrintHTML(items: ScheduleItem[], filterLabel: string): string {
   table{width:100%;border-collapse:collapse}
   thead th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
   tbody td{padding:5px 8px;border-bottom:1px solid #e0e0e0;vertical-align:top}
-  tbody tr:nth-child(even) td{background:#f8f8f8}
+  tbody tr:nth-child(even) td{background:#f5f5f5}
   @page{margin:1.5cm}
 </style></head><body>
 <h1>103 Tactical Training — Course Schedules</h1>
@@ -170,23 +170,23 @@ function DayModal({ dateStr, items, onClose }: {
               }}>
                 <Link
                   href={`/admin/collections/course-schedules/${s.id}`}
-                  style={{ fontWeight:600, fontSize:'13px', color:'#fb923c', textDecoration:'none' }}
+                  style={{ fontWeight:600, fontSize:'13px', color:'var(--theme-text)', textDecoration:'none' }}
                 >
                   {s.courseTitle}
                 </Link>
                 {s.displayLabel && (
-                  <div style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.6, marginTop:'2px' }}>
+                  <div style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.55, marginTop:'2px' }}>
                     {s.displayLabel}
                   </div>
                 )}
                 {todaySessions.map((x, i) => (
                   (x.startTime || x.endTime) ? (
-                    <div key={i} style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.7, marginTop:'4px' }}>
+                    <div key={i} style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.65, marginTop:'4px' }}>
                       {[x.startTime&&fmtTime(x.startTime), x.endTime&&fmtTime(x.endTime)].filter(Boolean).join(' – ')} ET
                     </div>
                   ) : null
                 ))}
-                <div style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.5, marginTop:'6px' }}>
+                <div style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.45, marginTop:'6px' }}>
                   {s.seatsBooked} / {s.maxSeats} seats booked
                   {!s.isActive && <span style={{ marginLeft:'8px', color:'#f97316' }}>· Inactive</span>}
                 </div>
@@ -199,27 +199,10 @@ function DayModal({ dateStr, items, onClose }: {
   )
 }
 
-// ── Shared table styles ───────────────────────────────────────────────────────
-
-const thSt: React.CSSProperties = {
-  padding:'8px 12px', textAlign:'left',
-  borderBottom:'1px solid var(--theme-elevation-200)',
-  color:'var(--theme-text)', opacity:.5,
-  fontSize:'11px', textTransform:'uppercase', letterSpacing:'.5px', fontWeight:600, whiteSpace:'nowrap',
-}
-
-const tdSt: React.CSSProperties = {
-  padding:'10px 12px',
-  borderBottom:'1px solid var(--theme-elevation-100)',
-  color:'var(--theme-text)',
-  verticalAlign:'top',
-  fontSize:'13px',
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ScheduleCalendarClient({ schedules }: { schedules: ScheduleItem[] }) {
-  const now   = new Date()
+  const now = new Date()
   const [year,        setYear]        = useState(now.getFullYear())
   const [month,       setMonth]       = useState(now.getMonth())
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
@@ -227,17 +210,18 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
   const [page,        setPage]        = useState(1)
 
   const TODAY = useMemo(() => todayKey(), [])
-
-  // Is the calendar currently showing today's month?
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
 
   const dateMap = useMemo(() => buildDateMap(schedules), [schedules])
   const grid    = useMemo(() => calendarGrid(year, month), [year, month])
 
+  // Unique course titles for dropdown (no counts)
   const courses = useMemo(() => {
-    const map = new Map<string, number>()
-    schedules.forEach(s => map.set(s.courseTitle, (map.get(s.courseTitle) ?? 0) + 1))
-    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+    const seen = new Set<string>()
+    return schedules
+      .map(s => s.courseTitle)
+      .filter(t => { if (seen.has(t)) return false; seen.add(t); return true })
+      .sort()
   }, [schedules])
 
   const filtered = useMemo(() => {
@@ -263,10 +247,10 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
     <>
       {/* ── Scoped styles ── */}
       <style>{`
-        /* Neutral calendar nav button — mirrors Payload secondary button */
+        /* Nav buttons — borderless, matches Payload's ghost button style */
         .cal-btn {
-          background: var(--theme-elevation-100);
-          border: 1px solid var(--theme-elevation-300);
+          background: transparent;
+          border: none;
           border-radius: var(--style-radius-s, 4px);
           color: var(--theme-text);
           padding: 5px 14px;
@@ -276,10 +260,11 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           line-height: 1.5;
           transition: background .12s;
         }
-        .cal-btn:hover { background: var(--theme-elevation-200); }
-        .cal-btn:disabled { opacity: .4; cursor: default; }
+        .cal-btn:hover    { background: var(--theme-elevation-100); }
+        .cal-btn:disabled { opacity: .35; cursor: default; }
+        .cal-btn-current  { background: var(--theme-elevation-200); font-weight: 600; }
 
-        /* Calendar cell responsive behaviour */
+        /* Calendar cell responsive */
         .cal-cell { min-height: 90px; padding: 6px; }
         .cal-pill { display: block; }
         .cal-dot  { display: none; }
@@ -288,6 +273,37 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           .cal-pill { display: none !important; }
           .cal-dot  { display: flex !important; }
         }
+
+        /* Course pill text — dark grey in light mode, soft white in dark mode */
+        .cal-pill-text { color: #374151; }
+        [data-theme="dark"] .cal-pill-text { color: rgba(255,255,255,0.78); }
+
+        /* Schedule list — alternating rows, theme-aware */
+        .sch-row:nth-child(odd)  { background: var(--theme-elevation-0); }
+        .sch-row:nth-child(even) { background: var(--theme-elevation-100); }
+        .sch-row:hover           { background: var(--theme-elevation-200) !important; transition: background .1s; }
+
+        /* Table header text */
+        .sch-th {
+          padding: 8px 12px; text-align: left;
+          font-size: 11px; font-weight: 600;
+          text-transform: uppercase; letter-spacing: .5px; white-space: nowrap;
+          border-bottom: 1px solid var(--theme-elevation-200);
+          color: #374151;
+        }
+        [data-theme="dark"] .sch-th { color: rgba(255,255,255,0.4); }
+
+        /* Results count text */
+        .sch-meta { font-size: 13px; color: #374151; }
+        [data-theme="dark"] .sch-meta { color: rgba(255,255,255,0.45); }
+
+        /* Filter label */
+        .sch-filter-label {
+          display: block; font-size: 11px; font-weight: 600;
+          text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
+          color: #374151;
+        }
+        [data-theme="dark"] .sch-filter-label { color: rgba(255,255,255,0.4); }
       `}</style>
 
       {/* ════════════════════════════
@@ -300,17 +316,17 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           <h2 style={{ margin:0, fontSize:'18px', fontWeight:700, color:'var(--theme-text)' }}>
             {MONTHS[month]} {year}
           </h2>
-          <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
-            {/* Today — orange only when not on current month */}
+          <div style={{ display:'flex', gap:'4px', alignItems:'center' }}>
+            {/* Today: grey when on current month, orange when navigated away */}
             <button
               onClick={goToday}
               className={isCurrentMonth ? 'cal-btn' : 'roster-btn'}
               style={{ padding:'5px 14px', fontSize:'13px' }}
             >
-              Today
+              {isCurrentMonth ? 'Today' : 'View Today'}
             </button>
-            <button onClick={prevMonth} className="cal-btn">‹</button>
-            <button onClick={nextMonth} className="cal-btn">›</button>
+            <button onClick={prevMonth} className="cal-btn" style={{ padding:'5px 10px' }}>‹</button>
+            <button onClick={nextMonth} className="cal-btn" style={{ padding:'5px 10px' }}>›</button>
           </div>
         </div>
 
@@ -320,7 +336,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
             <div key={d} style={{
               padding:'6px 4px', textAlign:'center',
               fontSize:'11px', fontWeight:600, textTransform:'uppercase', letterSpacing:'.5px',
-              color:'var(--theme-text)', opacity:.4,
+              color:'var(--theme-text)', opacity:.35,
             }}>
               {d}
             </div>
@@ -334,16 +350,12 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           background:'var(--theme-elevation-200)',
           borderRadius:'var(--style-radius-m,8px)',
           overflow:'hidden',
-          border:'1px solid var(--theme-elevation-200)',
         }}>
           {grid.map((dateStr, i) => {
             if (!dateStr) {
               return (
-                <div
-                  key={`e${i}`}
-                  className="cal-cell"
-                  style={{ background:'var(--theme-elevation-0)' }}
-                />
+                <div key={`e${i}`} className="cal-cell"
+                  style={{ background:'var(--theme-elevation-0)' }} />
               )
             }
 
@@ -360,32 +372,27 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                 className="cal-cell"
                 onClick={() => hasEvents && setSelectedDay(dateStr)}
                 style={{
-                  background: isToday
-                    ? 'rgba(249,115,22,0.07)'
-                    : 'var(--theme-elevation-0)',
+                  background: isToday ? 'rgba(249,115,22,0.07)' : 'var(--theme-elevation-0)',
                   cursor: hasEvents ? 'pointer' : 'default',
-                  // Orange inset border for today — no outline
-                  boxShadow: isToday ? 'inset 0 0 0 2px rgba(249,115,22,0.55)' : 'none',
+                  boxShadow: isToday ? 'inset 0 0 0 2px rgba(249,115,22,0.45)' : 'none',
                   transition: 'background .12s',
                 }}
                 onMouseEnter={e => { if (hasEvents) (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-100)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? 'rgba(249,115,22,0.07)' : 'var(--theme-elevation-0)' }}
               >
-                {/* Date number */}
                 <div style={{
                   fontSize:'12px', fontWeight: isToday ? 700 : 400, marginBottom:'3px',
-                  color: isToday ? '#fb923c' : 'var(--theme-text)',
+                  color: isToday ? '#f97316' : 'var(--theme-text)',
                 }}>
                   {dayNum}
                 </div>
 
-                {/* Desktop: orange-tinted pills */}
+                {/* Desktop: orange-bg pill, dark grey text */}
                 {visible.map(s => (
-                  <div key={s.id} className="cal-pill" style={{
+                  <div key={s.id} className="cal-pill cal-pill-text" style={{
                     fontSize:'10px', lineHeight:1.3,
-                    background:'rgba(249,115,22,0.1)',
-                    color:'#fb923c',
-                    borderRadius:'var(--style-radius-s,4px)',
+                    background:'rgba(249,115,22,0.12)',
+                    borderRadius:'var(--style-radius-s,3px)',
                     padding:'2px 5px', marginBottom:'2px',
                     whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
                   }}>
@@ -393,7 +400,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                   </div>
                 ))}
                 {overflow > 0 && (
-                  <div className="cal-pill" style={{ fontSize:'10px', color:'var(--theme-text)', opacity:.45, paddingLeft:'2px' }}>
+                  <div className="cal-pill" style={{ fontSize:'10px', color:'var(--theme-text)', opacity:.4, paddingLeft:'2px' }}>
                     +{overflow} more
                   </div>
                 )}
@@ -402,10 +409,9 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                 {hasEvents && (
                   <div className="cal-dot" style={{
                     alignItems:'center', justifyContent:'center',
-                    marginTop:'2px',
-                    width:'18px', height:'18px', borderRadius:'50%',
-                    background:'rgba(249,115,22,0.2)',
-                    fontSize:'10px', fontWeight:700, color:'#fb923c',
+                    marginTop:'2px', width:'18px', height:'18px', borderRadius:'50%',
+                    background:'rgba(249,115,22,0.15)',
+                    fontSize:'10px', fontWeight:700, color:'#f97316',
                   }}>
                     {dayItems.length}
                   </div>
@@ -415,7 +421,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           })}
         </div>
 
-        <p style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.35, margin:'8px 0 0' }}>
+        <p style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.3, margin:'8px 0 0' }}>
           Click any day with sessions to view details.
         </p>
       </div>
@@ -427,35 +433,29 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
 
         {/* Filter dropdown */}
         <div style={{ marginBottom:'20px' }}>
-          <label style={{
-            display:'block', fontSize:'11px', fontWeight:600,
-            textTransform:'uppercase', letterSpacing:'.5px',
-            color:'var(--theme-text)', opacity:.5, marginBottom:'6px',
-          }}>
-            View Course Schedules
-          </label>
+          <label className="sch-filter-label">View Course Schedules</label>
           <select
             value={course}
             onChange={e => { setCourse(e.target.value); setPage(1) }}
             style={{
               background:'var(--theme-elevation-100)',
-              border:'1px solid var(--theme-elevation-300)',
+              border:'none',
               borderRadius:'var(--style-radius-s,4px)',
               color:'var(--theme-text)',
               padding:'8px 12px', fontSize:'14px',
-              minWidth:'300px', maxWidth:'100%', cursor:'pointer',
+              minWidth:'280px', maxWidth:'100%', cursor:'pointer',
             }}
           >
-            <option value="all">All Schedules ({schedules.length})</option>
-            {courses.map(([title, count]) => (
-              <option key={title} value={title}>{title} ({count})</option>
+            <option value="all">All Schedules</option>
+            {courses.map(title => (
+              <option key={title} value={title}>{title}</option>
             ))}
           </select>
         </div>
 
         {/* Results count + Print */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px', flexWrap:'wrap', gap:'8px' }}>
-          <span style={{ fontSize:'13px', color:'var(--theme-text)', opacity:.5 }}>
+          <span className="sch-meta">
             {filtered.length} schedule{filtered.length!==1?'s':''}
             {course!=='all' && ` for ${course}`}
           </span>
@@ -466,15 +466,15 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
 
         {/* Schedule table */}
         {filtered.length === 0 ? (
-          <p style={{ fontSize:'14px', color:'var(--theme-text)', opacity:.5 }}>No schedules found.</p>
+          <p style={{ fontSize:'14px', color:'var(--theme-text)', opacity:.45 }}>No schedules found.</p>
         ) : (
           <>
-            <div style={{ overflowX:'auto', borderRadius:'var(--style-radius-m,8px)', border:'1px solid var(--theme-elevation-200)' }}>
+            <div style={{ overflowX:'auto', borderRadius:'var(--style-radius-m,8px)', overflow:'hidden' }}>
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{ background:'var(--theme-elevation-100)' }}>
                     {['Course','Session Label','Date(s)','Time(s) ET','Seats','Status'].map(h => (
-                      <th key={h} style={thSt}>{h}</th>
+                      <th key={h} className="sch-th">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -487,44 +487,41 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                     }).filter(Boolean) as string[]
 
                     return (
-                      <tr
-                        key={s.id}
-                        style={{ background:'var(--theme-elevation-0)', transition:'background .1s' }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-100)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-0)'}
-                      >
-                        <td style={tdSt}>
+                      <tr key={s.id} className="sch-row">
+                        <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px' }}>
                           <Link
                             href={`/admin/collections/course-schedules/${s.id}`}
-                            style={{ color:'#fb923c', fontWeight:500, textDecoration:'none' }}
+                            style={{ color:'var(--theme-text)', fontWeight:500, textDecoration:'none' }}
                           >
                             {s.courseTitle}
                           </Link>
                         </td>
-                        <td style={{ ...tdSt, opacity:.7 }}>{s.displayLabel ?? '—'}</td>
-                        <td style={tdSt}>
+                        <td style={{ padding:'10px 12px', color:'var(--theme-text)', opacity:.6, verticalAlign:'top', fontSize:'13px' }}>
+                          {s.displayLabel ?? '—'}
+                        </td>
+                        <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px' }}>
                           {dates.length===0
-                            ? <span style={{ opacity:.4 }}>—</span>
+                            ? <span style={{ opacity:.35 }}>—</span>
                             : dates.map((d,i) => <div key={i}>{d}</div>)
                           }
                         </td>
-                        <td style={tdSt}>
+                        <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px' }}>
                           {times.length===0
-                            ? <span style={{ opacity:.4 }}>—</span>
+                            ? <span style={{ opacity:.35 }}>—</span>
                             : times.map((t,i) => <div key={i}>{t}</div>)
                           }
                         </td>
-                        <td style={{ ...tdSt, whiteSpace:'nowrap' }}>
+                        <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px', whiteSpace:'nowrap' }}>
                           {s.seatsBooked} / {s.maxSeats}
                         </td>
-                        <td style={tdSt}>
+                        <td style={{ padding:'10px 12px', verticalAlign:'top', fontSize:'13px' }}>
                           <span style={{
                             display:'inline-block', padding:'2px 8px',
                             borderRadius:'var(--style-radius-s,4px)',
                             fontSize:'11px', fontWeight:600,
-                            background: s.isActive ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,.06)',
-                            color:       s.isActive ? '#fb923c'             : 'var(--theme-text)',
-                            opacity:     s.isActive ? 1 : .45,
+                            background: s.isActive ? 'rgba(249,115,22,0.1)' : 'rgba(128,128,128,0.12)',
+                            color:       s.isActive ? '#f97316'             : 'var(--theme-text)',
+                            opacity:     s.isActive ? 1 : .5,
                           }}>
                             {s.isActive ? 'Active' : 'Inactive'}
                           </span>
@@ -538,7 +535,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div style={{ display:'flex', gap:'6px', alignItems:'center', marginTop:'20px', flexWrap:'wrap' }}>
+              <div style={{ display:'flex', gap:'4px', alignItems:'center', marginTop:'20px', flexWrap:'wrap' }}>
                 <button disabled={page===1} onClick={() => setPage(p=>p-1)} className="cal-btn">
                   ‹ Prev
                 </button>
@@ -546,11 +543,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className="cal-btn"
-                    style={{
-                      background:  p===page ? 'var(--theme-elevation-300)' : undefined,
-                      fontWeight:  p===page ? 700 : 500,
-                    }}
+                    className={`cal-btn${p===page?' cal-btn-current':''}`}
                   >
                     {p}
                   </button>
@@ -564,7 +557,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         )}
       </div>
 
-      {/* ── Day detail modal ── */}
+      {/* Day detail modal */}
       {selectedDay && (
         <DayModal
           dateStr={selectedDay}

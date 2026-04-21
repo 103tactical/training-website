@@ -14,13 +14,17 @@ interface Props {
 }
 
 const RED     = '#b91c1c'
-const MUTED   = 'rgba(255,255,255,0.25)'
-const CARD_BG = 'var(--theme-elevation-100, #1a1a1a)'
+const MUTED   = 'var(--theme-elevation-500, #888)'
+const CARD_BG = 'var(--theme-elevation-100)'
 
 const tooltipStyle = {
-  contentStyle: { background: '#1f1f1f', border: '1px solid #444', borderRadius: 6, fontSize: 12 },
-  labelStyle:   { color: '#aaa' },
-  itemStyle:    { color: '#fff' },
+  contentStyle: {
+    background: 'var(--theme-elevation-200)',
+    border: '1px solid var(--theme-elevation-400)',
+    borderRadius: 6, fontSize: 12,
+  },
+  labelStyle: { color: 'var(--theme-elevation-600)' },
+  itemStyle:  { color: 'var(--theme-text)' },
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -40,7 +44,7 @@ export default function DashboardCharts({ revenueByMonth, bookingsByCourse }: Pr
         <SectionTitle>Revenue by Month — Last 12 Months</SectionTitle>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={revenueByMonth} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.07)" />
+            <CartesianGrid vertical={false} stroke="var(--theme-elevation-200)" />
             <XAxis dataKey="month" tick={{ fontSize: 10, fill: MUTED }} axisLine={false} tickLine={false} />
             <YAxis
               tickFormatter={(v: number) => `$${v >= 100000 ? `${(v/100000).toFixed(0)}k` : (v/100).toFixed(0)}`}
@@ -72,7 +76,7 @@ export default function DashboardCharts({ revenueByMonth, bookingsByCourse }: Pr
             layout="vertical"
             margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
           >
-            <CartesianGrid horizontal={false} stroke="rgba(255,255,255,0.07)" />
+            <CartesianGrid horizontal={false} stroke="var(--theme-elevation-200)" />
             <XAxis type="number" tick={{ fontSize: 10, fill: MUTED }} axisLine={false} tickLine={false} allowDecimals={false} />
             <YAxis
               dataKey="course"
