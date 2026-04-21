@@ -193,7 +193,7 @@ export async function findPendingBookingByToken(
   token: string,
 ): Promise<PendingBooking | null> {
   const res = await fetchPayloadAuth<{ docs: PendingBooking[] }>(
-    `/pending-bookings?where[token][equals]=${encodeURIComponent(token)}&limit=1`
+    `/pending-bookings?where[token][equals]=${encodeURIComponent(token)}&depth=0&limit=1`
   );
   return res.docs[0] ?? null;
 }

@@ -186,7 +186,12 @@ async function handlePaymentUpdated(event: Record<string, any>) {
 
   try {
     // ── Resolve the CourseSchedule ──────────────────────────────────────────
-    const schedule = await getCourseScheduleById(String(pending.courseSchedule));
+    // courseSchedule may be a populated object or a plain ID depending on depth
+    const scheduleId =
+      pending.courseSchedule !== null && typeof pending.courseSchedule === "object"
+        ? (pending.courseSchedule as { id: number }).id
+        : pending.courseSchedule;
+    const schedule = await getCourseScheduleById(String(scheduleId));
     const course = schedule.course as Course;
     const courseId = String(course?.id ?? "");
     if (!courseId) {
@@ -236,7 +241,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     // Use pending.email (the enrollment email the admin entered) rather than
     // buyerEmail (which may differ if the payer used a different address at
     // Square checkout) so the lookup matches the stored attendee row.
-    await markPrivateGroupAttendeePaid(String(pending.email), String(pending.courseSchedule));
+    await markPrivateGroupAttendeePaid(String(pending.email), String(scheduleId));
 
     console.log(
       `[webhook] Booking created — pendingId=${pending.id} attendee=${attendee.id} order=${orderId}`,
