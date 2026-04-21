@@ -324,8 +324,8 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
             >
               {isCurrentMonth ? 'Today' : 'View Today'}
             </button>
-            <button onClick={prevMonth} className="cal-btn" style={{ padding:'5px 10px' }}>‹</button>
-            <button onClick={nextMonth} className="cal-btn" style={{ padding:'5px 10px' }}>›</button>
+            <button onClick={prevMonth} className="cal-btn" style={{ padding:'2px 10px', fontSize:'22px', lineHeight:1 }}>‹</button>
+            <button onClick={nextMonth} className="cal-btn" style={{ padding:'2px 10px', fontSize:'22px', lineHeight:1 }}>›</button>
           </div>
         </div>
 
@@ -449,7 +449,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
               border:'none',
               borderRadius:'var(--style-radius-s,4px)',
               color:'var(--theme-text)',
-              padding:'8px 12px', fontSize:'14px',
+              padding:'8px 36px 8px 12px', fontSize:'14px',
               minWidth:'280px', maxWidth:'100%', cursor:'pointer',
             }}
           >
