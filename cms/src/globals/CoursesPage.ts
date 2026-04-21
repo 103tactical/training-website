@@ -6,6 +6,7 @@ export const CoursesPage: GlobalConfig = {
   admin: {
     group: "Pages",
     description: "Manage content for the Courses page.",
+    hidden: true,
   },
   access: {
     read: () => true,

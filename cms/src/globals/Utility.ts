@@ -8,6 +8,7 @@ export const Utility: GlobalConfig = {
   },
   admin: {
     description: "Miscellaneous site behaviour controls.",
+    hidden: true,
   },
   fields: [
     {

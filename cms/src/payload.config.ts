@@ -47,11 +47,13 @@ export default buildConfig({
       afterNavLinks: [
         './components/CourseOverviewNav',
         './components/reporting/AccountingNav',
+        './components/PagesNav',
+        './components/DataNav',
       ],
       views: {
         scheduleOverview: {
           Component: './components/schedule-overview/ScheduleOverviewPage',
-          path: '/schedule-overview',
+          path: '/schedule-dashboard',
         },
         reportingDashboard: {
           Component: './components/reporting/Dashboard',

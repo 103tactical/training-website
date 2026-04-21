@@ -9,6 +9,7 @@ export const ContactSettings: GlobalConfig = {
   admin: {
     group: "Pages",
     description: "Configure the contact form topics and other contact page settings.",
+    hidden: true,
   },
   fields: [
     {

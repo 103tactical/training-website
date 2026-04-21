@@ -9,6 +9,7 @@ export const HomePage: GlobalConfig = {
   admin: {
     group: "Pages",
     description: "Manage page-specific content.",
+    hidden: true,
   },
   fields: [
     // ── Website Headline ───────────────────────────────────────────────────

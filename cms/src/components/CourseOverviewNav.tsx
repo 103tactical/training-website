@@ -5,9 +5,9 @@ import { NavGroup } from '@payloadcms/ui'
 
 export default function CourseOverviewNav() {
   return (
-    <NavGroup label="Course Tools">
-      <Link href="/admin/schedule-overview" className="nav__link">
-        <span className="nav__link-label">Schedule Overview</span>
+    <NavGroup label="Course Management">
+      <Link href="/admin/schedule-dashboard" className="nav__link">
+        <span className="nav__link-label">Schedule Dashboard</span>
       </Link>
     </NavGroup>
   )

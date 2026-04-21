@@ -8,6 +8,7 @@ export const SiteSettings: GlobalConfig = {
   },
   admin: {
     description: "Global site configuration: navigation, footer content, and contact info.",
+    hidden: true,
   },
   fields: [
     {
