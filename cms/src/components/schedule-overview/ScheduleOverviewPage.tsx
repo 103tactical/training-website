@@ -1,5 +1,6 @@
 import React from 'react'
 import { DefaultTemplate } from '@payloadcms/next/templates'
+import { SetStepNav } from '@payloadcms/ui'
 import ScheduleCalendarClient from './ScheduleCalendarClient'
 
 // ── Serialisable types shared with the client component ──────────────────────
@@ -71,6 +72,7 @@ export default async function ScheduleOverviewPage(props: any) {
       user={initPageResult.req.user ?? undefined}
       visibleEntities={initPageResult.visibleEntities}
     >
+      <SetStepNav nav={[]} />
       <div style={{
         paddingLeft:   'var(--gutter-h, 24px)',
         paddingRight:  'var(--gutter-h, 24px)',
@@ -82,7 +84,7 @@ export default async function ScheduleOverviewPage(props: any) {
           color: 'var(--theme-text)',
           margin: '0 0 28px',
         }}>
-          Dashboard
+          Course Calendar
         </h1>
         <ScheduleCalendarClient schedules={schedules} />
       </div>

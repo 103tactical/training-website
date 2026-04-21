@@ -1,5 +1,6 @@
 import React from 'react'
 import { DefaultTemplate } from '@payloadcms/next/templates'
+import { SetStepNav } from '@payloadcms/ui'
 import DashboardCharts from './DashboardCharts'
 import type { RevenueMonth, CourseStat } from './DashboardCharts'
 import { formatCents, formatDate, getCourseName, getAttendeeName } from './shared'
@@ -228,9 +229,10 @@ export default async function Dashboard(props: any) {
       user={initPageResult.req.user ?? undefined}
       visibleEntities={initPageResult.visibleEntities}
     >
+    <SetStepNav nav={[]} />
     <div style={wrap}>
       <div style={{ marginBottom: '28px', paddingTop: '8px' }}>
-        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: 700 }}>Accounting & Reports</h1>
+        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: 700 }}>Accounting Overview</h1>
         <p style={{ margin: 0, color: 'var(--theme-elevation-500, #888)', fontSize: '14px' }}>
           Revenue, bookings, and session performance overview.
         </p>

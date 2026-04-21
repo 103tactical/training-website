@@ -38,7 +38,7 @@ export default function CustomNav() {
         <nav className="nav__wrap">
 
           <NavGroup label="Course Management">
-            <NavLink href="/admin/schedule-dashboard"                  label="Dashboard" />
+            <NavLink href="/admin/schedule-dashboard"                  label="Course Calendar" />
             <NavLink href="/admin/collections/courses"                 label="Courses" />
             <NavLink href="/admin/collections/course-groups"           label="Course Groups" />
             <NavLink href="/admin/collections/course-schedules"        label="Course Schedules" />
@@ -49,7 +49,7 @@ export default function CustomNav() {
           </NavGroup>
 
           <NavGroup label="Accounting & Reports">
-            <NavLink href="/admin/reporting/dashboard"  label="Dashboard" />
+            <NavLink href="/admin/reporting/dashboard"  label="Overview" />
             <NavLink href="/admin/reporting/revenue"    label="Revenue Report" />
             <NavLink href="/admin/reporting/bookings"   label="Bookings Report" />
             <NavLink href="/admin/reporting/refunds"    label="Refunds & Cancellations" />
