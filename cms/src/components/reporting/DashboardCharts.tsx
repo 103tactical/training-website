@@ -40,7 +40,7 @@ export default function DashboardCharts({ revenueByMonth, bookingsByCourse }: Pr
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '28px' }}>
 
       {/* Revenue by Month */}
-      <div style={{ background: CARD_BG, borderRadius: '8px', padding: '20px 24px' }}>
+      <div style={{ background: CARD_BG, borderRadius: '8px', padding: '20px 24px', outline: 'none' }}>
         <SectionTitle>Revenue by Month — Last 12 Months</SectionTitle>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={revenueByMonth} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -68,7 +68,7 @@ export default function DashboardCharts({ revenueByMonth, bookingsByCourse }: Pr
       </div>
 
       {/* Bookings by Course */}
-      <div style={{ background: CARD_BG, borderRadius: '8px', padding: '20px 24px' }}>
+      <div style={{ background: CARD_BG, borderRadius: '8px', padding: '20px 24px', outline: 'none' }}>
         <SectionTitle>Bookings by Course — All Time</SectionTitle>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart

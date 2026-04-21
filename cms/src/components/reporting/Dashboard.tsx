@@ -310,7 +310,11 @@ export default async function Dashboard(props: any) {
                 const max    = s.maxSeats ?? 0
                 return (
                   <tr key={i} className="rpt-row">
-                    <td style={tdStyle}>{course}</td>
+                    <td style={tdStyle}>
+                      <a href={`/admin/collections/course-schedules/${s.id}`} style={{ color: 'var(--theme-text)', textDecoration: 'underline' }}>
+                        {course}
+                      </a>
+                    </td>
                     <td style={tdStyle}>{label}</td>
                     <td style={tdStyle}>{firstDate}</td>
                     <td style={{ ...tdStyle, minWidth: '180px' }}>
