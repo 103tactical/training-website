@@ -43,6 +43,7 @@ function formatDate(iso?: string): string {
     month: "long",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -52,6 +53,7 @@ function formatTime(iso?: string): string {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: "America/New_York",
   });
 }
 
@@ -76,6 +78,14 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const instructor = schedule.instructor as Instructor | undefined;
   const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0);
 
+  const formattedSessions = (schedule.sessions ?? []).map((s: any) => ({
+    id: s.id,
+    dateText: formatDate(s.date),
+    startTimeText: formatTime(s.startTime),
+    endTimeText: formatTime(s.endTime),
+    hasTime: !!(s.startTime || s.endTime),
+  }));
+
   return json({
     scheduleId,
     courseName: course?.title ?? "Course",
@@ -83,7 +93,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     price: course?.price ?? 0,
     durationHours: course?.durationHours,
     durationDays: course?.durationDays,
-    sessions: schedule.sessions ?? [],
+    sessions: formattedSessions,
     instructorName: instructor?.name ?? null,
     displayLabel: schedule.displayLabel ?? schedule.label ?? null,
     maxSeats: schedule.maxSeats,
@@ -282,12 +292,12 @@ export default function BookSessionPage() {
                       {sessions.length > 1 && (
                         <span className="booking-summary__day-num">Day {i + 1}</span>
                       )}
-                      <span className="booking-summary__date-text">{formatDate(s.date)}</span>
-                      {(s.startTime || s.endTime) && (
+                      <span className="booking-summary__date-text">{s.dateText}</span>
+                      {s.hasTime && (
                         <span className="booking-summary__time">
-                          {s.startTime && formatTime(s.startTime)}
-                          {s.startTime && s.endTime && " – "}
-                          {s.endTime && formatTime(s.endTime)}
+                          {s.startTimeText}
+                          {s.startTimeText && s.endTimeText && " – "}
+                          {s.endTimeText}
                         </span>
                       )}
                     </div>
