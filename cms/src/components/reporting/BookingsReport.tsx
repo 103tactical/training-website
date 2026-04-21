@@ -87,7 +87,6 @@ export default async function BookingsReport(props: any) {
     textAlign: 'left', padding: '8px 12px', fontSize: '11px', fontWeight: 600,
     textTransform: 'uppercase', letterSpacing: '0.06em',
     color: 'var(--theme-elevation-500, #888)',
-    borderBottom: '1px solid var(--theme-elevation-200, #333)',
   }
   const tdStyle: React.CSSProperties = {
     padding: '10px 12px', borderBottom: '1px solid var(--theme-elevation-100, #222)',

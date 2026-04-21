@@ -208,7 +208,6 @@ export default async function Dashboard(props: any) {
     textTransform: 'uppercase',
     letterSpacing: '0.06em',
     color: 'var(--theme-elevation-500, #888)',
-    borderBottom: '1px solid var(--theme-elevation-200, #333)',
   }
 
   const tdStyle: React.CSSProperties = {

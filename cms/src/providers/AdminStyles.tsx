@@ -79,8 +79,8 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
         }
 
         /* ── Reporting / Schedule table rows — alternating, theme-aware ──────── */
-        .rpt-row:nth-child(odd)  { background: transparent; }
-        .rpt-row:nth-child(even) { background: var(--theme-elevation-0); }
+        .rpt-row:nth-child(odd)  { background: var(--theme-elevation-0); }
+        .rpt-row:nth-child(even) { background: var(--theme-elevation-100); }
         .rpt-row:hover           { background: var(--theme-elevation-200) !important; transition: background .1s; }
 
         /* Period / filter tab pills used in report pages */

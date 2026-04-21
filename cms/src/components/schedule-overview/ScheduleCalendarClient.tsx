@@ -288,7 +288,6 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           padding: 8px 12px; text-align: left;
           font-size: 11px; font-weight: 600;
           text-transform: uppercase; letter-spacing: .5px; white-space: nowrap;
-          border-bottom: 1px solid var(--theme-elevation-200);
           color: #374151;
         }
         [data-theme="dark"] .sch-th { color: rgba(255,255,255,0.4); }
@@ -348,6 +347,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           display:'grid', gridTemplateColumns:'repeat(7,1fr)',
           gap:'1px',
           background:'var(--theme-elevation-200)',
+          border:'1px solid var(--theme-elevation-200)',
           borderRadius:'var(--style-radius-m,8px)',
           overflow:'hidden',
         }}>
@@ -372,17 +372,16 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                 className="cal-cell"
                 onClick={() => hasEvents && setSelectedDay(dateStr)}
                 style={{
-                  background: isToday ? 'rgba(249,115,22,0.07)' : 'var(--theme-elevation-0)',
+                  background: isToday ? 'var(--theme-elevation-100)' : 'var(--theme-elevation-0)',
                   cursor: hasEvents ? 'pointer' : 'default',
-                  boxShadow: isToday ? 'inset 0 0 0 2px rgba(249,115,22,0.45)' : 'none',
                   transition: 'background .12s',
                 }}
-                onMouseEnter={e => { if (hasEvents) (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-100)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? 'rgba(249,115,22,0.07)' : 'var(--theme-elevation-0)' }}
+                onMouseEnter={e => { if (hasEvents) (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-200)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? 'var(--theme-elevation-100)' : 'var(--theme-elevation-0)' }}
               >
                 <div style={{
                   fontSize:'12px', fontWeight: isToday ? 700 : 400, marginBottom:'3px',
-                  color: isToday ? '#f97316' : 'var(--theme-text)',
+                  color: 'var(--theme-text)',
                 }}>
                   {dayNum}
                 </div>
