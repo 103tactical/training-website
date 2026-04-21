@@ -132,9 +132,9 @@ export default async function BookingsReport(props: any) {
         {PERIODS.map(p => (
           <a key={p} href={`?period=${p}&status=${status}`} style={{
             ...tabBase,
-            background: p === 'all-time' ? '#ea580c' : p === period ? '#b91c1c' : 'var(--theme-elevation-100, #1a1a1a)',
-            color: p === 'all-time' || p === period ? '#fff' : 'var(--theme-text)',
-            fontWeight: p === 'all-time' || p === period ? 600 : 400,
+            background: p === period ? '#ea580c' : 'var(--theme-elevation-100)',
+            color: p === period ? '#fff' : 'var(--theme-text)',
+            fontWeight: p === period ? 600 : 400,
           }}>
             {PERIOD_LABELS[p]}
           </a>
