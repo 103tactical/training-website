@@ -1,21 +1,53 @@
-# 103 Tactical – Public site (Remix + Vite, SSR)
+# 103 Tactical Training — Web Platform
 
-React/Remix app with server-side rendering. Deploy to DigitalOcean App Platform from the `web` directory.
+Monorepo containing the public website and CMS admin panel.
 
-## Commands
+```
+web/
+├── app/          Remix public website (SSR)
+└── cms/          Payload CMS admin panel (Next.js)
+```
 
-- **`npm run dev`** – Start dev server (Vite + Remix).
-- **`npm run build`** – Production build (output in `build/`).
-- **`npm run start`** – Run production server (after build).
+Both services are deployed independently on **Render**.
 
-## SEO metadata
+---
 
-Default meta (title, description, OG, Twitter) comes from `app/data/site-metadata.json`. This file is a copy of the project’s `content/site-metadata.json` so the app is self-contained for deployment. Later, this can be driven by Payload CMS.
+## Website (`app/`)
 
-## Deployment (DigitalOcean)
+**Stack:** Remix + Vite, server-side rendered, Node.js
 
-See **`docs/DIGITALOCEAN-SETUP.md`** for:
+**Dev commands:**
+```bash
+npm run dev      # start dev server on http://localhost:3000
+npm run build    # production build
+npm run start    # run production server (after build)
+```
 
-- Creating the PostgreSQL database (for Payload).
-- Creating the App (source directory: `web`, build: `npm ci && npm run build`, run: `npm run start`).
-- Environment variables and credentials.
+**Environment:** Copy `.env` and fill in values. See `ENVIRONMENT-VARIABLES.txt` at the project root for a description of every variable.
+
+---
+
+## CMS (`cms/`)
+
+**Stack:** Payload CMS v3, Next.js, PostgreSQL
+
+**Dev commands** (run from `cms/`):
+```bash
+npm run dev      # start CMS dev server on http://localhost:3001
+npm run build    # production build
+npm run start    # run production server (after build)
+```
+
+**Environment:** Copy `cms/.env` and fill in values. See `ENVIRONMENT-VARIABLES.txt` at the project root for a description of every variable.
+
+---
+
+## Documentation
+
+All go-live, deployment, and configuration documentation lives at the project root:
+
+| File | Purpose |
+|------|---------|
+| `GO-LIVE-CHECKLIST.txt` | Step-by-step launch checklist with completion status |
+| `ENVIRONMENT-VARIABLES.txt` | Description of every env var for both services |
+| `EMAIL-SETUP.txt` | Every email address used by the platform and what it does |

@@ -38,14 +38,15 @@ export default function CustomNav() {
         <nav className="nav__wrap">
 
           <NavGroup label="Course Management">
-            <NavLink href="/admin/schedule-dashboard"                  label="Course Calendar" />
-            <NavLink href="/admin/collections/courses"                 label="Courses" />
-            <NavLink href="/admin/collections/course-groups"           label="Course Groups" />
-            <NavLink href="/admin/collections/course-schedules"        label="Course Schedules" />
-            <NavLink href="/admin/collections/pending-bookings"        label="Pending Bookings" />
-            <NavLink href="/admin/collections/bookings"                label="Bookings" />
-            <NavLink href="/admin/collections/attendees"               label="Attendees" />
-            <NavLink href="/admin/collections/instructors"             label="Instructors" />
+            <NavLink href="/admin/schedule-dashboard"                          label="Course Calendar" />
+            <NavLink href="/admin/collections/courses"                         label="Courses" />
+            <NavLink href="/admin/collections/course-groups"                   label="Course Groups" />
+            <NavLink href="/admin/collections/course-schedules"                label="Course Schedules" />
+            <NavLink href="/admin/collections/private-group-bookings"          label="Private Group Bookings" />
+            <NavLink href="/admin/collections/pending-bookings"                label="Pending Bookings" />
+            <NavLink href="/admin/collections/bookings"                        label="Bookings" />
+            <NavLink href="/admin/collections/attendees"                       label="Attendees" />
+            <NavLink href="/admin/collections/instructors"                     label="Instructors" />
           </NavGroup>
 
           <NavGroup label="Accounting & Reports">

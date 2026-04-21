@@ -16,6 +16,7 @@ import { Attendees } from './collections/Attendees'
 import { Bookings } from './collections/Bookings'
 import { Instructors } from './collections/Instructors'
 import { PendingBookings } from './collections/PendingBookings'
+import { PrivateGroupBookings } from './collections/PrivateGroupBookings'
 import { SiteSettings } from './globals/SiteSettings'
 import { HomePage } from './globals/HomePage'
 import { Utility } from './globals/Utility'
@@ -72,7 +73,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Users, Media, Courses, Badges, ContactSubmissions, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors, PendingBookings],
+  collections: [Users, Media, Courses, Badges, ContactSubmissions, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors, PendingBookings, PrivateGroupBookings],
   globals: [HomePage, CoursesPage, ApplicationsPage, StorePage, SiteSettings, ContactSettings, Utility],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
