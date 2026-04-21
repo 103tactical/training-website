@@ -39,6 +39,7 @@ import * as migration_20260414_bookings_transfer_history from './20260414_bookin
 import * as migration_20260304_bookings_square_fields from './20260304_bookings_square_fields';
 import * as migration_20260414_pending_bookings from './20260414_pending_bookings';
 import * as migration_20260414_courses_enrollment_forms from './20260414_courses_enrollment_forms';
+import * as migration_20260421_private_group_bookings from './20260421_private_group_bookings';
 
 export const migrations = [
   {
@@ -245,5 +246,10 @@ export const migrations = [
     up: migration_20260414_courses_enrollment_forms.up,
     down: migration_20260414_courses_enrollment_forms.down,
     name: '20260414_courses_enrollment_forms'
+  },
+  {
+    up: migration_20260421_private_group_bookings.up,
+    down: migration_20260421_private_group_bookings.down,
+    name: '20260421_private_group_bookings'
   },
 ];
