@@ -218,7 +218,7 @@ export const PendingBookings: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     group: 'Course Management',
-    defaultColumns: ['email', 'firstName', 'lastName', 'courseSchedule', 'status', 'createdAt'],
+    defaultColumns: ['email', 'courseSchedule', 'status', 'phone', 'updatedAt'],
     description:
       'Short-lived checkout sessions created when a visitor starts the booking flow. ' +
       'Completed once payment is confirmed. ' +
