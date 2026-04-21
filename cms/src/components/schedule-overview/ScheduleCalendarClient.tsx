@@ -15,40 +15,32 @@ const PAGE_SIZE = 20
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
-/** "2026-04-10T00:00:00Z" → "Apr 10, 2026" */
 function fmtDateShort(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
   })
 }
 
-/** "2026-04-10T00:00:00Z" → "Friday, April 10, 2026" */
 function fmtDateLong(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
   })
 }
 
-/** ISO datetime → "3:00 PM" (ET) */
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', {
     hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York',
   })
 }
 
-/** Return "YYYY-MM-DD" for a date-type ISO string */
-function toDateKey(iso: string): string {
-  return iso.slice(0, 10)
-}
+function toDateKey(iso: string): string { return iso.slice(0, 10) }
 
-/** First session date string for sorting ("" if none) */
 function firstDate(s: ScheduleItem): string {
   return s.sessions.map(x => x.date ?? '').filter(Boolean).sort()[0] ?? ''
 }
 
 // ── Calendar helpers ──────────────────────────────────────────────────────────
 
-/** Map YYYY-MM-DD → schedules that have a session on that day */
 function buildDateMap(schedules: ScheduleItem[]): Map<string, ScheduleItem[]> {
   const map = new Map<string, ScheduleItem[]>()
   for (const s of schedules) {
@@ -63,48 +55,43 @@ function buildDateMap(schedules: ScheduleItem[]): Map<string, ScheduleItem[]> {
   return map
 }
 
-/** Returns an array of "YYYY-MM-DD" strings (or null for padding cells) */
 function calendarGrid(year: number, month: number): (string | null)[] {
   const firstDow = new Date(Date.UTC(year, month, 1)).getUTCDay()
   const days     = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
   const grid: (string | null)[] = Array(firstDow).fill(null)
   for (let d = 1; d <= days; d++) {
-    grid.push(
-      `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
-    )
+    grid.push(`${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`)
   }
   while (grid.length % 7 !== 0) grid.push(null)
   return grid
 }
 
-/** Today as YYYY-MM-DD in local wall-clock time (for visual highlight only) */
 function todayKey(): string {
   const t = new Date()
-  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`
 }
 
 // ── Print generator ───────────────────────────────────────────────────────────
 
-function escape(s: string): string {
+function esc(s: string): string {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
 
 function generatePrintHTML(items: ScheduleItem[], filterLabel: string): string {
   const printDate = new Date().toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York',
+    month:'long', day:'numeric', year:'numeric', timeZone:'America/New_York',
   })
   const rows = items.map(s => {
     const dates = s.sessions.map(x => x.date ? fmtDateShort(x.date) : '').filter(Boolean)
     const times = s.sessions.map(x => {
       if (!x.startTime && !x.endTime) return null
-      const parts = [x.startTime && fmtTime(x.startTime), x.endTime && fmtTime(x.endTime)].filter(Boolean)
-      return parts.join(' – ')
-    }).filter(Boolean)
+      return [x.startTime && fmtTime(x.startTime), x.endTime && fmtTime(x.endTime)].filter(Boolean).join(' – ')
+    }).filter(Boolean) as string[]
     return `<tr>
-      <td>${escape(s.courseTitle)}</td>
-      <td>${escape(s.displayLabel ?? '—')}</td>
-      <td>${dates.map(escape).join('<br>')}</td>
-      <td>${(times as string[]).map(escape).join('<br>')}</td>
+      <td>${esc(s.courseTitle)}</td>
+      <td>${esc(s.displayLabel ?? '—')}</td>
+      <td>${dates.map(esc).join('<br>')}</td>
+      <td>${times.map(esc).join('<br>')}</td>
       <td>${s.seatsBooked} / ${s.maxSeats}</td>
       <td>${s.isActive ? 'Active' : 'Inactive'}</td>
     </tr>`
@@ -112,7 +99,7 @@ function generatePrintHTML(items: ScheduleItem[], filterLabel: string): string {
 
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
-<title>Course Schedules — ${escape(filterLabel)}</title>
+<title>Course Schedules — ${esc(filterLabel)}</title>
 <style>
   *{box-sizing:border-box}
   body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:20px}
@@ -125,79 +112,81 @@ function generatePrintHTML(items: ScheduleItem[], filterLabel: string): string {
   @page{margin:1.5cm}
 </style></head><body>
 <h1>103 Tactical Training — Course Schedules</h1>
-<p class="meta">Filter: ${escape(filterLabel)} &nbsp;·&nbsp; Printed ${escape(printDate)} &nbsp;·&nbsp; ${items.length} schedule${items.length !== 1 ? 's' : ''}</p>
+<p class="meta">Filter: ${esc(filterLabel)} &nbsp;·&nbsp; Printed ${esc(printDate)} &nbsp;·&nbsp; ${items.length} schedule${items.length!==1?'s':''}</p>
 <table>
   <thead><tr>
     <th>Course</th><th>Session Label</th><th>Date(s)</th>
     <th>Time(s) ET</th><th>Seats (Booked / Total)</th><th>Status</th>
   </tr></thead>
-  <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:#999;">No schedules found.</td></tr>'}</tbody>
+  <tbody>${rows||'<tr><td colspan="6" style="text-align:center;color:#999">No schedules found.</td></tr>'}</tbody>
 </table></body></html>`
 }
 
 // ── Day modal ─────────────────────────────────────────────────────────────────
 
-function DayModal({
-  dateStr, items, onClose,
-}: { dateStr: string; items: ScheduleItem[]; onClose: () => void }) {
+function DayModal({ dateStr, items, onClose }: {
+  dateStr: string; items: ScheduleItem[]; onClose: () => void
+}) {
   return (
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.65)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px',
+        position:'fixed', inset:0, zIndex:9999,
+        background:'rgba(0,0,0,0.65)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        padding:'16px',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: 'var(--theme-elevation-150,#1a1a1a)',
-          border: '1px solid var(--theme-elevation-500,#333)',
-          borderRadius: '10px', padding: '24px',
-          width: '100%', maxWidth: '460px', maxHeight: '80vh', overflowY: 'auto',
+          background:'var(--theme-elevation-0)',
+          borderRadius:'var(--style-radius-m,8px)',
+          padding:'24px',
+          width:'100%', maxWidth:'460px', maxHeight:'80vh', overflowY:'auto',
         }}
       >
-        {/* Header */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'16px' }}>
           <h3 style={{ margin:0, fontSize:'15px', fontWeight:600, color:'var(--theme-text)' }}>
-            {fmtDateLong(dateStr + 'T00:00:00Z')}
+            {fmtDateLong(dateStr+'T00:00:00Z')}
           </h3>
           <button
             onClick={onClose}
-            style={{ background:'none', border:'none', cursor:'pointer', color:'var(--theme-text)', fontSize:'22px', lineHeight:1, padding:'0 0 0 12px' }}
+            style={{
+              background:'none', border:'none', cursor:'pointer',
+              color:'var(--theme-text)', fontSize:'22px', lineHeight:1, padding:'0 0 0 12px',
+            }}
           >×</button>
         </div>
 
-        {/* Sessions */}
         <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
           {items.map(s => {
             const todaySessions = s.sessions.filter(x => x.date?.slice(0,10) === dateStr)
             return (
               <div key={s.id} style={{
-                background:'var(--theme-elevation-200,#222)',
-                borderRadius:'6px', padding:'12px',
+                background:'var(--theme-elevation-100)',
+                borderRadius:'var(--style-radius-s,4px)',
+                padding:'12px',
               }}>
                 <Link
                   href={`/admin/collections/course-schedules/${s.id}`}
-                  style={{ fontWeight:600, fontSize:'13px', color:'var(--theme-text)', textDecoration:'none' }}
+                  style={{ fontWeight:600, fontSize:'13px', color:'#fb923c', textDecoration:'none' }}
                 >
                   {s.courseTitle}
                 </Link>
                 {s.displayLabel && (
-                  <div style={{ fontSize:'12px', color:'var(--theme-elevation-500,#aaa)', marginTop:'2px' }}>
+                  <div style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.6, marginTop:'2px' }}>
                     {s.displayLabel}
                   </div>
                 )}
                 {todaySessions.map((x, i) => (
                   (x.startTime || x.endTime) ? (
-                    <div key={i} style={{ fontSize:'12px', color:'var(--theme-elevation-500,#aaa)', marginTop:'4px' }}>
-                      {[x.startTime && fmtTime(x.startTime), x.endTime && fmtTime(x.endTime)].filter(Boolean).join(' – ')} ET
+                    <div key={i} style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.7, marginTop:'4px' }}>
+                      {[x.startTime&&fmtTime(x.startTime), x.endTime&&fmtTime(x.endTime)].filter(Boolean).join(' – ')} ET
                     </div>
                   ) : null
                 ))}
-                <div style={{ fontSize:'11px', color:'var(--theme-elevation-500,#888)', marginTop:'6px' }}>
+                <div style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.5, marginTop:'6px' }}>
                   {s.seatsBooked} / {s.maxSeats} seats booked
                   {!s.isActive && <span style={{ marginLeft:'8px', color:'#f97316' }}>· Inactive</span>}
                 </div>
@@ -210,39 +199,27 @@ function DayModal({
   )
 }
 
-// ── Shared style constants ────────────────────────────────────────────────────
-
-const btnBase: React.CSSProperties = {
-  background: 'var(--theme-elevation-200,#222)',
-  border: '1px solid var(--theme-elevation-500,#444)',
-  borderRadius: '4px',
-  color: 'var(--theme-text)',
-  padding: '5px 12px',
-  fontSize: '13px',
-  cursor: 'pointer',
-  lineHeight: 1.4,
-}
+// ── Shared table styles ───────────────────────────────────────────────────────
 
 const thSt: React.CSSProperties = {
-  padding: '8px 12px', textAlign: 'left',
-  borderBottom: '1px solid var(--theme-elevation-300,#2a2a2a)',
-  color: 'var(--theme-elevation-500,#888)',
-  fontSize: '11px', textTransform: 'uppercase',
-  letterSpacing: '.5px', fontWeight: 600, whiteSpace: 'nowrap',
+  padding:'8px 12px', textAlign:'left',
+  borderBottom:'1px solid var(--theme-elevation-200)',
+  color:'var(--theme-text)', opacity:.5,
+  fontSize:'11px', textTransform:'uppercase', letterSpacing:'.5px', fontWeight:600, whiteSpace:'nowrap',
 }
 
 const tdSt: React.CSSProperties = {
-  padding: '10px 12px',
-  borderBottom: '1px solid var(--theme-elevation-200,#1e1e1e)',
-  color: 'var(--theme-text)',
-  verticalAlign: 'top',
-  fontSize: '13px',
+  padding:'10px 12px',
+  borderBottom:'1px solid var(--theme-elevation-100)',
+  color:'var(--theme-text)',
+  verticalAlign:'top',
+  fontSize:'13px',
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ScheduleCalendarClient({ schedules }: { schedules: ScheduleItem[] }) {
-  const now = new Date()
+  const now   = new Date()
   const [year,        setYear]        = useState(now.getFullYear())
   const [month,       setMonth]       = useState(now.getMonth())
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
@@ -251,79 +228,99 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
 
   const TODAY = useMemo(() => todayKey(), [])
 
-  // Calendar date → schedules map (all schedules, not filtered)
+  // Is the calendar currently showing today's month?
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
+
   const dateMap = useMemo(() => buildDateMap(schedules), [schedules])
+  const grid    = useMemo(() => calendarGrid(year, month), [year, month])
 
-  // Calendar grid for current month
-  const grid = useMemo(() => calendarGrid(year, month), [year, month])
-
-  // Unique courses for dropdown
   const courses = useMemo(() => {
     const map = new Map<string, number>()
     schedules.forEach(s => map.set(s.courseTitle, (map.get(s.courseTitle) ?? 0) + 1))
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
   }, [schedules])
 
-  // Filtered + sorted schedule list
   const filtered = useMemo(() => {
     const base = course === 'all' ? schedules : schedules.filter(s => s.courseTitle === course)
     return [...base].sort((a, b) => firstDate(a).localeCompare(firstDate(b)))
   }, [schedules, course])
 
-  const totalPages   = Math.ceil(filtered.length / PAGE_SIZE)
-  const pageItems    = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  const filterLabel  = course === 'all' ? 'All Schedules' : course
+  const totalPages  = Math.ceil(filtered.length / PAGE_SIZE)
+  const pageItems   = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE)
+  const filterLabel = course === 'all' ? 'All Schedules' : course
 
-  // Month navigation
-  const prevMonth = () => month === 0  ? (setYear(y => y - 1), setMonth(11)) : setMonth(m => m - 1)
-  const nextMonth = () => month === 11 ? (setYear(y => y + 1), setMonth(0))  : setMonth(m => m + 1)
+  const prevMonth = () => month === 0  ? (setYear(y=>y-1), setMonth(11)) : setMonth(m=>m-1)
+  const nextMonth = () => month === 11 ? (setYear(y=>y+1), setMonth(0))  : setMonth(m=>m+1)
   const goToday   = () => { setYear(now.getFullYear()); setMonth(now.getMonth()) }
 
   const handlePrint = () => {
     const html = generatePrintHTML(filtered, filterLabel)
-    const win = window.open('', '_blank', 'width=960,height=700')
+    const win  = window.open('', '_blank', 'width=960,height=700')
     if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 350) }
   }
 
   return (
     <>
-      {/* ── Responsive styles injected once ── */}
+      {/* ── Scoped styles ── */}
       <style>{`
-        .cal-cell { min-height: 90px; }
+        /* Neutral calendar nav button — mirrors Payload secondary button */
+        .cal-btn {
+          background: var(--theme-elevation-100);
+          border: 1px solid var(--theme-elevation-300);
+          border-radius: var(--style-radius-s, 4px);
+          color: var(--theme-text);
+          padding: 5px 14px;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          line-height: 1.5;
+          transition: background .12s;
+        }
+        .cal-btn:hover { background: var(--theme-elevation-200); }
+        .cal-btn:disabled { opacity: .4; cursor: default; }
+
+        /* Calendar cell responsive behaviour */
+        .cal-cell { min-height: 90px; padding: 6px; }
         .cal-pill { display: block; }
         .cal-dot  { display: none; }
         @media (max-width: 640px) {
-          .cal-cell { min-height: 56px; padding: 4px !important; }
-          .cal-pill { display: none; }
-          .cal-dot  { display: flex; }
+          .cal-cell { min-height: 52px; padding: 4px !important; }
+          .cal-pill { display: none !important; }
+          .cal-dot  { display: flex !important; }
         }
       `}</style>
 
-      {/* ════════════════════════════════════════════
+      {/* ════════════════════════════
           CALENDAR
-      ════════════════════════════════════════════ */}
-      <div style={{ marginBottom: '48px' }}>
+      ════════════════════════════ */}
+      <div style={{ marginBottom:'48px' }}>
 
-        {/* Month header */}
+        {/* Month + nav */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'14px', flexWrap:'wrap', gap:'8px' }}>
           <h2 style={{ margin:0, fontSize:'18px', fontWeight:700, color:'var(--theme-text)' }}>
             {MONTHS[month]} {year}
           </h2>
-          <div style={{ display:'flex', gap:'6px' }}>
-            <button onClick={goToday}   style={btnBase}>Today</button>
-            <button onClick={prevMonth} style={btnBase}>‹</button>
-            <button onClick={nextMonth} style={btnBase}>›</button>
+          <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
+            {/* Today — orange only when not on current month */}
+            <button
+              onClick={goToday}
+              className={isCurrentMonth ? 'cal-btn' : 'roster-btn'}
+              style={{ padding:'5px 14px', fontSize:'13px' }}
+            >
+              Today
+            </button>
+            <button onClick={prevMonth} className="cal-btn">‹</button>
+            <button onClick={nextMonth} className="cal-btn">›</button>
           </div>
         </div>
 
-        {/* Day-of-week header row */}
+        {/* Day-of-week header */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:'1px' }}>
           {DOW.map(d => (
             <div key={d} style={{
               padding:'6px 4px', textAlign:'center',
-              fontSize:'11px', fontWeight:600,
-              textTransform:'uppercase', letterSpacing:'.5px',
-              color:'var(--theme-elevation-500,#888)',
+              fontSize:'11px', fontWeight:600, textTransform:'uppercase', letterSpacing:'.5px',
+              color:'var(--theme-text)', opacity:.4,
             }}>
               {d}
             </div>
@@ -331,10 +328,23 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         </div>
 
         {/* Calendar grid */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'1px', background:'var(--theme-elevation-300,#2a2a2a)', border:'1px solid var(--theme-elevation-300,#2a2a2a)', borderRadius:'6px', overflow:'hidden' }}>
+        <div style={{
+          display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+          gap:'1px',
+          background:'var(--theme-elevation-200)',
+          borderRadius:'var(--style-radius-m,8px)',
+          overflow:'hidden',
+          border:'1px solid var(--theme-elevation-200)',
+        }}>
           {grid.map((dateStr, i) => {
             if (!dateStr) {
-              return <div key={`e${i}`} style={{ background:'var(--theme-elevation-50,#0d0d0d)' }} className="cal-cell" />
+              return (
+                <div
+                  key={`e${i}`}
+                  className="cal-cell"
+                  style={{ background:'var(--theme-elevation-0)' }}
+                />
+              )
             }
 
             const dayItems  = dateMap.get(dateStr) ?? []
@@ -351,50 +361,51 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                 onClick={() => hasEvents && setSelectedDay(dateStr)}
                 style={{
                   background: isToday
-                    ? 'var(--theme-elevation-250,#202020)'
-                    : 'var(--theme-elevation-100,#141414)',
-                  padding: '6px',
+                    ? 'rgba(249,115,22,0.07)'
+                    : 'var(--theme-elevation-0)',
                   cursor: hasEvents ? 'pointer' : 'default',
-                  outline: isToday ? '2px inset var(--color-success-500,#4ade80)' : 'none',
+                  // Orange inset border for today — no outline
+                  boxShadow: isToday ? 'inset 0 0 0 2px rgba(249,115,22,0.55)' : 'none',
                   transition: 'background .12s',
                 }}
-                onMouseEnter={e => { if (hasEvents) (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-300,#2a2a2a)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? 'var(--theme-elevation-250,#202020)' : 'var(--theme-elevation-100,#141414)' }}
+                onMouseEnter={e => { if (hasEvents) (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-100)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? 'rgba(249,115,22,0.07)' : 'var(--theme-elevation-0)' }}
               >
                 {/* Date number */}
                 <div style={{
                   fontSize:'12px', fontWeight: isToday ? 700 : 400, marginBottom:'3px',
-                  color: isToday ? 'var(--color-success-500,#4ade80)' : 'var(--theme-text)',
+                  color: isToday ? '#fb923c' : 'var(--theme-text)',
                 }}>
                   {dayNum}
                 </div>
 
-                {/* Desktop: pills */}
+                {/* Desktop: orange-tinted pills */}
                 {visible.map(s => (
                   <div key={s.id} className="cal-pill" style={{
                     fontSize:'10px', lineHeight:1.3,
-                    background:'var(--theme-elevation-400,#333)',
-                    color:'var(--theme-text)',
-                    borderRadius:'3px', padding:'2px 5px', marginBottom:'2px',
+                    background:'rgba(249,115,22,0.1)',
+                    color:'#fb923c',
+                    borderRadius:'var(--style-radius-s,4px)',
+                    padding:'2px 5px', marginBottom:'2px',
                     whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
                   }}>
                     {s.courseTitle}
                   </div>
                 ))}
                 {overflow > 0 && (
-                  <div className="cal-pill" style={{ fontSize:'10px', color:'var(--theme-elevation-500,#888)', paddingLeft:'2px' }}>
+                  <div className="cal-pill" style={{ fontSize:'10px', color:'var(--theme-text)', opacity:.45, paddingLeft:'2px' }}>
                     +{overflow} more
                   </div>
                 )}
 
-                {/* Mobile: dot badge */}
+                {/* Mobile: count badge */}
                 {hasEvents && (
                   <div className="cal-dot" style={{
                     alignItems:'center', justifyContent:'center',
                     marginTop:'2px',
                     width:'18px', height:'18px', borderRadius:'50%',
-                    background:'var(--theme-elevation-500,#555)',
-                    fontSize:'10px', fontWeight:700, color:'var(--theme-text)',
+                    background:'rgba(249,115,22,0.2)',
+                    fontSize:'10px', fontWeight:700, color:'#fb923c',
                   }}>
                     {dayItems.length}
                   </div>
@@ -404,15 +415,14 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           })}
         </div>
 
-        {/* Legend */}
-        <p style={{ fontSize:'11px', color:'var(--theme-elevation-500,#666)', margin:'8px 0 0' }}>
+        <p style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.35, margin:'8px 0 0' }}>
           Click any day with sessions to view details.
         </p>
       </div>
 
-      {/* ════════════════════════════════════════════
+      {/* ════════════════════════════
           FILTER + LIST
-      ════════════════════════════════════════════ */}
+      ════════════════════════════ */}
       <div>
 
         {/* Filter dropdown */}
@@ -420,7 +430,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           <label style={{
             display:'block', fontSize:'11px', fontWeight:600,
             textTransform:'uppercase', letterSpacing:'.5px',
-            color:'var(--theme-elevation-500,#888)', marginBottom:'6px',
+            color:'var(--theme-text)', opacity:.5, marginBottom:'6px',
           }}>
             View Course Schedules
           </label>
@@ -428,9 +438,10 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
             value={course}
             onChange={e => { setCourse(e.target.value); setPage(1) }}
             style={{
-              background:'var(--theme-elevation-150,#1a1a1a)',
-              border:'1px solid var(--theme-elevation-500,#444)',
-              borderRadius:'4px', color:'var(--theme-text)',
+              background:'var(--theme-elevation-100)',
+              border:'1px solid var(--theme-elevation-300)',
+              borderRadius:'var(--style-radius-s,4px)',
+              color:'var(--theme-text)',
               padding:'8px 12px', fontSize:'14px',
               minWidth:'300px', maxWidth:'100%', cursor:'pointer',
             }}
@@ -442,26 +453,26 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           </select>
         </div>
 
-        {/* Results bar + print */}
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px', flexWrap:'wrap', gap:'8px' }}>
-          <span style={{ fontSize:'13px', color:'var(--theme-elevation-500,#888)' }}>
-            {filtered.length} schedule{filtered.length !== 1 ? 's' : ''}
-            {course !== 'all' && ` for ${course}`}
+        {/* Results count + Print */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px', flexWrap:'wrap', gap:'8px' }}>
+          <span style={{ fontSize:'13px', color:'var(--theme-text)', opacity:.5 }}>
+            {filtered.length} schedule{filtered.length!==1?'s':''}
+            {course!=='all' && ` for ${course}`}
           </span>
-          <button onClick={handlePrint} style={btnBase}>
-            ⊞ Print All Results
+          <button onClick={handlePrint} className="roster-btn">
+            Print All Results
           </button>
         </div>
 
         {/* Schedule table */}
         {filtered.length === 0 ? (
-          <p style={{ fontSize:'14px', color:'var(--theme-elevation-500,#888)' }}>No schedules found.</p>
+          <p style={{ fontSize:'14px', color:'var(--theme-text)', opacity:.5 }}>No schedules found.</p>
         ) : (
           <>
-            <div style={{ overflowX:'auto', borderRadius:'6px', border:'1px solid var(--theme-elevation-300,#2a2a2a)' }}>
+            <div style={{ overflowX:'auto', borderRadius:'var(--style-radius-m,8px)', border:'1px solid var(--theme-elevation-200)' }}>
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
                 <thead>
-                  <tr style={{ background:'var(--theme-elevation-100,#141414)' }}>
+                  <tr style={{ background:'var(--theme-elevation-100)' }}>
                     {['Course','Session Label','Date(s)','Time(s) ET','Seats','Status'].map(h => (
                       <th key={h} style={thSt}>{h}</th>
                     ))}
@@ -472,35 +483,35 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                     const dates = s.sessions.map(x => x.date ? fmtDateShort(x.date) : '').filter(Boolean)
                     const times = s.sessions.map(x => {
                       if (!x.startTime && !x.endTime) return null
-                      return [x.startTime && fmtTime(x.startTime), x.endTime && fmtTime(x.endTime)].filter(Boolean).join(' – ')
+                      return [x.startTime&&fmtTime(x.startTime), x.endTime&&fmtTime(x.endTime)].filter(Boolean).join(' – ')
                     }).filter(Boolean) as string[]
 
                     return (
-                      <tr key={s.id} style={{ background:'var(--theme-elevation-50,#0d0d0d)' }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-100,#141414)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-50,#0d0d0d)'}
+                      <tr
+                        key={s.id}
+                        style={{ background:'var(--theme-elevation-0)', transition:'background .1s' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-100)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-0)'}
                       >
                         <td style={tdSt}>
                           <Link
                             href={`/admin/collections/course-schedules/${s.id}`}
-                            style={{ color:'var(--theme-text)', fontWeight:500, textDecoration:'none' }}
+                            style={{ color:'#fb923c', fontWeight:500, textDecoration:'none' }}
                           >
                             {s.courseTitle}
                           </Link>
                         </td>
-                        <td style={{ ...tdSt, color:'var(--theme-elevation-500,#aaa)' }}>
-                          {s.displayLabel ?? '—'}
-                        </td>
+                        <td style={{ ...tdSt, opacity:.7 }}>{s.displayLabel ?? '—'}</td>
                         <td style={tdSt}>
-                          {dates.length === 0
-                            ? <span style={{ color:'var(--theme-elevation-500,#888)' }}>—</span>
-                            : dates.map((d, i) => <div key={i}>{d}</div>)
+                          {dates.length===0
+                            ? <span style={{ opacity:.4 }}>—</span>
+                            : dates.map((d,i) => <div key={i}>{d}</div>)
                           }
                         </td>
                         <td style={tdSt}>
-                          {times.length === 0
-                            ? <span style={{ color:'var(--theme-elevation-500,#888)' }}>—</span>
-                            : times.map((t, i) => <div key={i}>{t}</div>)
+                          {times.length===0
+                            ? <span style={{ opacity:.4 }}>—</span>
+                            : times.map((t,i) => <div key={i}>{t}</div>)
                           }
                         </td>
                         <td style={{ ...tdSt, whiteSpace:'nowrap' }}>
@@ -508,10 +519,12 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                         </td>
                         <td style={tdSt}>
                           <span style={{
-                            display:'inline-block', padding:'2px 8px', borderRadius:'3px',
+                            display:'inline-block', padding:'2px 8px',
+                            borderRadius:'var(--style-radius-s,4px)',
                             fontSize:'11px', fontWeight:600,
-                            background: s.isActive ? 'rgba(74,222,128,.12)' : 'rgba(255,255,255,.06)',
-                            color:       s.isActive ? '#4ade80'             : 'var(--theme-elevation-500,#888)',
+                            background: s.isActive ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,.06)',
+                            color:       s.isActive ? '#fb923c'             : 'var(--theme-text)',
+                            opacity:     s.isActive ? 1 : .45,
                           }}>
                             {s.isActive ? 'Active' : 'Inactive'}
                           </span>
@@ -526,21 +539,23 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
             {/* Pagination */}
             {totalPages > 1 && (
               <div style={{ display:'flex', gap:'6px', alignItems:'center', marginTop:'20px', flexWrap:'wrap' }}>
-                <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
-                  style={{ ...btnBase, opacity: page === 1 ? .4 : 1 }}>
+                <button disabled={page===1} onClick={() => setPage(p=>p-1)} className="cal-btn">
                   ‹ Prev
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button key={p} onClick={() => setPage(p)} style={{
-                    ...btnBase,
-                    background: p === page ? 'var(--theme-elevation-500,#444)' : 'var(--theme-elevation-200,#222)',
-                    fontWeight: p === page ? 700 : 400,
-                  }}>
+                {Array.from({ length: totalPages }, (_,i) => i+1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className="cal-btn"
+                    style={{
+                      background:  p===page ? 'var(--theme-elevation-300)' : undefined,
+                      fontWeight:  p===page ? 700 : 500,
+                    }}
+                  >
                     {p}
                   </button>
                 ))}
-                <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}
-                  style={{ ...btnBase, opacity: page === totalPages ? .4 : 1 }}>
+                <button disabled={page===totalPages} onClick={() => setPage(p=>p+1)} className="cal-btn">
                   Next ›
                 </button>
               </div>
