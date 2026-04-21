@@ -159,6 +159,89 @@ function buildPaymentLinkEmail({
   return { html, text }
 }
 
+// ── Mark attendee paid endpoint ───────────────────────────────────────────────
+// Called by the website's Square webhook after a payment is confirmed.
+// Finds the private group booking by schedule ID and updates the matching
+// attendee's paymentStatus to 'paid'. Non-fatal — booking already exists by
+// the time this is called.
+
+async function markAttendeePaidHandler(req: PayloadRequest): Promise<Response> {
+  // Allow logged-in admin OR website backend presenting CMS_WRITE_SECRET
+  if (!req.user) {
+    const auth: string = req?.headers?.get?.('authorization') ?? ''
+    const token = auth.replace(/^Bearer\s+/i, '').trim()
+    const secret = process.env.CMS_WRITE_SECRET ?? ''
+    if (!safeCompare(token, secret)) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: { email?: string; scheduleId?: string | number }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body = (await (req as any).json()) as { email?: string; scheduleId?: string | number }
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const { email, scheduleId } = body
+  if (!email || !scheduleId) {
+    return Response.json({ error: 'email and scheduleId are required' }, { status: 400 })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+
+  // Find the private group booking that owns this schedule
+  const result = await p.find({
+    collection: 'private-group-bookings',
+    where: { createdScheduleId: { equals: Number(scheduleId) } },
+    limit: 1,
+    req,
+  })
+
+  if (result.docs.length === 0) {
+    // Not a private group booking — no-op, this is expected for regular bookings
+    return Response.json({ updated: false, reason: 'No matching private group booking' })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const groupBooking: Record<string, any> = result.docs[0]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const attendees: any[] = groupBooking.attendees ?? []
+
+  const normalizedEmail = String(email).toLowerCase().trim()
+  let matched = false
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updatedAttendees = attendees.map((a: any) => {
+    if (String(a.email ?? '').toLowerCase().trim() === normalizedEmail) {
+      matched = true
+      return { ...a, paymentStatus: 'paid' }
+    }
+    return a
+  })
+
+  if (!matched) {
+    return Response.json({ updated: false, reason: 'Attendee email not found in group booking' })
+  }
+
+  try {
+    await p.update({
+      collection: 'private-group-bookings',
+      id: groupBooking.id,
+      data: { attendees: updatedAttendees },
+      req,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return Response.json({ error: `Failed to update attendee status: ${msg}` }, { status: 500 })
+  }
+
+  return Response.json({ updated: true })
+}
+
 // ── Process endpoint ──────────────────────────────────────────────────────────
 
 const ALLOWED_ATTACH_TYPES = new Set([
@@ -682,6 +765,11 @@ export const PrivateGroupBookings: CollectionConfig = {
       path: '/:id/process',
       method: 'post',
       handler: processHandler,
+    },
+    {
+      path: '/mark-attendee-paid',
+      method: 'post',
+      handler: markAttendeePaidHandler,
     },
   ],
   fields: [

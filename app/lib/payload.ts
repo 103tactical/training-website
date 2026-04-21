@@ -311,6 +311,30 @@ export interface BookingRecord {
   course?: { id: string; title: string } | null;
 }
 
+/**
+ * After a payment-link attendee pays, mark their row in the Private Group
+ * Booking as 'paid'. Non-fatal — the booking already exists before this runs.
+ */
+export async function markPrivateGroupAttendeePaid(
+  email: string,
+  scheduleId: string,
+): Promise<void> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  try {
+    await fetch(`${PAYLOAD_API_URL}/api/private-group-bookings/mark-attendee-paid`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+      },
+      body: JSON.stringify({ email, scheduleId }),
+    });
+  } catch (err) {
+    // Non-fatal — log and move on
+    console.error("[payload] markPrivateGroupAttendeePaid failed:", err);
+  }
+}
+
 /** Find a booking by its Square Order ID (depth=2 to populate attendee + course) */
 export async function findBookingBySquareOrderId(orderId: string): Promise<BookingRecord | null> {
   const res = await fetchPayloadAuth<{ docs: BookingRecord[] }>(

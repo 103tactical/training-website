@@ -32,6 +32,7 @@ import {
   createAttendee,
   findPendingBookingByToken,
   updatePendingBooking,
+  markPrivateGroupAttendeePaid,
   resolveMediaUrl,
 } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
@@ -228,6 +229,11 @@ async function handlePaymentUpdated(event: Record<string, any>) {
 
     // ── Mark PendingBooking completed ───────────────────────────────────────
     await updatePendingBooking(pending.id, { status: "completed" });
+
+    // ── Update Private Group Booking attendee status if applicable ───────────
+    // Non-fatal — if this isn't a private group booking the CMS returns a
+    // no-op response. If it is, the attendee row is updated to 'paid'.
+    await markPrivateGroupAttendeePaid(buyerEmail, String(pending.courseSchedule));
 
     console.log(
       `[webhook] Booking created — pendingId=${pending.id} attendee=${attendee.id} order=${orderId}`,
