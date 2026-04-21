@@ -82,7 +82,7 @@ export default async function ScheduleOverviewPage(props: any) {
           color: 'var(--theme-text)',
           margin: '0 0 28px',
         }}>
-          Schedule Dashboard
+          Schedule Overview
         </h1>
         <ScheduleCalendarClient schedules={schedules} />
       </div>

@@ -281,10 +281,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         /* Schedule list — alternating rows, theme-aware */
         .sch-row:nth-child(odd)  { background: var(--theme-elevation-0); }
         .sch-row:nth-child(even) { background: var(--theme-elevation-100); }
-
-        /* Course name link — underline on hover to indicate clickability */
-        .sch-course-link { text-decoration: none; color: var(--theme-text); font-weight: 500; }
-        .sch-course-link:hover { text-decoration: underline; }
+        .sch-row:hover           { background: var(--theme-elevation-200) !important; transition: background .1s; }
 
         /* Table header text */
         .sch-th {
@@ -493,7 +490,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                         <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px' }}>
                           <Link
                             href={`/admin/collections/course-schedules/${s.id}`}
-                            className="sch-course-link"
+                            style={{ color:'var(--theme-text)', fontWeight:500, textDecoration:'none' }}
                           >
                             {s.courseTitle}
                           </Link>

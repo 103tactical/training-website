@@ -44,11 +44,14 @@ export default buildConfig({
       graphics: {
         Logo: './components/AdminLogo',
       },
-      Nav: './components/CustomNav',
+      afterNavLinks: [
+        './components/CourseOverviewNav',
+        './components/reporting/AccountingNav',
+      ],
       views: {
         scheduleOverview: {
           Component: './components/schedule-overview/ScheduleOverviewPage',
-          path: '/schedule-dashboard',
+          path: '/schedule-overview',
         },
         reportingDashboard: {
           Component: './components/reporting/Dashboard',
