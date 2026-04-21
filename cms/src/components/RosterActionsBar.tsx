@@ -105,11 +105,20 @@ export default function RosterActionsBar() {
         body: formData,
         // No Content-Type header — browser sets it with the multipart boundary
       })
-      const json = await res.json() as { sent?: number; failed?: number; error?: string }
+      const json = await res.json() as { sent?: number; failed?: number; error?: string; quotaError?: string }
       if (res.ok) {
-        const failNote = json.failed ? ` (${json.failed} failed)` : ''
-        setFeedback(`Sent to ${json.sent} attendee${(json.sent ?? 0) === 1 ? '' : 's'}${failNote}.`)
-        setPhase('done')
+        if (json.quotaError) {
+          // Quota hit mid-send — some went out, rest were skipped
+          const sentNote = (json.sent ?? 0) > 0
+            ? `Sent to ${json.sent} attendee${json.sent === 1 ? '' : 's'} before the limit was reached. `
+            : 'No emails were sent. '
+          setFeedback(`⚠ Email quota limit reached. ${sentNote}${json.quotaError}`)
+          setPhase('error')
+        } else {
+          const failNote = json.failed ? ` (${json.failed} failed)` : ''
+          setFeedback(`Sent to ${json.sent} attendee${(json.sent ?? 0) === 1 ? '' : 's'}${failNote}.`)
+          setPhase('done')
+        }
       } else {
         setFeedback(json.error ?? 'Send failed. Check server logs.')
         setPhase('error')

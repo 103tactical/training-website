@@ -78,6 +78,58 @@ export interface SendResult {
   sent: number
   failed: number
   errors: string[]
+  /**
+   * Set when Resend rejected sends due to a quota or rate limit.
+   * Contains a human-readable message with an estimated reset time.
+   * When present, remaining recipients were skipped — not all failed
+   * addresses were attempted.
+   */
+  quotaError?: string
+}
+
+/**
+ * Classify a Resend error and return a human-readable message.
+ * For quota errors, includes an estimated reset time.
+ */
+function describeResendError(error: { message?: string; name?: string; statusCode?: number }): {
+  display: string
+  isQuota: boolean
+  isRateLimit: boolean
+} {
+  const msg = (error.message ?? '').toLowerCase()
+  const isQuota = msg.includes('daily') || msg.includes('quota') || msg.includes('monthly') || msg.includes('limit exceeded')
+  const isRateLimit = !isQuota && (
+    error.name === 'rate_limit_exceeded' ||
+    msg.includes('rate limit') ||
+    error.statusCode === 429
+  )
+
+  if (isQuota) {
+    const now = new Date()
+    const midnight = new Date(Date.UTC(
+      now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1,
+    ))
+    const resetUTC = midnight.toUTCString()
+    return {
+      display: `Resend email quota reached — sending stopped. Email will resume at approximately midnight UTC (${resetUTC}). Upgrade your Resend plan at resend.com/pricing to avoid this limit.`,
+      isQuota: true,
+      isRateLimit: false,
+    }
+  }
+
+  if (isRateLimit) {
+    return {
+      display: 'Resend rate limit hit (too many requests per second). Wait a few seconds and try again.',
+      isQuota: false,
+      isRateLimit: true,
+    }
+  }
+
+  return {
+    display: error.message ?? 'Unknown Resend error',
+    isQuota: false,
+    isRateLimit: false,
+  }
 }
 
 /**
@@ -129,12 +181,17 @@ export async function sendBulkEmail({
 
   const result: SendResult = { sent: 0, failed: 0, errors: [] }
 
-  // Send in small batches to stay well within Resend's rate limit (100 req/s)
+  // Send in small batches to stay well within Resend's rate limit (5 req/s)
   const BATCH = 10
   for (let i = 0; i < unique.length; i += BATCH) {
+    // Stop immediately if a quota error was already detected — no point
+    // hammering Resend when the account is over its limit.
+    if (result.quotaError) break
+
     const batch = unique.slice(i, i + BATCH)
     await Promise.all(
       batch.map(async (to) => {
+        if (result.quotaError) return  // another in this batch already hit quota
         const { error } = await resend.emails.send({
           from,
           to,
@@ -144,8 +201,13 @@ export async function sendBulkEmail({
           ...(hasAttachments && { attachments }),
         })
         if (error) {
+          const { display, isQuota } = describeResendError(error)
+          if (isQuota) {
+            // Record the quota error and skip all subsequent recipients
+            result.quotaError = display
+          }
           result.failed++
-          result.errors.push(`${to}: ${error.message}`)
+          result.errors.push(`${to}: ${display}`)
         } else {
           result.sent++
         }
@@ -155,6 +217,13 @@ export async function sendBulkEmail({
     if (i + BATCH < unique.length) {
       await new Promise((r) => setTimeout(r, 200))
     }
+  }
+
+  // Mark skipped recipients as failed so the count is accurate
+  const attempted = result.sent + result.failed
+  const skipped   = unique.length - attempted
+  if (skipped > 0 && result.quotaError) {
+    result.failed += skipped
   }
 
   return result
