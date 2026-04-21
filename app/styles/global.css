@@ -2030,6 +2030,12 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   --btn-px: 22px;
   --btn-py: 14px;
   align-self: flex-start;
+  background-color: var(--color-bg-card-alt);
+  color: #fff;
+}
+.course-card__details-btn:hover {
+  background-color: color-mix(in srgb, var(--color-bg-card-alt) 85%, #fff);
+  color: #fff;
 }
 
 /* ── Card body ── */

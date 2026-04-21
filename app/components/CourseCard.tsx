@@ -91,7 +91,7 @@ export default function CourseCard({ course }: CourseCardProps) {
         <div className="course-card__card-actions">
           <Link
             to={`/courses/${course.slug}`}
-            className="btn btn--outline btn--lg course-card__details-btn"
+            className="btn btn--lg course-card__details-btn"
           >
             View Details
           </Link>
@@ -100,7 +100,7 @@ export default function CourseCard({ course }: CourseCardProps) {
             className="btn btn--outline btn--lg course-card__signup-btn"
             onClick={() => trackScheduleNowClick(course.title, course.slug, "course_card")}
           >
-            Schedule Now
+            View Sessions
           </Link>
         </div>
       </div>
