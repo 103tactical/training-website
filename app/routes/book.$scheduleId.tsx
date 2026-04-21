@@ -163,7 +163,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const token = crypto.randomUUID().replace(/-/g, "");
     await createPendingBooking({
       token,
-      courseSchedule: scheduleId,
+      courseSchedule: parseInt(scheduleId, 10),
       email,
       phone: sanitizedPhone || undefined,
     });
