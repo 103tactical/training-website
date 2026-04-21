@@ -218,7 +218,7 @@ export const PendingBookings: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     group: 'Course Management',
-    defaultColumns: ['email', 'courseSchedule', 'status', 'phone', 'updatedAt'],
+    defaultColumns: ['email', 'courseSchedule', 'status', 'failureReason', 'updatedAt'],
     description:
       'Short-lived checkout sessions created when a visitor starts the booking flow. ' +
       'Completed once payment is confirmed. ' +
@@ -362,6 +362,10 @@ export const PendingBookings: CollectionConfig = {
         readOnly: true,
         description: 'Populated when status is Failed. Shows the error that prevented booking creation.',
         condition: (data) => data.status === 'failed',
+        rows: 10,
+        components: {
+          Cell: './components/FailureReasonCell',
+        },
       },
     },
     {
