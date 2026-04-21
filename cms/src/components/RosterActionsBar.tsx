@@ -1,8 +1,20 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useDocumentInfo } from '@payloadcms/ui'
 
 type Phase = 'idle' | 'composing' | 'sending' | 'done' | 'error'
+
+const ALLOWED_TYPES  = ['application/pdf', 'image/jpeg', 'image/png']
+const ALLOWED_ACCEPT = '.pdf,.jpg,.jpeg,.png'
+const MAX_PER_FILE   = 5  * 1024 * 1024  // 5 MB
+const MAX_TOTAL      = 10 * 1024 * 1024  // 10 MB
+const MAX_FILES      = 5
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
 
 /**
  * Rendered inside the Attendee Roster section of a CourseSchedule.
@@ -16,6 +28,8 @@ export default function RosterActionsBar() {
   const [subject, setSubject]   = useState('')
   const [message, setMessage]   = useState('')
   const [feedback, setFeedback] = useState('')
+  const [files, setFiles]       = useState<File[]>([])
+  const fileInputRef            = useRef<HTMLInputElement>(null)
 
   const webUrl  = process.env.NEXT_PUBLIC_WEB_URL ?? ''
   const token   = process.env.NEXT_PUBLIC_PRINT_SECRET ?? ''
@@ -25,7 +39,46 @@ export default function RosterActionsBar() {
   if (!id) return null
 
   const open  = () => setPhase('composing')
-  const close = () => { setPhase('idle'); setSubject(''); setMessage(''); setFeedback('') }
+  const close = () => {
+    setPhase('idle'); setSubject(''); setMessage(''); setFeedback(''); setFiles([])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? [])
+    const errors: string[] = []
+
+    const valid = selected.filter((f) => {
+      if (!ALLOWED_TYPES.includes(f.type)) {
+        errors.push(`"${f.name}" is not allowed (PDF, JPEG, PNG only).`)
+        return false
+      }
+      if (f.size > MAX_PER_FILE) {
+        errors.push(`"${f.name}" exceeds the 5 MB per-file limit.`)
+        return false
+      }
+      return true
+    })
+
+    const merged = [...files, ...valid].slice(0, MAX_FILES)
+    const totalSize = merged.reduce((sum, f) => sum + f.size, 0)
+
+    if (errors.length > 0) {
+      setFeedback(errors.join(' '))
+    } else if (totalSize > MAX_TOTAL) {
+      setFeedback('Total attachment size would exceed the 10 MB limit.')
+    } else {
+      setFeedback('')
+      setFiles(merged)
+    }
+    // Reset input so the same file can be re-selected after removal
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+    setFeedback('')
+  }
 
   const send = async () => {
     if (!subject.trim() || !message.trim()) {
@@ -35,11 +88,16 @@ export default function RosterActionsBar() {
     setPhase('sending')
     setFeedback('')
     try {
+      const formData = new FormData()
+      formData.append('subject', subject.trim())
+      formData.append('message', message.trim())
+      files.forEach((f) => formData.append('attachments', f))
+
       const res = await fetch(`/api/course-schedules/${id}/email-attendees`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: subject.trim(), message: message.trim() }),
+        body: formData,
+        // No Content-Type header — browser sets it with the multipart boundary
       })
       const json = await res.json() as { sent?: number; failed?: number; error?: string }
       if (res.ok) {
@@ -148,6 +206,75 @@ export default function RosterActionsBar() {
               style={{ ...inputStyle, resize: 'vertical' }}
               disabled={phase === 'sending'}
             />
+          </div>
+
+          {/* ── Attachments ─────────────────────────────────────────────────── */}
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', marginBottom: '6px', color: 'var(--theme-elevation-700)' }}>
+              Attachments <span style={{ fontWeight: 400 }}>(PDF, JPEG, PNG — 5 MB per file, 10 MB total, max {MAX_FILES})</span>
+            </label>
+
+            {/* Selected file list */}
+            {files.length > 0 && (
+              <ul style={{ listStyle: 'none', margin: '0 0 8px', padding: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {files.map((f, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--theme-text)' }}>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      📎 {f.name} <span style={{ color: 'var(--theme-elevation-500)' }}>({formatBytes(f.size)})</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      disabled={phase === 'sending'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontSize: '13px', padding: '0 2px', lineHeight: 1 }}
+                      aria-label={`Remove ${f.name}`}
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {files.length < MAX_FILES && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ALLOWED_ACCEPT}
+                  multiple
+                  onChange={handleFileChange}
+                  disabled={phase === 'sending'}
+                  style={{ display: 'none' }}
+                  id="roster-email-attachments"
+                />
+                <label
+                  htmlFor="roster-email-attachments"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    cursor: phase === 'sending' ? 'not-allowed' : 'pointer',
+                    opacity: phase === 'sending' ? 0.55 : 1,
+                    border: '1px dashed var(--theme-elevation-300)',
+                    borderRadius: 'var(--style-radius-s)',
+                    color: 'var(--theme-elevation-700)',
+                    userSelect: 'none',
+                  }}
+                >
+                  + Add file{files.length > 0 ? ' (another)' : ''}
+                </label>
+              </>
+            )}
+
+            {files.length > 0 && (
+              <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--theme-elevation-500)' }}>
+                Total: {formatBytes(files.reduce((s, f) => s + f.size, 0))} / 10 MB
+              </p>
+            )}
           </div>
 
           {feedback && (

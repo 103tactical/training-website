@@ -1,6 +1,6 @@
 import { APIError } from "payload";
 import type { CollectionConfig, CollectionBeforeChangeHook, CollectionBeforeDeleteHook, PayloadRequest } from "payload";
-import { sendBulkEmail } from "../lib/email";
+import { sendBulkEmail, type EmailAttachment } from "../lib/email";
 
 /**
  * Auto-populates adminTitle as "Course Name: Internal Label" on every save.
@@ -77,18 +77,62 @@ async function emailAttendeesHandler(req: PayloadRequest): Promise<Response> {
     return Response.json({ error: 'Missing schedule id' }, { status: 400 })
   }
 
-  let body: { subject?: string; message?: string }
+  // Parse multipart form data (supports optional file attachments)
+  let formData: FormData
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    body = (await (req as any).json()) as { subject?: string; message?: string }
+    formData = await (req as any).formData()
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
+    return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { subject, message } = body
+  const subject = formData.get('subject') as string | null
+  const message = formData.get('message') as string | null
+
   if (!subject?.trim() || !message?.trim()) {
     return Response.json({ error: 'subject and message are required' }, { status: 400 })
   }
+
+  // ── Attachment validation ──────────────────────────────────────────────────
+  const ALLOWED_TYPES  = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+  const MAX_PER_FILE   = 5  * 1024 * 1024  // 5 MB
+  const MAX_TOTAL      = 10 * 1024 * 1024  // 10 MB
+  const MAX_FILES      = 5
+
+  const rawFiles = formData.getAll('attachments').filter(
+    (e): e is File => e instanceof File && e.size > 0,
+  )
+
+  if (rawFiles.length > MAX_FILES) {
+    return Response.json({ error: `Maximum ${MAX_FILES} attachments allowed.` }, { status: 400 })
+  }
+
+  for (const file of rawFiles) {
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return Response.json(
+        { error: `"${file.name}" is not an allowed file type. Only PDF, JPEG, and PNG are accepted.` },
+        { status: 400 },
+      )
+    }
+    if (file.size > MAX_PER_FILE) {
+      return Response.json(
+        { error: `"${file.name}" exceeds the 5 MB per-file limit.` },
+        { status: 400 },
+      )
+    }
+  }
+
+  const totalBytes = rawFiles.reduce((sum, f) => sum + f.size, 0)
+  if (totalBytes > MAX_TOTAL) {
+    return Response.json({ error: 'Total attachment size exceeds the 10 MB limit.' }, { status: 400 })
+  }
+
+  const attachments: EmailAttachment[] = await Promise.all(
+    rawFiles.map(async (f) => ({
+      filename: f.name,
+      content: Buffer.from(await f.arrayBuffer()),
+    })),
+  )
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = req.payload as any
@@ -127,7 +171,12 @@ async function emailAttendeesHandler(req: PayloadRequest): Promise<Response> {
   }
 
   try {
-    const result = await sendBulkEmail({ recipients: emails, subject: subject.trim(), message: message.trim() })
+    const result = await sendBulkEmail({
+      recipients: emails,
+      subject: subject.trim(),
+      message: message.trim(),
+      attachments,
+    })
     return Response.json(result)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)

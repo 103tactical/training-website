@@ -69,6 +69,11 @@ function buildHtml(message: string): string {
 </html>`
 }
 
+export interface EmailAttachment {
+  filename: string
+  content: Buffer
+}
+
 export interface SendResult {
   sent: number
   failed: number
@@ -82,10 +87,12 @@ export async function sendEmail({
   to,
   subject,
   message,
+  attachments = [],
 }: {
   to: string
   subject: string
   message: string
+  attachments?: EmailAttachment[]
 }): Promise<void> {
   const resend = getClient()
   const { error } = await resend.emails.send({
@@ -94,6 +101,7 @@ export async function sendEmail({
     subject,
     html: buildHtml(message),
     text: message,
+    ...(attachments.length > 0 && { attachments }),
   })
   if (error) throw new Error(error.message)
 }
@@ -106,15 +114,18 @@ export async function sendBulkEmail({
   recipients,
   subject,
   message,
+  attachments = [],
 }: {
   recipients: string[]
   subject: string
   message: string
+  attachments?: EmailAttachment[]
 }): Promise<SendResult> {
   const resend  = getClient()
   const from    = getFromAddress()
   const html    = buildHtml(message)
   const unique  = [...new Set(recipients.map((r) => r.toLowerCase().trim()).filter(Boolean))]
+  const hasAttachments = attachments.length > 0
 
   const result: SendResult = { sent: 0, failed: 0, errors: [] }
 
@@ -130,6 +141,7 @@ export async function sendBulkEmail({
           subject,
           html,
           text: message,
+          ...(hasAttachments && { attachments }),
         })
         if (error) {
           result.failed++
