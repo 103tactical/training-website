@@ -401,8 +401,8 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                 {overflow > 0 && (
                   <div className="cal-pill" style={{
                     fontSize: '10px', lineHeight: 1.3,
-                    background: 'var(--theme-elevation-200)',
-                    color: 'var(--theme-elevation-800)',
+                    background: 'var(--theme-elevation-100)',
+                    color: 'var(--theme-elevation-400)',
                     borderRadius: 'var(--style-radius-s,3px)',
                     padding: '2px 5px', marginBottom: '2px',
                     fontWeight: 500,
