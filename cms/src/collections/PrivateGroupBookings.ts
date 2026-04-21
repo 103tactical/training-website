@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
 import { Resend } from 'resend'
 import { SquareClient, SquareEnvironment } from 'square'
-import { sendEmail } from '../lib/email'
+import { sendEmail, type EmailAttachment } from '../lib/email'
 
 function getResendClient(): Resend {
   const key = process.env.RESEND_API_KEY
@@ -161,6 +161,17 @@ function buildPaymentLinkEmail({
 
 // ── Process endpoint ──────────────────────────────────────────────────────────
 
+const ALLOWED_ATTACH_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+])
+const MAX_ATTACH_PER_FILE = 5  * 1024 * 1024  // 5 MB
+const MAX_ATTACH_TOTAL    = 10 * 1024 * 1024  // 10 MB
+const MAX_ATTACH_FILES    = 5
+
 async function processHandler(req: PayloadRequest): Promise<Response> {
   if (!req.user) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -169,6 +180,51 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
   const id = req.routeParams?.id
   if (!id) {
     return Response.json({ error: 'Missing id' }, { status: 400 })
+  }
+
+  // ── Parse optional file attachments from multipart form data ─────────────
+  let attachments: EmailAttachment[] = []
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formData: FormData = await (req as any).formData()
+    const rawFiles = formData.getAll('attachments').filter(
+      (e): e is File => e instanceof File && e.size > 0,
+    )
+
+    if (rawFiles.length > MAX_ATTACH_FILES) {
+      return Response.json(
+        { error: `Maximum ${MAX_ATTACH_FILES} attachments allowed.` },
+        { status: 400 },
+      )
+    }
+
+    let totalSize = 0
+    for (const file of rawFiles) {
+      if (!ALLOWED_ATTACH_TYPES.has(file.type)) {
+        return Response.json(
+          { error: `"${file.name}" is not an allowed file type. PDF, JPG, Word (.doc/.docx), and TXT only.` },
+          { status: 400 },
+        )
+      }
+      if (file.size > MAX_ATTACH_PER_FILE) {
+        return Response.json(
+          { error: `"${file.name}" exceeds the 5 MB per-file limit.` },
+          { status: 400 },
+        )
+      }
+      totalSize += file.size
+      if (totalSize > MAX_ATTACH_TOTAL) {
+        return Response.json(
+          { error: 'Total attachment size exceeds the 10 MB limit.' },
+          { status: 400 },
+        )
+      }
+      const buffer = Buffer.from(await file.arrayBuffer())
+      attachments.push({ filename: file.name, content: buffer })
+    }
+  } catch {
+    // No body or not multipart — proceed with no attachments
+    attachments = []
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -377,8 +433,8 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
           bookingId = newBooking.id as number
         }
 
-        // Send confirmation email if an onboarding message is set
-        if (onboardingMessage?.trim()) {
+        // Send confirmation email if an onboarding message is set (or attachments provided)
+        if (onboardingMessage?.trim() || attachments.length > 0) {
           try {
             const from = process.env.FROM_NAME || '103 Tactical Training'
             await sendEmail({
@@ -389,12 +445,12 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
                 ``,
                 `You have been confirmed for ${courseName}${sessionDateStr ? ` on ${sessionDateStr}` : ''}.`,
                 ``,
-                onboardingMessage.trim(),
-                ``,
+                ...(onboardingMessage?.trim() ? [onboardingMessage.trim(), ``] : []),
                 `Questions? Reply to this email.`,
                 ``,
                 `— ${from}`,
               ].join('\n'),
+              attachments,
             })
           } catch (emailErr) {
             // Email failure is non-fatal — booking was already created
@@ -503,6 +559,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
           subject: `${courseName} — Complete Your Registration`,
           html,
           text,
+          ...(attachments.length > 0 && { attachments }),
         })
 
         if (emailError) {

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useDocumentInfo, useFormFields } from '@payloadcms/ui'
 
 type Phase = 'idle' | 'processing' | 'done' | 'error'
@@ -21,10 +21,31 @@ type ProcessResponse = {
   results: AttendeeResult[]
 }
 
+// ── Attachment constants (mirrors RosterActionsBar / emailAttendeesHandler) ───
+const ALLOWED_TYPES  = [
+  'application/pdf',
+  'image/jpeg',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+]
+const ALLOWED_ACCEPT = '.pdf,.jpg,.jpeg,.doc,.docx,.txt'
+const MAX_PER_FILE   = 5  * 1024 * 1024  // 5 MB
+const MAX_TOTAL      = 10 * 1024 * 1024  // 10 MB
+const MAX_FILES      = 5
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
+
 /**
  * Rendered at the bottom of the Private Group Booking form.
  * Lets the admin trigger the process endpoint which creates the schedule,
  * creates bookings or sends Square payment links, and emails attendees.
+ * Supports optional file attachments (PDF, JPG, Word, TXT — same limits as
+ * the Email Attendees feature on Course Schedules).
  */
 export default function ProcessGroupBookingButton() {
   const { id } = useDocumentInfo()
@@ -34,9 +55,12 @@ export default function ProcessGroupBookingButton() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const status = useFormFields((fields: any) => (fields?.status?.value as string) ?? 'draft')
 
-  const [phase, setPhase]       = useState<Phase>('idle')
-  const [response, setResponse] = useState<ProcessResponse | null>(null)
-  const [errorMsg, setErrorMsg] = useState<string>('')
+  const [phase, setPhase]           = useState<Phase>('idle')
+  const [response, setResponse]     = useState<ProcessResponse | null>(null)
+  const [errorMsg, setErrorMsg]     = useState<string>('')
+  const [files, setFiles]           = useState<File[]>([])
+  const [attachError, setAttachError] = useState<string>('')
+  const fileInputRef                = useRef<HTMLInputElement>(null)
 
   const isManual = paymentMethod === 'manual'
   const isDone   = status === 'completed' || status === 'sent'
@@ -66,15 +90,54 @@ export default function ProcessGroupBookingButton() {
     )
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? [])
+    const errors: string[] = []
+
+    const valid = selected.filter((f) => {
+      if (!ALLOWED_TYPES.includes(f.type)) {
+        errors.push(`"${f.name}" is not an allowed type (PDF, JPG, Word, or TXT only).`)
+        return false
+      }
+      if (f.size > MAX_PER_FILE) {
+        errors.push(`"${f.name}" exceeds the 5 MB per-file limit.`)
+        return false
+      }
+      return true
+    })
+
+    const merged = [...files, ...valid].slice(0, MAX_FILES)
+    const totalSize = merged.reduce((sum, f) => sum + f.size, 0)
+
+    if (errors.length > 0) {
+      setAttachError(errors.join(' '))
+    } else if (totalSize > MAX_TOTAL) {
+      setAttachError('Total attachment size would exceed the 10 MB limit.')
+    } else {
+      setAttachError('')
+      setFiles(merged)
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+    setAttachError('')
+  }
+
   const handleProcess = async () => {
     setPhase('processing')
     setErrorMsg('')
     setResponse(null)
 
     try {
+      const formData = new FormData()
+      files.forEach((f) => formData.append('attachments', f))
+
       const res = await fetch(`/api/private-group-bookings/${id}/process`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        body: formData,
       })
       const json = await res.json()
 
@@ -96,6 +159,9 @@ export default function ProcessGroupBookingButton() {
     setPhase('idle')
     setResponse(null)
     setErrorMsg('')
+    setFiles([])
+    setAttachError('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   return (
@@ -138,6 +204,93 @@ export default function ProcessGroupBookingButton() {
         </strong>
       </p>
 
+      {/* ── Attachments ──────────────────────────────────────────────────────── */}
+      {phase === 'idle' && (
+        <div style={{ marginBottom: '16px' }}>
+          <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 600, color: 'var(--theme-elevation-700)' }}>
+            Attachments (optional)
+          </p>
+          <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--theme-elevation-500)', lineHeight: '1.5' }}>
+            Files attached here are sent with the email to every attendee.
+            PDF, JPG, Word (.doc/.docx), TXT — up to 5 files, 5 MB each, 10 MB total.
+          </p>
+
+          {files.length > 0 && (
+            <div style={{ marginBottom: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {files.map((f, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '5px 10px',
+                    borderRadius: '4px',
+                    background: 'var(--theme-elevation-100)',
+                    fontSize: '12px',
+                    color: 'var(--theme-elevation-800)',
+                  }}
+                >
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {f.name}
+                  </span>
+                  <span style={{ color: 'var(--theme-elevation-500)', flexShrink: 0 }}>
+                    {formatBytes(f.size)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(i)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--theme-elevation-500)',
+                      padding: '0',
+                      fontSize: '14px',
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
+                    aria-label="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {attachError && (
+            <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#b91c1c' }}>{attachError}</p>
+          )}
+
+          {files.length < MAX_FILES && (
+            <label
+              style={{
+                display: 'inline-block',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                background: 'var(--theme-elevation-100)',
+                border: '1px solid var(--theme-elevation-200)',
+                fontSize: '12px',
+                cursor: 'pointer',
+                color: 'var(--theme-elevation-700)',
+              }}
+            >
+              + Add file
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ALLOWED_ACCEPT}
+                multiple
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </label>
+          )}
+        </div>
+      )}
+
+      {/* ── Action button ────────────────────────────────────────────────────── */}
       {phase === 'idle' && (
         <button
           type="button"
