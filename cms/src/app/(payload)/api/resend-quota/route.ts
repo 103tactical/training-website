@@ -7,7 +7,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch('https://api.resend.com/domains', {
+    const res = await fetch('https://api.resend.com/emails?limit=1', {
       headers: { Authorization: `Bearer ${apiKey}` },
       cache: 'no-store',
     })
