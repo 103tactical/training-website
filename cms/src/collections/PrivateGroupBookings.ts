@@ -295,6 +295,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
 
   // ── Step 1: Create or reuse CourseSchedule ────────────────────────────────
   let scheduleId: number = groupBooking.createdScheduleId
+  let seatCountExpanded = false
 
   if (!scheduleId) {
     try {
@@ -327,6 +328,28 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       return Response.json({ error: `Failed to create course schedule: ${msg}` }, { status: 500 })
+    }
+  } else {
+    // Schedule already exists from a previous run — ensure maxSeats reflects
+    // the current attendee count in case the admin added people since the
+    // schedule was first created.
+    try {
+      const existingSchedule = await p.findByID({
+        collection: 'course-schedules',
+        id: scheduleId,
+        req,
+      })
+      if (existingSchedule && (existingSchedule.maxSeats ?? 0) < attendees.length) {
+        await p.update({
+          collection: 'course-schedules',
+          id: scheduleId,
+          data: { maxSeats: attendees.length },
+          req,
+        })
+        seatCountExpanded = true
+      }
+    } catch {
+      // Non-fatal — proceed; the overbooking guard will catch any real issues
     }
   }
 
@@ -627,6 +650,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
     processed: successCount,
     skipped: skippedCount,
     failed: failCount,
+    seatCountExpanded,
     results,
   })
 }

@@ -18,6 +18,7 @@ type ProcessResponse = {
   processed: number
   skipped: number
   failed: number
+  seatCountExpanded?: boolean
   results: AttendeeResult[]
 }
 
@@ -342,6 +343,11 @@ export default function ProcessGroupBookingButton() {
             {response.processed > 0 && `${response.processed} processed  `}
             {response.skipped > 0 && `${response.skipped} already done (skipped)  `}
             {response.failed > 0 && `${response.failed} failed`}
+            {response.seatCountExpanded && (
+              <span style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--theme-elevation-600)' }}>
+                ℹ The seat count on the linked Course Schedule was automatically increased to match the current attendee count.
+              </span>
+            )}
           </div>
 
           {response.results.some((r) => !r.success) && (
