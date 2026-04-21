@@ -233,7 +233,10 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     // ── Update Private Group Booking attendee status if applicable ───────────
     // Non-fatal — if this isn't a private group booking the CMS returns a
     // no-op response. If it is, the attendee row is updated to 'paid'.
-    await markPrivateGroupAttendeePaid(buyerEmail, String(pending.courseSchedule));
+    // Use pending.email (the enrollment email the admin entered) rather than
+    // buyerEmail (which may differ if the payer used a different address at
+    // Square checkout) so the lookup matches the stored attendee row.
+    await markPrivateGroupAttendeePaid(String(pending.email), String(pending.courseSchedule));
 
     console.log(
       `[webhook] Booking created — pendingId=${pending.id} attendee=${attendee.id} order=${orderId}`,
