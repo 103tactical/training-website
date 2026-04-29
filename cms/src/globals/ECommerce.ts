@@ -8,7 +8,36 @@ export const ECommerce: GlobalConfig = {
   },
   admin: {
     group: "Accounting & Reports",
-    description: "Payment processing configuration for online bookings.",
+    description:
+      "Payment processing configuration and operations guide for online bookings.\n\n" +
+
+      "─────────────────────────────────────────────────────────────────────\n" +
+      "COMMON SCENARIOS\n\n" +
+
+      "Attendee booked and paid online — you want to cancel and refund them:\n" +
+      "  → Set status to Cancelled. The refund to their card issues automatically.\n\n" +
+
+      "Attendee booked and paid online — you want to cancel but NOT refund them:\n" +
+      "  → Check 'Cancel without issuing a refund', then set status to Cancelled.\n\n" +
+
+      "Attendee booked and paid online — you already refunded them manually (cash, Square POS):\n" +
+      "  → Check 'Cancel without issuing a refund', enter the amount in 'Manual Refund Amount', then set status to Cancelled.\n\n" +
+
+      "Attendee paid you directly (cash, Square POS, Terminal) — not through the website:\n" +
+      "  → Go to Bookings → Create New, fill in the attendee and session, enter the amount in 'Amount Paid', set status to Confirmed.\n\n" +
+
+      "Attendee paid you directly and you need to cancel and refund them:\n" +
+      "  → Open the booking, enter the refund amount in 'Manual Refund Amount', set status to Cancelled.\n\n" +
+
+      "Attendee paid you directly and you need to cancel but no refund is being given:\n" +
+      "  → Open the booking and set status to Cancelled. Leave 'Manual Refund Amount' blank.\n\n" +
+
+      "─────────────────────────────────────────────────────────────────────\n" +
+      "KEY THINGS TO REMEMBER\n\n" +
+      "  • All bookings should be recorded here, even if payment was collected in person.\n" +
+      "  • 'Amount Paid' and 'Manual Refund Amount' use cents — $225.00 = 22500.\n" +
+      "  • The CMS can only issue automatic refunds for bookings paid through the website.\n" +
+      "  • 'Manual Refund Amount' never moves money — it is for record-keeping only.",
   },
   fields: [
     {
@@ -62,50 +91,5 @@ export const ECommerce: GlobalConfig = {
       ],
     },
 
-    // ── Operations Guide ──────────────────────────────────────────────────────
-    {
-      name: "operationsGuide",
-      type: "group",
-      label: "Operations Guide — Manual Bookings & Refunds",
-      admin: {
-        description:
-          "COMMON SCENARIOS\n\n" +
-
-          "Attendee booked and paid online — you want to cancel and refund them:\n" +
-          "  → Set status to Cancelled. The refund to their card issues automatically.\n\n" +
-
-          "Attendee booked and paid online — you want to cancel but NOT refund them:\n" +
-          "  → Check 'Cancel without issuing a refund', then set status to Cancelled.\n\n" +
-
-          "Attendee booked and paid online — you already refunded them manually (cash, Square POS):\n" +
-          "  → Check 'Cancel without issuing a refund', enter the amount in 'Manual Refund Amount', then set status to Cancelled.\n\n" +
-
-          "Attendee paid you directly (cash, Square POS, Terminal) — not through the website:\n" +
-          "  → Go to Bookings → Create New, fill in the attendee and session, enter the amount in 'Amount Paid', set status to Confirmed.\n\n" +
-
-          "Attendee paid you directly and you need to cancel and refund them:\n" +
-          "  → Open the booking, enter the refund amount in 'Manual Refund Amount', set status to Cancelled.\n\n" +
-
-          "Attendee paid you directly and you need to cancel but no refund is being given:\n" +
-          "  → Open the booking and set status to Cancelled. Leave 'Manual Refund Amount' blank.\n\n" +
-
-          "─────────────────────────────────────────────────────────────────────\n\n" +
-
-          "KEY THINGS TO REMEMBER\n\n" +
-          "  • All bookings should be recorded here, even if payment was collected in person.\n" +
-          "  • 'Amount Paid' and 'Manual Refund Amount' use cents — $225.00 = 22500.\n" +
-          "  • The CMS can only issue automatic refunds for bookings paid through the website.\n" +
-          "  • 'Manual Refund Amount' never moves money — it is for record-keeping only.",
-      },
-      fields: [
-        {
-          name: "_placeholder",
-          type: "text",
-          admin: {
-            hidden: true,
-          },
-        },
-      ],
-    },
   ],
 };
