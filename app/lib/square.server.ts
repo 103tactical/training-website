@@ -30,27 +30,35 @@ export const SQUARE_CONFIGURED = Boolean(
 )
 
 // ── Surcharge cache ───────────────────────────────────────────────────────────
-// Fetched from Square's catalog once every 10 minutes so we don't hammer the
-// API on every page load, but changes in the Square dashboard propagate quickly.
+// Priority order:
+//   1. SQUARE_SURCHARGE_PERCENT env var (explicit, always wins if set)
+//   2. Square Catalog API — SERVICE_CHARGE items (cached 10 min)
+//   3. 0 (no surcharge)
 
 let _surchargeCache: { percent: number; expiresAt: number } | null = null;
 const SURCHARGE_CACHE_TTL_MS = 10 * 60 * 1000;
 
 /**
- * Returns the surcharge percentage configured in the Square dashboard
- * (Settings → Service Charges → first active percentage-based charge).
+ * Returns the credit-card surcharge percentage to apply at checkout.
  *
- * Falls back to the SQUARE_SURCHARGE_PERCENT env var if the catalog API is
- * unavailable or returns no matching charge, and to 0 if neither is set.
+ * If SQUARE_SURCHARGE_PERCENT is set in the environment it is used directly
+ * (no API call). Otherwise the Square Catalog API is queried for an active
+ * percentage-based SERVICE_CHARGE item, with the result cached for 10 minutes.
  */
 export async function getSquareSurchargePercent(): Promise<number> {
+  // Env var always wins — explicit and zero-latency.
+  const envValue = process.env.SQUARE_SURCHARGE_PERCENT;
+  if (envValue !== undefined && envValue !== '') {
+    const parsed = parseFloat(envValue);
+    if (!isNaN(parsed) && parsed >= 0) return parsed;
+  }
+
+  // Return cached value if still fresh.
   if (_surchargeCache && Date.now() < _surchargeCache.expiresAt) {
     return _surchargeCache.percent;
   }
 
-  const envFallback = parseFloat(process.env.SQUARE_SURCHARGE_PERCENT ?? "0");
-
-  if (!squareClient) return envFallback;
+  if (!squareClient) return 0;
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,25 +66,54 @@ export async function getSquareSurchargePercent(): Promise<number> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const objects: any[] = page.data ?? [];
 
+    console.log(`[Square] catalog.list SERVICE_CHARGE returned ${objects.length} object(s)`);
+    if (objects.length > 0) {
+      console.log('[Square] service charge objects:', JSON.stringify(objects.map((o: any) => ({
+        id: o.id,
+        type: o.type,
+        isDeleted: o.isDeleted,
+        serviceChargeData: o.serviceChargeData,
+      })), null, 2));
+    }
+
+    // Filter to charges that are active AND apply to our booking location.
+    // CatalogObjects use presentAtAllLocations (default true) / presentAtLocationIds
+    // / absentAtLocationIds for location scoping.
+    const locationId = SQUARE_LOCATION_ID;
     const charge = objects.find(
-      (obj) =>
-        obj.type === 'SERVICE_CHARGE' &&
-        !obj.isDeleted &&
-        obj.serviceChargeData?.percentage != null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (obj: any) => {
+        if (obj.type !== 'SERVICE_CHARGE') return false;
+        if (obj.isDeleted) return false;
+        if (obj.serviceChargeData?.percentage == null) return false;
+
+        // Location check
+        const presentAtAll = obj.presentAtAllLocations !== false; // defaults to true
+        const absentIds: string[] = obj.absentAtLocationIds ?? [];
+        const presentIds: string[] = obj.presentAtLocationIds ?? [];
+
+        if (presentAtAll) {
+          return !absentIds.includes(locationId);
+        }
+        return presentIds.includes(locationId);
+      },
     );
 
     if (charge) {
       const pct = parseFloat(charge.serviceChargeData.percentage);
       if (!isNaN(pct) && pct > 0) {
+        console.log(`[Square] Using catalog service charge: ${pct}%`);
         _surchargeCache = { percent: pct, expiresAt: Date.now() + SURCHARGE_CACHE_TTL_MS };
         return pct;
       }
     }
+
+    console.warn('[Square] No active percentage-based SERVICE_CHARGE found in catalog. Set SQUARE_SURCHARGE_PERCENT env var to apply a surcharge.');
   } catch (err) {
     console.warn('[Square] Could not fetch service charges from catalog:', err);
   }
 
-  return envFallback;
+  return 0;
 }
 
 /**
