@@ -59,6 +59,30 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   }
 }
 
+export interface ECommerceSettings {
+  payments?: {
+    creditCardSurchargePercent?: number | null;
+    creditCardFixedFeeCents?: number | null;
+  };
+}
+
+let _eCommerceCache: { data: ECommerceSettings; expiresAt: number } | null = null;
+const ECOMMERCE_TTL_MS = 5 * 60 * 1000;
+
+export async function getECommerceSettings(): Promise<ECommerceSettings> {
+  if (_eCommerceCache && Date.now() < _eCommerceCache.expiresAt) {
+    return _eCommerceCache.data;
+  }
+  try {
+    const data = await fetchPayload<ECommerceSettings>("/globals/e-commerce");
+    _eCommerceCache = { data, expiresAt: Date.now() + ECOMMERCE_TTL_MS };
+    return data;
+  } catch (err) {
+    console.warn("[payload] Could not fetch e-commerce settings:", err);
+    return _eCommerceCache?.data ?? {};
+  }
+}
+
 export async function getUtility() {
   return fetchPayload<Utility>("/globals/utility");
 }
@@ -422,10 +446,6 @@ export interface SiteSettings {
   social: { platform: string; url: string }[];
   copyright?: string;
   seo?: SeoFields & { title?: string };
-  payments?: {
-    creditCardSurchargePercent?: number | null;
-    creditCardFixedFeeCents?: number | null;
-  };
 }
 
 export interface HighlightCalloutItem {

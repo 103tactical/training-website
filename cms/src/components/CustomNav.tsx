@@ -50,10 +50,11 @@ export default function CustomNav() {
           </NavGroup>
 
           <NavGroup label="Accounting & Reports">
-            <NavLink href="/admin/reporting/dashboard"  label="Overview" />
-            <NavLink href="/admin/reporting/revenue"    label="Revenue Report" />
-            <NavLink href="/admin/reporting/bookings"   label="Bookings Report" />
-            <NavLink href="/admin/reporting/refunds"    label="Refunds & Cancellations" />
+            <NavLink href="/admin/reporting/dashboard"       label="Overview" />
+            <NavLink href="/admin/reporting/revenue"         label="Revenue Report" />
+            <NavLink href="/admin/reporting/bookings"        label="Bookings Report" />
+            <NavLink href="/admin/reporting/refunds"         label="Refunds & Cancellations" />
+            <NavLink href="/admin/globals/e-commerce"        label="E-Commerce" />
           </NavGroup>
 
           <NavGroup label="Data">

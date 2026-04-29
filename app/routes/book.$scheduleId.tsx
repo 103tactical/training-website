@@ -17,7 +17,7 @@ import {
   createPendingBooking,
   findActivePendingBooking,
   updatePendingBooking,
-  getSiteSettings,
+  getECommerceSettings,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
@@ -91,9 +91,9 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }));
 
   const basePrice = course?.price ?? 0;
-  const siteSettings = await getSiteSettings();
-  const surchargePercent = siteSettings.payments?.creditCardSurchargePercent ?? 0;
-  const fixedFeeDollars = (siteSettings.payments?.creditCardFixedFeeCents ?? 0) / 100;
+  const ecommerceSettings = await getECommerceSettings();
+  const surchargePercent = ecommerceSettings.payments?.creditCardSurchargePercent ?? 0;
+  const fixedFeeDollars = (ecommerceSettings.payments?.creditCardFixedFeeCents ?? 0) / 100;
   // Pass-through formula accounting for both % and fixed fee components:
   // surcharge = (price + fixedFee) / (1 - rate%) - price
   // Ensures merchant fully recoups Square's fee structure (e.g. 2.9% + $0.30).
@@ -173,9 +173,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
     const course = schedule.course as Course;
     const priceInCents = Math.round((course?.price ?? 0) * 100);
-    const siteSettings = await getSiteSettings();
-    const surchargePercent = siteSettings.payments?.creditCardSurchargePercent ?? 0;
-    const fixedFeeCents = siteSettings.payments?.creditCardFixedFeeCents ?? 0;
+    const ecommerceSettings = await getECommerceSettings();
+    const surchargePercent = ecommerceSettings.payments?.creditCardSurchargePercent ?? 0;
+    const fixedFeeCents = ecommerceSettings.payments?.creditCardFixedFeeCents ?? 0;
     // Pass-through formula: (price + fixedFee) / (1 - rate%) - price
     // Fully recoups both the percentage and fixed components of Square's fee.
     const surchargeCents = surchargePercent > 0
