@@ -166,7 +166,7 @@ export default async function BookingsReport(props: any) {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>
+      <div className="rpt-stat-grid">
         <div style={statCard}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Confirmed</span>
           <span style={{ fontSize: '26px', fontWeight: 700, color: '#16a34a' }}>{confirmed.length}</span>
@@ -186,7 +186,7 @@ export default async function BookingsReport(props: any) {
       </div>
 
       {/* Table */}
-      <div style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden' }}>
+      <div className="rpt-table-scroll" style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden' }}>
         {bookings.length === 0 ? (
           <p style={{ padding: '20px', color: 'var(--theme-elevation-500)', fontSize: '13px', margin: 0 }}>
             No bookings found for this filter.

@@ -134,8 +134,10 @@ export default function ResendQuotaWidget() {
         }
         .rq-title-row {
           display: flex;
+          flex-wrap: wrap;
           justify-content: space-between;
           align-items: center;
+          gap: 8px;
           margin-bottom: 8px;
         }
         .rq-left {

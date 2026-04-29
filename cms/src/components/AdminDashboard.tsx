@@ -62,11 +62,11 @@ const SECTIONS = [
 export default function AdminDashboard() {
   return (
     <div style={{
-      padding: '2.5rem',
+      padding: '0 4.5rem',
       maxWidth: '960px',
     }}>
       <h1 style={{
-        fontSize: '1.5rem',
+        fontSize: '24px',
         fontWeight: 700,
         marginBottom: '2rem',
         color: 'var(--theme-text)',

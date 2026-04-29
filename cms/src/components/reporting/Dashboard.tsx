@@ -189,8 +189,6 @@ export default async function Dashboard(props: any) {
   }
 
   const grid4: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '16px',
     marginBottom: '16px',
   }
@@ -240,7 +238,7 @@ export default async function Dashboard(props: any) {
 
       {/* ── Revenue metrics ── */}
       <SectionHeading>Revenue</SectionHeading>
-      <div style={grid4}>
+      <div className="rpt-stat-grid" style={grid4}>
         <StatCard label="Total Revenue"     value={formatCents(totalRevenue)} sub="All confirmed bookings" />
         <StatCard label="This Month"        value={formatCents(monthRevenue)} />
         <StatCard label="This Year"         value={formatCents(yearRevenue)} />
@@ -249,7 +247,7 @@ export default async function Dashboard(props: any) {
 
       {/* ── Booking metrics ── */}
       <SectionHeading>Bookings</SectionHeading>
-      <div style={{ ...grid4, marginBottom: '28px' }}>
+      <div className="rpt-stat-grid" style={{ ...grid4, marginBottom: '28px' }}>
         <StatCard label="Confirmed"         value={String(confirmed.length)} sub="All time" />
         <StatCard label="Waitlisted"        value={String(waitlisted.length)} />
         <StatCard label="Cancellations"     value={String(cancelled.length)} />
@@ -262,7 +260,7 @@ export default async function Dashboard(props: any) {
 
       {/* ── Upcoming sessions ── */}
       <SectionHeading>Upcoming Sessions (Next 60 Days)</SectionHeading>
-      <div style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden', marginBottom: '28px' }}>
+      <div className="rpt-table-scroll" style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden', marginBottom: '28px' }}>
         {upcomingSessions.length === 0 ? (
           <p style={{ padding: '20px', color: 'var(--theme-elevation-500, #888)', fontSize: '13px', margin: 0 }}>
             No upcoming sessions in the next 60 days.
@@ -305,7 +303,7 @@ export default async function Dashboard(props: any) {
 
       {/* ── Recent bookings ── */}
       <SectionHeading>Recent Bookings</SectionHeading>
-      <div style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden', marginBottom: '32px' }}>
+      <div className="rpt-table-scroll" style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden', marginBottom: '32px' }}>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -334,7 +332,7 @@ export default async function Dashboard(props: any) {
 
       {/* ── Quick links to reports ── */}
       <SectionHeading>Reports</SectionHeading>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div className="rpt-quick-links-grid">
         <QuickLink href="/admin/reporting/revenue"  label="Revenue Report"          desc="Revenue by period with CSV export" />
         <QuickLink href="/admin/reporting/bookings" label="Bookings Report"         desc="All bookings filtered by status and date" />
         <QuickLink href="/admin/reporting/refunds"  label="Refunds & Cancellations" desc="Cancelled bookings and refund totals" />

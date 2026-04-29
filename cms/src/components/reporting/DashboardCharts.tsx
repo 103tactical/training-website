@@ -37,7 +37,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 export default function DashboardCharts({ revenueByMonth, bookingsByCourse }: Props) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '28px' }}>
+    <div className="rpt-charts-grid">
 
       {/* Revenue by Month */}
       <div style={{ background: CARD_BG, borderRadius: '8px', padding: '20px 24px', outline: 'none' }}>

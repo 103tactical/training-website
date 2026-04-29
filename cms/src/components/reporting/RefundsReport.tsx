@@ -129,7 +129,7 @@ export default async function RefundsReport(props: any) {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>
+      <div className="rpt-stat-grid">
         <div style={statCard}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Total Cancellations</span>
           <span style={{ fontSize: '26px', fontWeight: 700 }}>{cancellations.length}</span>
@@ -153,7 +153,7 @@ export default async function RefundsReport(props: any) {
       </div>
 
       {/* Table */}
-      <div style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden' }}>
+      <div className="rpt-table-scroll" style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden' }}>
         {cancellations.length === 0 ? (
           <p style={{ padding: '20px', color: 'var(--theme-elevation-500)', fontSize: '13px', margin: 0 }}>
             No cancellations found for this period.
