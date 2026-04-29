@@ -4659,8 +4659,8 @@ body.layout-print .app-content { transform: none !important; }
   flex-direction: column;
   gap: var(--spacing-1);
   padding: var(--spacing-3) var(--spacing-4);
-  border-left: 3px solid var(--color-accent, #ea580c);
-  background: rgba(234, 88, 12, 0.07);
+  border-left: 3px solid var(--color-blue);
+  background: rgba(27, 79, 158, 0.07);
   border-radius: 0 4px 4px 0;
   margin-bottom: var(--spacing-4);
 }
@@ -4670,7 +4670,7 @@ body.layout-print .app-content { transform: none !important; }
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-accent, #ea580c);
+  color: var(--color-blue);
 }
 
 .booking-form__cc-notice-body {
