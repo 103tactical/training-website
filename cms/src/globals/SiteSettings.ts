@@ -17,7 +17,6 @@ export const SiteSettings: GlobalConfig = {
       label: "Payment Settings",
       admin: {
         description:
-          "HOW THIS WORKS\n\n" +
           "Square charges a processing fee of 2.9% + $0.30 on every online payment. Rather than " +
           "absorbing that cost out of your course revenue, the site automatically calculates a small " +
           "surcharge and adds it to the customer's total — so after Square takes their cut, you " +
