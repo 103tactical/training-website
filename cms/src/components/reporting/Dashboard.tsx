@@ -124,8 +124,10 @@ export default async function Dashboard(props: any) {
                                      .reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
   const yearRevenue       = confirmed.filter(b => new Date(b.createdAt) >= yearStart)
                                      .reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
-  const totalRefunded     = cancelled.filter(b => b.squarePaymentId)
-                                     .reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
+  const totalRefunded     = cancelled.reduce((s, b) => {
+    if (b.squarePaymentId) return s + (b.amountPaidCents ?? 0)
+    return s + (b.manualRefundAmountCents ?? 0)
+  }, 0)
   const avgBooking        = confirmed.length > 0
     ? Math.round(totalRevenue / confirmed.length)
     : 0
@@ -242,7 +244,7 @@ export default async function Dashboard(props: any) {
         <StatCard label="Total Revenue"     value={formatCents(totalRevenue)} sub="All confirmed bookings" />
         <StatCard label="This Month"        value={formatCents(monthRevenue)} />
         <StatCard label="This Year"         value={formatCents(yearRevenue)} />
-        <StatCard label="Total Refunded"    value={formatCents(totalRefunded)} sub="Square-processed only" accent />
+        <StatCard label="Total Refunded"    value={formatCents(totalRefunded)} sub="Square + manual" accent />
       </div>
 
       {/* ── Booking metrics ── */}

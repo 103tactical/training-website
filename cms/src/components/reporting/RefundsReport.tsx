@@ -44,9 +44,12 @@ export default async function RefundsReport(props: any) {
     sort: '-updatedAt',
   }) as { docs: RawBooking[] }
 
-  const squareRefunds    = cancellations.filter(b => b.squarePaymentId && b.amountPaidCents)
-  const totalRefunded    = squareRefunds.reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
-  const manualCancels    = cancellations.filter(b => !b.squarePaymentId)
+  const squareRefunds       = cancellations.filter(b => b.squarePaymentId && b.amountPaidCents)
+  const totalSquareRefunded = squareRefunds.reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
+  const manualRefunds       = cancellations.filter(b => !b.squarePaymentId && (b.manualRefundAmountCents ?? 0) > 0)
+  const totalManualRefunded = manualRefunds.reduce((s, b) => s + (b.manualRefundAmountCents ?? 0), 0)
+  const totalRefunded       = totalSquareRefunded + totalManualRefunded
+  const manualCancels       = cancellations.filter(b => !b.squarePaymentId)
 
   const csvHeaders = ['Date Cancelled', 'Attendee', 'Email', 'Course', 'Session', 'Amount Refunded', 'Square Order ID', 'Square Payment ID']
   const csvRows = cancellations.map(b => [
@@ -136,19 +139,18 @@ export default async function RefundsReport(props: any) {
         </div>
         <div style={statCard}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Square Refunds</span>
-          <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalRefunded)}</span>
+          <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalSquareRefunded)}</span>
           <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{squareRefunds.length} transactions</span>
         </div>
         <div style={statCard}>
-          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Manual Cancellations</span>
-          <span style={{ fontSize: '26px', fontWeight: 700 }}>{manualCancels.length}</span>
-          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>No Square refund</span>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Manual Refunds</span>
+          <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalManualRefunded)}</span>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{manualCancels.length} manual cancellation{manualCancels.length !== 1 ? 's' : ''}</span>
         </div>
         <div style={statCard}>
-          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Avg Refund</span>
-          <span style={{ fontSize: '26px', fontWeight: 700 }}>
-            {squareRefunds.length > 0 ? formatCents(Math.round(totalRefunded / squareRefunds.length)) : '—'}
-          </span>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Total Refunded</span>
+          <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalRefunded)}</span>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>Square + manual</span>
         </div>
       </div>
 
@@ -172,8 +174,12 @@ export default async function RefundsReport(props: any) {
                   <td style={tdStyle}>{getAttendeeName(b)}</td>
                   <td style={tdStyle}>{getCourseName(b)}</td>
                   <td style={tdStyle}>{getSessionLabel(b)}</td>
-                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: b.squarePaymentId ? '#b91c1c' : 'var(--theme-elevation-500)' }}>
-                    {b.squarePaymentId ? formatCents(b.amountPaidCents) : 'Manual'}
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: (b.squarePaymentId || b.manualRefundAmountCents) ? '#b91c1c' : 'var(--theme-elevation-500)' }}>
+                    {b.squarePaymentId
+                      ? formatCents(b.amountPaidCents)
+                      : b.manualRefundAmountCents
+                        ? formatCents(b.manualRefundAmountCents)
+                        : '—'}
                   </td>
                   <td style={{ ...tdStyle, fontSize: '11px', color: 'var(--theme-elevation-500)' }}>
                     {b.squareOrderId ?? '—'}

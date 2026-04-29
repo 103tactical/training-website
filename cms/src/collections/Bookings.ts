@@ -531,9 +531,11 @@ export const Bookings: CollectionConfig = {
       name: 'amountPaidCents',
       type: 'number',
       label: 'Amount Paid (cents)',
+      min: 0,
       admin: {
-        readOnly: true,
-        description: 'Amount charged in cents (e.g. 22500 = $225.00). Auto-populated from Square.',
+        description:
+          'Amount charged in cents (e.g. 22500 = $225.00). Auto-populated from Square for online bookings. ' +
+          'For manual/cash bookings, enter the amount collected here.',
       },
     },
     {
@@ -573,6 +575,18 @@ export const Bookings: CollectionConfig = {
           'Check this box BEFORE setting status to Cancelled if you do NOT want to issue a Square refund. ' +
           'Leave unchecked (default) to automatically refund the customer when cancelling.',
         condition: (data) => data.status !== 'cancelled',
+      },
+    },
+    {
+      name: 'manualRefundAmountCents',
+      type: 'number',
+      label: 'Manual Refund Amount (cents)',
+      min: 0,
+      admin: {
+        description:
+          'If you issued a refund outside of Square (cash, POS, etc.), enter the amount refunded in cents ' +
+          '(e.g. 22500 = $225.00). This is recorded for reporting purposes only — it does not trigger any payment action.',
+        condition: (data) => data.skipRefund === true || data.status === 'cancelled',
       },
     },
     {
