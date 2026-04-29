@@ -150,6 +150,33 @@ export const SiteSettings: GlobalConfig = {
       defaultValue: "© 103 Tactical Training. All rights reserved.",
     },
 
+    // ── Payment Settings ──────────────────────────────────────────────────────
+    {
+      name: "payments",
+      type: "group",
+      label: "Payment Settings",
+      admin: {
+        description: "Configure payment processing options for online bookings.",
+      },
+      fields: [
+        {
+          name: "creditCardSurchargePercent",
+          type: "number",
+          label: "Credit Card Surcharge (%)",
+          defaultValue: 0,
+          min: 0,
+          max: 10,
+          admin: {
+            description:
+              "Percentage surcharge added to cover credit card processing costs. " +
+              "Set to 0 to disable. Enter the percentage your payment processor charges " +
+              "(e.g. enter 3 for 3%). The fee shown to the customer is calculated using " +
+              "the formula price ÷ (1 − rate) so the merchant fully recoups the processing fee.",
+          },
+        },
+      ],
+    },
+
     // ── SEO Defaults ──────────────────────────────────────────────────────────
     {
       name: "seo",

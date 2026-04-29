@@ -29,22 +29,6 @@ export const SQUARE_CONFIGURED = Boolean(
   process.env.SQUARE_WEBHOOK_SIGNATURE_KEY,
 )
 
-/**
- * Returns the credit-card surcharge percentage to apply at checkout.
- *
- * NOTE: Square's Catalog API does not expose service charges configured in the
- * Square Dashboard — SERVICE_CHARGE is not a listable CatalogObjectType. The
- * SQUARE_SURCHARGE_PERCENT env var is therefore the authoritative source.
- * Set it to match whatever percentage is configured in your Square Dashboard
- * (Settings → Account & Settings → Payments → Service charges).
- * Returns 0 if the env var is not set or is invalid.
- */
-export function getSquareSurchargePercent(): number {
-  const val = process.env.SQUARE_SURCHARGE_PERCENT;
-  if (!val) return 0;
-  const parsed = parseFloat(val);
-  return isNaN(parsed) || parsed < 0 ? 0 : parsed;
-}
 
 /**
  * Verify that an incoming webhook request genuinely came from Square.

@@ -17,9 +17,10 @@ import {
   createPendingBooking,
   findActivePendingBooking,
   updatePendingBooking,
+  getSiteSettings,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
-import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED, getSquareSurchargePercent } from "~/lib/square.server";
+import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -90,9 +91,13 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }));
 
   const basePrice = course?.price ?? 0;
-  const surchargePercent = getSquareSurchargePercent();
+  const siteSettings = await getSiteSettings();
+  const surchargePercent = siteSettings.payments?.creditCardSurchargePercent ?? 0;
+  // Use the pass-through formula: charge = price / (1 - rate) - price
+  // This ensures the merchant fully recoups the processing fee since Square
+  // charges their fee on the total transaction amount (including surcharge).
   const surchargeAmount = surchargePercent > 0
-    ? Math.round(basePrice * surchargePercent) / 100
+    ? Math.round((basePrice / (1 - surchargePercent / 100) - basePrice) * 100) / 100
     : 0;
   const totalPrice = basePrice + surchargeAmount;
 
@@ -167,7 +172,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
     const course = schedule.course as Course;
     const priceInCents = Math.round((course?.price ?? 0) * 100);
-    const surchargePercent = getSquareSurchargePercent();
+    const siteSettings = await getSiteSettings();
+    const surchargePercent = siteSettings.payments?.creditCardSurchargePercent ?? 0;
+    // Pass-through formula: merchant fully recoups the fee
+    const surchargeCents = surchargePercent > 0
+      ? Math.round(priceInCents / (1 - surchargePercent / 100)) - priceInCents
+      : 0;
 
     // ── Upsert PendingBooking ───────────────────────────────────────────────
     // If this email already has a pending record for this schedule (e.g. the
@@ -238,11 +248,14 @@ export async function action({ request, params }: ActionFunctionArgs) {
             },
           },
         ],
-        ...(surchargePercent > 0 ? {
+        ...(surchargeCents > 0 ? {
           serviceCharges: [
             {
               name: `Credit Card Processing Fee (${surchargePercent}%)`,
-              percentage: String(surchargePercent),
+              amountMoney: {
+                amount: BigInt(surchargeCents),
+                currency: "USD",
+              },
               calculationPhase: "SUBTOTAL_PHASE",
               taxable: false,
             },

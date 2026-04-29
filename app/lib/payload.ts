@@ -8,6 +8,35 @@ export function resolveMediaUrl(url: string | undefined): string | undefined {
   return url.startsWith("http") ? url : `${PAYLOAD_API_URL}${url}`;
 }
 
+// ── Site Settings ─────────────────────────────────────────────────────────────
+
+export type SiteSettingsData = {
+  payments?: {
+    creditCardSurchargePercent?: number | null;
+  };
+};
+
+let _siteSettingsCache: { data: SiteSettingsData; expiresAt: number } | null = null;
+const SITE_SETTINGS_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetches the site-settings global from the CMS, cached for 5 minutes.
+ * Returns a partial object on failure so callers degrade gracefully.
+ */
+export async function getSiteSettings(): Promise<SiteSettingsData> {
+  if (_siteSettingsCache && Date.now() < _siteSettingsCache.expiresAt) {
+    return _siteSettingsCache.data;
+  }
+  try {
+    const data = await fetchPayload<SiteSettingsData>("/globals/site-settings");
+    _siteSettingsCache = { data, expiresAt: Date.now() + SITE_SETTINGS_TTL_MS };
+    return data;
+  } catch (err) {
+    console.warn("[payload] Could not fetch site-settings:", err);
+    return {};
+  }
+}
+
 /** Fetch public Payload data (no auth required). */
 export async function fetchPayload<T>(path: string): Promise<T> {
   const res = await fetch(`${PAYLOAD_API_URL}/api${path}`, {
