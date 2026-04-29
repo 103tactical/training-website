@@ -609,6 +609,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
           idempotencyKey,
           order: {
             locationId: process.env.SQUARE_LOCATION_ID!,
+            source: { name: '103 Tactical — Private Group Booking' },
             // referenceId is used by the webhook to look up the PendingBooking
             referenceId: token,
             metadata: {

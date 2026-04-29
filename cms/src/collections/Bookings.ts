@@ -360,7 +360,7 @@ const afterChangeHook: CollectionAfterChangeHook = async ({ doc, previousDoc, op
     previousDoc?.status !== 'cancelled' &&
     ACTIVE_STATUSES.includes(previousDoc?.status ?? '')
 
-  if (wasCancelled && doc.squarePaymentId && doc.amountPaidCents) {
+  if (wasCancelled && doc.squarePaymentId && doc.amountPaidCents && !doc.skipRefund) {
     await issueSquareRefund(doc.squarePaymentId, doc.amountPaidCents)
   }
 
@@ -435,7 +435,7 @@ export const Bookings: CollectionConfig = {
   admin: {
     useAsTitle: 'adminTitle',
     group: 'Course Management',
-    defaultColumns: ['adminTitle', 'courseSchedule', 'status', 'transferHistory'],
+    defaultColumns: ['adminTitle', 'courseSchedule', 'status', 'squarePaymentId', 'amountPaidCents'],
     description:
       'Course registrations. Each booking links an Attendee to a specific course session.',
     components: {
@@ -528,21 +528,21 @@ export const Bookings: CollectionConfig = {
     },
     // ── Square-specific fields (auto-populated on online bookings) ──────────
     {
-      name: 'squareOrderId',
-      type: 'text',
-      label: 'Square Order ID',
-      admin: {
-        hidden: true,
-        description: 'Auto-populated from Square when booked online. Used for refund lookups.',
-      },
-    },
-    {
       name: 'squarePaymentId',
       type: 'text',
       label: 'Square Payment ID',
       admin: {
-        hidden: true,
-        description: 'Auto-populated from Square when booked online. Used to issue refunds.',
+        readOnly: true,
+        description: 'Full payment ID from Square (e.g. RWF1bO7TF…). The first 4 characters match the receipt number shown in Square Dashboard. Required to issue refunds.',
+      },
+    },
+    {
+      name: 'squareOrderId',
+      type: 'text',
+      label: 'Square Order ID',
+      admin: {
+        readOnly: true,
+        description: 'Order ID from Square. Use this to look up the transaction in Square Dashboard → Payments → Orders.',
       },
     },
     {
@@ -550,8 +550,20 @@ export const Bookings: CollectionConfig = {
       type: 'number',
       label: 'Amount Paid (cents)',
       admin: {
-        hidden: true,
-        description: 'Amount charged in cents (e.g. 20000 = $200.00). Auto-populated from Square.',
+        readOnly: true,
+        description: 'Amount charged in cents (e.g. 22500 = $225.00). Auto-populated from Square.',
+      },
+    },
+    {
+      name: 'skipRefund',
+      type: 'checkbox',
+      label: 'Cancel without issuing a refund',
+      defaultValue: false,
+      admin: {
+        description:
+          'Check this box BEFORE setting status to Cancelled if you do NOT want to issue a Square refund. ' +
+          'Leave unchecked (default) to automatically refund the customer when cancelling.',
+        condition: (data) => data.status !== 'cancelled',
       },
     },
     {

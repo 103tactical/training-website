@@ -220,6 +220,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       idempotencyKey,
       order: {
         locationId: SQUARE_LOCATION_ID,
+        source: { name: '103 Tactical Website' },
         referenceId: token, // 32-char hex — webhook uses this to look up the PendingBooking
         // Metadata links every Square transaction back to our CMS records
         metadata: {

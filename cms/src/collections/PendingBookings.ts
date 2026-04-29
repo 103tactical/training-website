@@ -220,9 +220,12 @@ export const PendingBookings: CollectionConfig = {
     group: 'Course Management',
     defaultColumns: ['email', 'courseSchedule', 'status', 'failureReason', 'updatedAt'],
     description:
-      'Short-lived checkout sessions created when a visitor starts the booking flow. ' +
-      'Completed once payment is confirmed. ' +
-      'Expired records are visitors who started checkout but did not pay — useful as a prospecting list.',
+      'Checkout sessions created when a visitor starts the booking flow. ' +
+      'All records are kept for auditing and accounting purposes — ' +
+      'Completed = booking created successfully · ' +
+      'Failed = payment received but booking creation failed (use Retry) · ' +
+      'Expired = visitor started checkout but never paid (useful as a prospecting list) · ' +
+      'Completed records remain here intentionally as a permanent audit trail linking Square Order IDs to bookings.',
     components: {
       beforeList: ['./components/EmailExpiredLeadsButton'],
     },

@@ -205,14 +205,40 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     }
 
     // ── Find or create Attendee ─────────────────────────────────────────────
-    // Prefer Square's cardholder name (verified at payment) over our form data.
-    // Fall back to form data if the cardholder name is unavailable.
-    const cardholderName: string = payment.card_details?.card?.card_holder_name ?? "";
+    // The webhook payload may truncate card_details for PCI reasons.
+    // Fetch the full payment via the SDK to reliably get the cardholder name.
+    // The SDK response uses camelCase; the raw webhook object uses snake_case.
+    let cardholderName = "";
+    let buyerFirstName = "";
+    let buyerLastName  = "";
+    if (squareClient) {
+      try {
+        const fullPaymentResp = await squareClient.payments.get({ paymentId });
+        const fp = fullPaymentResp.payment;
+        const sdkName: string = fp?.cardDetails?.card?.cardHolderName ?? "";
+        if (sdkName) {
+          cardholderName = sdkName;
+        } else {
+          // Fall back to billing address name if card holder name is absent
+          const fn = fp?.billingAddress?.firstName ?? "";
+          const ln = fp?.billingAddress?.lastName  ?? "";
+          if (fn) {
+            buyerFirstName = fn;
+            buyerLastName  = ln;
+          }
+        }
+      } catch (err) {
+        console.warn("[webhook] Could not fetch full payment for name:", err);
+      }
+    }
+    // Final name resolution: SDK card name → SDK billing address → form data → fallback
     const { firstName, lastName } = cardholderName
       ? parseCardholderName(cardholderName)
-      : pending.firstName
-        ? { firstName: pending.firstName as string, lastName: (pending.lastName ?? "") as string }
-        : { firstName: "Customer", lastName: "" };
+      : buyerFirstName
+        ? { firstName: buyerFirstName, lastName: buyerLastName }
+        : pending.firstName
+          ? { firstName: pending.firstName as string, lastName: (pending.lastName ?? "") as string }
+          : { firstName: "Customer", lastName: "" };
 
     const buyerEmail: string = payment.buyer_email_address ?? pending.email;
 

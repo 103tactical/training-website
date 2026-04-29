@@ -43,6 +43,7 @@ import * as migration_20260421_private_group_bookings from './20260421_private_g
 import * as migration_20260304_testimonials_heading_update from './20260304_testimonials_heading_update';
 import * as migration_20260304_testimonials_heading_update_v2 from './20260304_testimonials_heading_update_v2';
 import * as migration_20260421_attendees_lastname_nullable from './20260421_attendees_lastname_nullable';
+import * as migration_20260429_bookings_skip_refund from './20260429_bookings_skip_refund';
 
 export const migrations = [
   {
@@ -269,5 +270,10 @@ export const migrations = [
     up: migration_20260421_attendees_lastname_nullable.up,
     down: migration_20260421_attendees_lastname_nullable.down,
     name: '20260421_attendees_lastname_nullable'
+  },
+  {
+    up: migration_20260429_bookings_skip_refund.up,
+    down: migration_20260429_bookings_skip_refund.down,
+    name: '20260429_bookings_skip_refund'
   },
 ];
