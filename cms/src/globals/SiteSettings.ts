@@ -162,16 +162,28 @@ export const SiteSettings: GlobalConfig = {
         {
           name: "creditCardSurchargePercent",
           type: "number",
-          label: "Credit Card Surcharge (%)",
+          label: "Credit Card Surcharge — Percentage (%)",
           defaultValue: 0,
           min: 0,
           max: 10,
           admin: {
             description:
-              "Percentage surcharge added to cover credit card processing costs. " +
-              "Set to 0 to disable. Enter the percentage your payment processor charges " +
-              "(e.g. enter 3 for 3%). The fee shown to the customer is calculated using " +
-              "the formula price ÷ (1 − rate) so the merchant fully recoups the processing fee.",
+              "The percentage component of Square's processing fee for payment links. " +
+              "Square's standard rate is 2.9% — enter 2.9. Set to 0 to disable surcharging entirely.",
+          },
+        },
+        {
+          name: "creditCardFixedFeeCents",
+          type: "number",
+          label: "Credit Card Surcharge — Fixed Fee (cents)",
+          defaultValue: 30,
+          min: 0,
+          admin: {
+            description:
+              "The flat per-transaction component of Square's fee, in cents. " +
+              "Square's standard rate includes a $0.30 fixed fee — enter 30. " +
+              "Together with the percentage above, the formula (price + fixed) ÷ (1 − rate%) − price " +
+              "ensures the merchant fully recoups both components of the processing fee.",
           },
         },
       ],

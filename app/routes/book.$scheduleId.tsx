@@ -93,11 +93,12 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const basePrice = course?.price ?? 0;
   const siteSettings = await getSiteSettings();
   const surchargePercent = siteSettings.payments?.creditCardSurchargePercent ?? 0;
-  // Use the pass-through formula: charge = price / (1 - rate) - price
-  // This ensures the merchant fully recoups the processing fee since Square
-  // charges their fee on the total transaction amount (including surcharge).
+  const fixedFeeDollars = (siteSettings.payments?.creditCardFixedFeeCents ?? 0) / 100;
+  // Pass-through formula accounting for both % and fixed fee components:
+  // surcharge = (price + fixedFee) / (1 - rate%) - price
+  // Ensures merchant fully recoups Square's fee structure (e.g. 2.9% + $0.30).
   const surchargeAmount = surchargePercent > 0
-    ? Math.round((basePrice / (1 - surchargePercent / 100) - basePrice) * 100) / 100
+    ? Math.round(((basePrice + fixedFeeDollars) / (1 - surchargePercent / 100) - basePrice) * 100) / 100
     : 0;
   const totalPrice = basePrice + surchargeAmount;
 
@@ -174,9 +175,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const priceInCents = Math.round((course?.price ?? 0) * 100);
     const siteSettings = await getSiteSettings();
     const surchargePercent = siteSettings.payments?.creditCardSurchargePercent ?? 0;
-    // Pass-through formula: merchant fully recoups the fee
+    const fixedFeeCents = siteSettings.payments?.creditCardFixedFeeCents ?? 0;
+    // Pass-through formula: (price + fixedFee) / (1 - rate%) - price
+    // Fully recoups both the percentage and fixed components of Square's fee.
     const surchargeCents = surchargePercent > 0
-      ? Math.round(priceInCents / (1 - surchargePercent / 100)) - priceInCents
+      ? Math.round((priceInCents + fixedFeeCents) / (1 - surchargePercent / 100)) - priceInCents
       : 0;
 
     // ── Upsert PendingBooking ───────────────────────────────────────────────

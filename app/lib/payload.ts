@@ -13,6 +13,7 @@ export function resolveMediaUrl(url: string | undefined): string | undefined {
 export type SiteSettingsData = {
   payments?: {
     creditCardSurchargePercent?: number | null;
+    creditCardFixedFeeCents?: number | null;
   };
 };
 
