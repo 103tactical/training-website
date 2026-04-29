@@ -156,7 +156,22 @@ export const SiteSettings: GlobalConfig = {
       type: "group",
       label: "Payment Settings",
       admin: {
-        description: "Configure payment processing options for online bookings.",
+        description:
+          "HOW THIS WORKS\n\n" +
+          "Square charges a processing fee of 2.9% + $0.30 on every online payment. Rather than " +
+          "absorbing that cost out of your course revenue, the site automatically calculates a small " +
+          "surcharge and adds it to the customer's total — so after Square takes their cut, you " +
+          "receive the full course price.\n\n" +
+          "The customer sees the fee clearly broken down on the booking page before they pay, along " +
+          "with a brief notice that it covers processing costs and is not more than what you pay Square.\n\n" +
+          "Example — $100 course:\n" +
+          "  Course fee:              $100.00\n" +
+          "  Processing surcharge:    + $3.39\n" +
+          "  Customer pays:           $103.39\n" +
+          "  Square takes 2.9%+$0.30: − $3.39\n" +
+          "  You receive:             $100.00\n\n" +
+          "To disable the surcharge and absorb the fee yourself, set the percentage to 0. " +
+          "Changes take effect within minutes — no redeployment needed.",
       },
       fields: [
         {
@@ -168,8 +183,8 @@ export const SiteSettings: GlobalConfig = {
           max: 10,
           admin: {
             description:
-              "The percentage component of Square's processing fee for payment links. " +
-              "Square's standard rate is 2.9% — enter 2.9. Set to 0 to disable surcharging entirely.",
+              "The percentage component of Square's processing fee. " +
+              "Square's standard API rate is 2.9 — enter 2.9. Set to 0 to disable the surcharge entirely.",
           },
         },
         {
@@ -182,8 +197,7 @@ export const SiteSettings: GlobalConfig = {
             description:
               "The flat per-transaction component of Square's fee, in cents. " +
               "Square's standard rate includes a $0.30 fixed fee — enter 30. " +
-              "Together with the percentage above, the formula (price + fixed) ÷ (1 − rate%) − price " +
-              "ensures the merchant fully recoups both components of the processing fee.",
+              "Both fields together ensure you fully recoup Square's exact fee on every transaction.",
           },
         },
       ],
