@@ -187,15 +187,21 @@ async function handlePaymentUpdated(event: Record<string, any>) {
   try {
     // ── Resolve the CourseSchedule ──────────────────────────────────────────
     // courseSchedule may be a populated object or a plain ID depending on depth
-    const scheduleId =
+    const scheduleIdRaw =
       pending.courseSchedule !== null && typeof pending.courseSchedule === "object"
         ? (pending.courseSchedule as { id: number }).id
         : pending.courseSchedule;
+    const scheduleId = Number(scheduleIdRaw);
+    if (!scheduleId) {
+      throw new Error(`Could not resolve a numeric schedule ID from pending.courseSchedule: ${JSON.stringify(pending.courseSchedule)}`);
+    }
     const schedule = await getCourseScheduleById(String(scheduleId));
     const course = schedule.course as Course;
-    const courseId = String(course?.id ?? "");
+    const courseId = Number(
+      typeof course === "object" && course !== null ? course.id : course,
+    );
     if (!courseId) {
-      throw new Error(`Schedule ${pending.courseSchedule} has no linked course`);
+      throw new Error(`Schedule ${scheduleId} has no linked course`);
     }
 
     // ── Find or create Attendee ─────────────────────────────────────────────
@@ -223,8 +229,8 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     // ── Create Booking ──────────────────────────────────────────────────────
     await createBookingRecord({
       attendee: attendee.id,
-      course: courseId,
-      courseSchedule: String(pending.courseSchedule),
+      course: courseId,      // numeric ID resolved from schedule.course above
+      courseSchedule: scheduleId, // numeric ID, not pending.courseSchedule
       status: "confirmed",
       squareOrderId: orderId,
       squarePaymentId: paymentId,
@@ -340,7 +346,9 @@ async function handleLegacyPayment(args: {
   if (!schedule) return;
 
   const course = schedule.course as Course;
-  const courseId = String(course?.id ?? "");
+  const courseId = Number(
+    typeof course === "object" && course !== null ? course.id : course,
+  );
   if (!courseId) return;
 
   let attendeeId = parseInt(attendeeIdStr ?? "", 10);

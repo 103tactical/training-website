@@ -290,13 +290,21 @@ export async function createBookingRecord(data: {
   paymentReference?: string;
 }): Promise<{ id: number }> {
   const secret = process.env.CMS_WRITE_SECRET;
+  // Payload's REST relationship validation requires numeric IDs — coerce here
+  // so callers don't need to worry about string vs number.
+  const body = {
+    ...data,
+    attendee: Number(data.attendee),
+    course: Number(data.course),
+    courseSchedule: Number(data.courseSchedule),
+  };
   const res = await fetch(`${PAYLOAD_API_URL}/api/bookings`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const body = await res.text();
