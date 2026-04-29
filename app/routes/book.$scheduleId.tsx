@@ -90,7 +90,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }));
 
   const basePrice = course?.price ?? 0;
-  const surchargePercent = await getSquareSurchargePercent();
+  const surchargePercent = getSquareSurchargePercent();
   const surchargeAmount = surchargePercent > 0
     ? Math.round(basePrice * surchargePercent) / 100
     : 0;
@@ -167,10 +167,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
     const course = schedule.course as Course;
     const priceInCents = Math.round((course?.price ?? 0) * 100);
-    const surchargePercent = await getSquareSurchargePercent();
-    const surchargeCents = surchargePercent > 0
-      ? Math.round(priceInCents * surchargePercent / 100)
-      : 0;
+    const surchargePercent = getSquareSurchargePercent();
 
     // ── Upsert PendingBooking ───────────────────────────────────────────────
     // If this email already has a pending record for this schedule (e.g. the
@@ -240,15 +237,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
               currency: "USD",
             },
           },
-          ...(surchargeCents > 0 ? [{
-            name: `Credit Card Processing Fee (${surchargePercent}%)`,
-            quantity: "1",
-            basePriceMoney: {
-              amount: BigInt(surchargeCents),
-              currency: "USD",
-            },
-          }] : []),
         ],
+        ...(surchargePercent > 0 ? {
+          serviceCharges: [
+            {
+              name: `Credit Card Processing Fee (${surchargePercent}%)`,
+              percentage: String(surchargePercent),
+              calculationPhase: "SUBTOTAL_PHASE",
+              taxable: false,
+            },
+          ],
+        } : {}),
       },
       checkoutOptions: {
         redirectUrl: `${siteUrl}/booking-confirmation`,
