@@ -41,24 +41,24 @@ const SURCHARGE_CACHE_TTL_MS = 10 * 60 * 1000;
 /**
  * Returns the credit-card surcharge percentage to apply at checkout.
  *
- * If SQUARE_SURCHARGE_PERCENT is set in the environment it is used directly
- * (no API call). Otherwise the Square Catalog API is queried for an active
- * percentage-based SERVICE_CHARGE item, with the result cached for 10 minutes.
+ * Source of truth is the Square Catalog API (SERVICE_CHARGE items filtered to
+ * the booking location). Result is cached for 10 minutes.
+ * Falls back to SQUARE_SURCHARGE_PERCENT env var only if the API is unavailable,
+ * and to 0 if neither yields a value.
  */
 export async function getSquareSurchargePercent(): Promise<number> {
-  // Env var always wins — explicit and zero-latency.
-  const envValue = process.env.SQUARE_SURCHARGE_PERCENT;
-  if (envValue !== undefined && envValue !== '') {
-    const parsed = parseFloat(envValue);
-    if (!isNaN(parsed) && parsed >= 0) return parsed;
-  }
-
   // Return cached value if still fresh.
   if (_surchargeCache && Date.now() < _surchargeCache.expiresAt) {
     return _surchargeCache.percent;
   }
 
-  if (!squareClient) return 0;
+  const envFallback = process.env.SQUARE_SURCHARGE_PERCENT
+    ? parseFloat(process.env.SQUARE_SURCHARGE_PERCENT)
+    : NaN;
+
+  if (!squareClient) {
+    return !isNaN(envFallback) ? envFallback : 0;
+  }
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,9 +108,15 @@ export async function getSquareSurchargePercent(): Promise<number> {
       }
     }
 
-    console.warn('[Square] No active percentage-based SERVICE_CHARGE found in catalog. Set SQUARE_SURCHARGE_PERCENT env var to apply a surcharge.');
+    console.warn('[Square] No active percentage-based SERVICE_CHARGE found in catalog for this location.');
   } catch (err) {
     console.warn('[Square] Could not fetch service charges from catalog:', err);
+  }
+
+  // Env var is only a fallback when the catalog API is unavailable or returns nothing.
+  if (!isNaN(envFallback) && envFallback > 0) {
+    console.warn(`[Square] Using SQUARE_SURCHARGE_PERCENT env fallback: ${envFallback}%`);
+    return envFallback;
   }
 
   return 0;
