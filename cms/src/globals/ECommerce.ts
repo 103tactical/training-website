@@ -9,9 +9,6 @@ export const ECommerce: GlobalConfig = {
   admin: {
     group: "Accounting & Reports",
     description: "Configure payment processing for online bookings. See the Operations Guide below for how to handle manual payments and refunds.",
-    components: {
-      afterFields: ['@/components/ECommerceGuide'],
-    },
   },
   fields: [
     {
@@ -64,6 +61,14 @@ export const ECommerce: GlobalConfig = {
         },
       ],
     },
-
+    {
+      name: 'ecommerceGuide',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/ECommerceGuide',
+        },
+      },
+    },
   ],
 };
