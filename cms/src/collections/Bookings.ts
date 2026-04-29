@@ -500,30 +500,12 @@ export const Bookings: CollectionConfig = {
       },
     },
     {
-      name: 'status',
-      type: 'select',
-      label: 'Booking Status',
-      required: true,
-      defaultValue: 'confirmed',
-      options: [
-        { label: 'Confirmed',  value: 'confirmed' },
-        { label: 'Waitlisted', value: 'waitlisted' },
-        { label: 'Cancelled',  value: 'cancelled' },
-      ],
-      admin: {
-        description:
-          'Confirmed and Waitlisted count against available seats. Cancelled frees the seat and automatically promotes the next Waitlisted person. To move someone to a different session, change the Session field above.',
-        components: {
-          Cell: './components/StatusBadge',
-        },
-      },
-    },
-    {
       name: 'paymentReference',
       type: 'text',
       label: 'Payment Reference',
       admin: {
-        description: 'Optional transaction ID or receipt number from the payment processor.',
+        hidden: true,
+        description: 'Internal reference kept for legacy/audit purposes. Use Square Payment ID instead.',
       },
     },
     // ── Square-specific fields (auto-populated on online bookings) ──────────
@@ -555,6 +537,33 @@ export const Bookings: CollectionConfig = {
       },
     },
     {
+      name: 'notes',
+      type: 'textarea',
+      label: 'Admin Notes',
+      admin: {
+        description: 'Internal notes visible only to admins (e.g. special accommodations).',
+      },
+    },
+    {
+      name: 'status',
+      type: 'select',
+      label: 'Booking Status',
+      required: true,
+      defaultValue: 'confirmed',
+      options: [
+        { label: 'Confirmed',  value: 'confirmed' },
+        { label: 'Waitlisted', value: 'waitlisted' },
+        { label: 'Cancelled',  value: 'cancelled' },
+      ],
+      admin: {
+        description:
+          'Confirmed and Waitlisted count against available seats. Cancelled frees the seat, automatically refunds the customer (if paid online), and promotes the next Waitlisted person. To move someone to a different session, change the Session field above.',
+        components: {
+          Cell: './components/StatusBadge',
+        },
+      },
+    },
+    {
       name: 'skipRefund',
       type: 'checkbox',
       label: 'Cancel without issuing a refund',
@@ -564,14 +573,6 @@ export const Bookings: CollectionConfig = {
           'Check this box BEFORE setting status to Cancelled if you do NOT want to issue a Square refund. ' +
           'Leave unchecked (default) to automatically refund the customer when cancelling.',
         condition: (data) => data.status !== 'cancelled',
-      },
-    },
-    {
-      name: 'notes',
-      type: 'textarea',
-      label: 'Admin Notes',
-      admin: {
-        description: 'Internal notes visible only to admins (e.g. special accommodations).',
       },
     },
     {
