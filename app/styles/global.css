@@ -4654,6 +4654,24 @@ body.layout-print .app-content { transform: none !important; }
   color: var(--color-white);
 }
 
+.booking-form__summary-breakdown {
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-form__summary-line--sub {
+  padding: var(--spacing-2) 0;
+  border-top: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.booking-form__summary-line--total {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: var(--spacing-1);
+}
+
 .booking-form__submit {
   width: 100%;
 }

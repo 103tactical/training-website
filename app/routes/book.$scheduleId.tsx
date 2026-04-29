@@ -19,7 +19,7 @@ import {
   updatePendingBooking,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
-import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
+import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED, getSquareSurchargePercent } from "~/lib/square.server";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -89,11 +89,21 @@ export async function loader({ params }: LoaderFunctionArgs) {
     hasTime: !!(s.startTime || s.endTime),
   }));
 
+  const basePrice = course?.price ?? 0;
+  const surchargePercent = await getSquareSurchargePercent();
+  const surchargeAmount = surchargePercent > 0
+    ? Math.round(basePrice * surchargePercent) / 100
+    : 0;
+  const totalPrice = basePrice + surchargeAmount;
+
   return json({
     scheduleId,
     courseName: course?.title ?? "Course",
     courseSlug: course?.slug ?? "",
-    price: course?.price ?? 0,
+    price: basePrice,
+    surchargePercent,
+    surchargeAmount,
+    totalPrice,
     durationHours: course?.durationHours,
     durationDays: course?.durationDays,
     sessions: formattedSessions,
@@ -157,6 +167,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
     const course = schedule.course as Course;
     const priceInCents = Math.round((course?.price ?? 0) * 100);
+    const surchargePercent = await getSquareSurchargePercent();
+    const surchargeCents = surchargePercent > 0
+      ? Math.round(priceInCents * surchargePercent / 100)
+      : 0;
 
     // ── Upsert PendingBooking ───────────────────────────────────────────────
     // If this email already has a pending record for this schedule (e.g. the
@@ -225,6 +239,14 @@ export async function action({ request, params }: ActionFunctionArgs) {
               currency: "USD",
             },
           },
+          ...(surchargeCents > 0 ? [{
+            name: `Credit Card Processing Fee (${surchargePercent}%)`,
+            quantity: "1",
+            basePriceMoney: {
+              amount: BigInt(surchargeCents),
+              currency: "USD",
+            },
+          }] : []),
         ],
       },
       checkoutOptions: {
@@ -261,9 +283,9 @@ export default function BookSessionPage() {
   const submitting = navigation.state === "submitting";
 
   const {
-    courseName, courseSlug, price, durationHours, durationDays,
-    sessions, instructorName, displayLabel, remaining, full,
-    squareConfigured,
+    courseName, courseSlug, price, surchargePercent, surchargeAmount, totalPrice,
+    durationHours, durationDays, sessions, instructorName, displayLabel,
+    remaining, full, squareConfigured,
   } = data;
 
   const errors = actionData?.errors ?? {};
@@ -428,10 +450,27 @@ export default function BookSessionPage() {
                 </span>
               </div>
 
-              <div className="booking-form__summary-line">
-                <span>Total due today</span>
-                <span className="booking-form__total">${price.toLocaleString()}.00</span>
-              </div>
+              {surchargePercent > 0 ? (
+                <div className="booking-form__summary-breakdown">
+                  <div className="booking-form__summary-line booking-form__summary-line--sub">
+                    <span>Course fee</span>
+                    <span>${price.toLocaleString()}.00</span>
+                  </div>
+                  <div className="booking-form__summary-line booking-form__summary-line--sub">
+                    <span>Credit card processing ({surchargePercent}%)</span>
+                    <span>${surchargeAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="booking-form__summary-line booking-form__summary-line--total">
+                    <span>Total due today</span>
+                    <span className="booking-form__total">${totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="booking-form__summary-line">
+                  <span>Total due today</span>
+                  <span className="booking-form__total">${price.toLocaleString()}.00</span>
+                </div>
+              )}
 
               <button
                 type="submit"
