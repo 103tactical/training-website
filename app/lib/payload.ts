@@ -8,35 +8,6 @@ export function resolveMediaUrl(url: string | undefined): string | undefined {
   return url.startsWith("http") ? url : `${PAYLOAD_API_URL}${url}`;
 }
 
-// ── Site Settings ─────────────────────────────────────────────────────────────
-
-export type SiteSettingsData = {
-  payments?: {
-    creditCardSurchargePercent?: number | null;
-    creditCardFixedFeeCents?: number | null;
-  };
-};
-
-let _siteSettingsCache: { data: SiteSettingsData; expiresAt: number } | null = null;
-const SITE_SETTINGS_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
-/**
- * Fetches the site-settings global from the CMS, cached for 5 minutes.
- * Returns a partial object on failure so callers degrade gracefully.
- */
-export async function getSiteSettings(): Promise<SiteSettingsData> {
-  if (_siteSettingsCache && Date.now() < _siteSettingsCache.expiresAt) {
-    return _siteSettingsCache.data;
-  }
-  try {
-    const data = await fetchPayload<SiteSettingsData>("/globals/site-settings");
-    _siteSettingsCache = { data, expiresAt: Date.now() + SITE_SETTINGS_TTL_MS };
-    return data;
-  } catch (err) {
-    console.warn("[payload] Could not fetch site-settings:", err);
-    return {};
-  }
-}
 
 /** Fetch public Payload data (no auth required). */
 export async function fetchPayload<T>(path: string): Promise<T> {
@@ -71,8 +42,21 @@ async function fetchPayloadAuth<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function getSiteSettings() {
-  return fetchPayload<SiteSettings>("/globals/site-settings?depth=1");
+let _siteSettingsCache: { data: SiteSettings; expiresAt: number } | null = null;
+const SITE_SETTINGS_TTL_MS = 5 * 60 * 1000;
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  if (_siteSettingsCache && Date.now() < _siteSettingsCache.expiresAt) {
+    return _siteSettingsCache.data;
+  }
+  try {
+    const data = await fetchPayload<SiteSettings>("/globals/site-settings?depth=1");
+    _siteSettingsCache = { data, expiresAt: Date.now() + SITE_SETTINGS_TTL_MS };
+    return data;
+  } catch (err) {
+    console.warn("[payload] Could not fetch site-settings:", err);
+    return _siteSettingsCache?.data ?? ({} as SiteSettings);
+  }
 }
 
 export async function getUtility() {
@@ -437,7 +421,11 @@ export interface SiteSettings {
   };
   social: { platform: string; url: string }[];
   copyright?: string;
-  seo?: SeoFields & { title?: string }; // title = site name suffix
+  seo?: SeoFields & { title?: string };
+  payments?: {
+    creditCardSurchargePercent?: number | null;
+    creditCardFixedFeeCents?: number | null;
+  };
 }
 
 export interface HighlightCalloutItem {
