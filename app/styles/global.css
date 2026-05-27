@@ -2870,12 +2870,14 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 .featured-course__eyebrow {
-  font-size: var(--text-sm);
+  font-family: var(--font-quantico);
+  font-weight: 700;
+  font-size: var(--text-2xl);
   color: var(--color-blue-tint);
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.06em;
+  text-align: center;
   margin: 0 0 var(--spacing-6) 0;
-  font-weight: 600;
 }
 
 .featured-course__inner {

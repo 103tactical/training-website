@@ -126,7 +126,7 @@ export default function CoursesRoute() {
                       {featuredHrefIsExternal ? (
                         <a
                           href={featuredHref}
-                          className="btn btn--primary featured-course__cta-btn"
+                          className="btn btn--outline featured-course__cta-btn"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -135,7 +135,7 @@ export default function CoursesRoute() {
                       ) : (
                         <Link
                           to={featuredHref}
-                          className="btn btn--primary featured-course__cta-btn"
+                          className="btn btn--outline featured-course__cta-btn"
                         >
                           {featured?.buttonLabel ?? "Book Now"}
                         </Link>
