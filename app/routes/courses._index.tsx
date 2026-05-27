@@ -1,5 +1,5 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, Link } from "@remix-run/react";
 import { getCoursesPage, getAllCourses, resolveMediaUrl } from "~/lib/payload";
 import type { CoursesPage, Course, CourseGroup } from "~/lib/payload";
 import CourseCard from "~/components/CourseCard";
@@ -32,6 +32,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function CoursesRoute() {
   const { coursesPage, allCourses } = useLoaderData<typeof loader>();
   const heroImageUrl = resolveMediaUrl(coursesPage?.heroImage?.url);
+
+  // Featured course — resolve its button link based on linkType
+  const featured = coursesPage?.featuredCourse;
+  const featuredImageUrl = resolveMediaUrl(featured?.image?.url);
+  const featuredCourse =
+    featured?.course && typeof featured.course === "object" ? featured.course : null;
+  let featuredHref: string | null = null;
+  if (featured?.linkType === "custom" && featured.customUrl) {
+    featuredHref = featured.customUrl;
+  } else if (featured?.linkType === "detail" && featuredCourse?.slug) {
+    featuredHref = `/courses/${featuredCourse.slug}`;
+  } else if (featured?.linkType === "schedule" && featuredCourse?.slug) {
+    featuredHref = `/courses/${featuredCourse.slug}/schedule`;
+  }
+  const featuredHrefIsExternal = !!featuredHref && /^https?:\/\//i.test(featuredHref);
+  const showFeatured =
+    featured?.enabled &&
+    (featured.heading || featured.body || featured.image?.url);
 
   const selectedGroups: CourseGroup[] = (coursesPage?.courseGroups ?? [])
     .map((cg) => (typeof cg.group === "object" ? cg.group : null))
@@ -68,6 +86,68 @@ export default function CoursesRoute() {
           </div>
         )}
       </div>
+
+      {/* Featured Course promo */}
+      {showFeatured && (
+        <section className="featured-course">
+          <div className="container">
+            <div className="featured-course__box">
+              {featured?.eyebrow && (
+                <p className="featured-course__eyebrow">{featured.eyebrow}</p>
+              )}
+              <div className="featured-course__inner">
+
+                {/* Image */}
+                <div className="featured-course__img-wrap">
+                  {featured?.badge && (
+                    <span className="product-badge">{featured.badge}</span>
+                  )}
+                  {featuredImageUrl ? (
+                    <img
+                      className="featured-course__img"
+                      src={featuredImageUrl}
+                      alt={featured?.image?.alt ?? featured?.heading ?? "Featured course"}
+                    />
+                  ) : (
+                    <div className="featured-course__img featured-course__img--placeholder" />
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="featured-course__details">
+                  {featured?.heading && (
+                    <h2 className="featured-course__heading">{featured.heading}</h2>
+                  )}
+                  {featured?.body && (
+                    <p className="featured-course__body">{featured.body}</p>
+                  )}
+                  {featuredHref && (
+                    <div className="featured-course__cta-wrap">
+                      {featuredHrefIsExternal ? (
+                        <a
+                          href={featuredHref}
+                          className="btn btn--primary featured-course__cta-btn"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {featured?.buttonLabel ?? "Book Now"}
+                        </a>
+                      ) : (
+                        <Link
+                          to={featuredHref}
+                          className="btn btn--primary featured-course__cta-btn"
+                        >
+                          {featured?.buttonLabel ?? "Book Now"}
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Selected course groups */}
       {selectedGroups.map((group) => {

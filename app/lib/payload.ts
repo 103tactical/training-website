@@ -513,6 +513,18 @@ export interface Course {
 export interface CoursesPage {
   heroImage?: { url: string; alt?: string };
   header?: { title?: string; subtext?: string };
+  featuredCourse?: {
+    enabled?: boolean;
+    eyebrow?: string;
+    heading?: string;
+    body?: string;
+    image?: { url: string; alt?: string };
+    badge?: string;
+    buttonLabel?: string;
+    linkType?: "detail" | "schedule" | "custom";
+    course?: Course | string | null;
+    customUrl?: string;
+  };
   courseGroups?: {
     id: string;
     group: CourseGroup;

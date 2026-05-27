@@ -47,6 +47,108 @@ export const CoursesPage: GlobalConfig = {
       ],
     },
 
+    // ── Featured Course ───────────────────────────────────────────────────
+    {
+      name: "featuredCourse",
+      type: "group",
+      label: "Featured Course",
+      admin: {
+        description:
+          "Promotional block displayed at the top of the Courses page, between the hero and the course groups. " +
+          "Use it to spotlight a seasonal discount, new offering, or limited-time promotion. " +
+          "Toggle off when no promotion is running.",
+      },
+      fields: [
+        {
+          name: "enabled",
+          type: "checkbox",
+          label: "Show this featured block on the Courses page",
+          defaultValue: false,
+        },
+        {
+          name: "eyebrow",
+          type: "text",
+          label: "Eyebrow Text",
+          admin: {
+            description: "Small label above the heading. E.g. 'Summer Special' or 'Limited Time'.",
+          },
+        },
+        {
+          name: "heading",
+          type: "text",
+          label: "Heading",
+          admin: {
+            description: "Main headline. E.g. 'Summer Teacher Special $100 OFF'.",
+          },
+        },
+        {
+          name: "body",
+          type: "textarea",
+          label: "Body Copy",
+          admin: {
+            description: "Supporting paragraph explaining the promotion.",
+          },
+        },
+        {
+          name: "image",
+          type: "upload",
+          relationTo: "media",
+          label: "Image",
+        },
+        {
+          name: "badge",
+          type: "text",
+          label: "Image Badge",
+          admin: {
+            description: "Optional label overlaid on the image. E.g. 'New', 'Sale', 'Popular'.",
+          },
+        },
+        {
+          name: "buttonLabel",
+          type: "text",
+          label: "Button Label",
+          defaultValue: "Book Now",
+        },
+        {
+          name: "linkType",
+          type: "radio",
+          label: "Button Links To",
+          defaultValue: "schedule",
+          admin: {
+            description:
+              "Choose what the button should link to. 'Course Detail' opens the course page. " +
+              "'Schedule List' jumps straight to the list of upcoming sessions for the course. " +
+              "'Custom URL' lets you link anywhere (e.g. an external promo page).",
+          },
+          options: [
+            { label: "Course Detail Page", value: "detail" },
+            { label: "Course Schedule List", value: "schedule" },
+            { label: "Custom URL", value: "custom" },
+          ],
+        },
+        {
+          name: "course",
+          type: "relationship",
+          relationTo: "courses",
+          label: "Linked Course",
+          admin: {
+            description: "The course this promotion is for. Required when the button links to a course or its schedule list.",
+            condition: (_, siblingData) =>
+              siblingData?.linkType === "detail" || siblingData?.linkType === "schedule",
+          },
+        },
+        {
+          name: "customUrl",
+          type: "text",
+          label: "Custom URL",
+          admin: {
+            description: "Any URL — internal (e.g. '/contact') or external (full https:// URL).",
+            condition: (_, siblingData) => siblingData?.linkType === "custom",
+          },
+        },
+      ],
+    },
+
     // ── Course Groups ─────────────────────────────────────────────────────
     {
       name: "courseGroups",
