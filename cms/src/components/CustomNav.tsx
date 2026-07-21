@@ -62,7 +62,7 @@ export default function CustomNav() {
           </NavGroup>
 
           <NavGroup label="Page Content">
-            <NavLink href="/admin/globals/home-page"          label="Home Page" />
+            <NavLink href="/admin/globals/home-page"          label="About Page" />
             <NavLink href="/admin/globals/courses-page"       label="Courses Page" />
             <NavLink href="/admin/globals/applications-page"  label="Applications Page" />
             <NavLink href="/admin/globals/store-page"         label="Store Page" />

@@ -35,7 +35,7 @@ const SECTIONS = [
   {
     label: 'Page Content',
     links: [
-      { href: '/admin/globals/home-page',         label: 'Home Page' },
+      { href: '/admin/globals/home-page',         label: 'About Page' },
       { href: '/admin/globals/courses-page',      label: 'Courses Page' },
       { href: '/admin/globals/applications-page', label: 'Applications Page' },
       { href: '/admin/globals/store-page',        label: 'Store Page' },

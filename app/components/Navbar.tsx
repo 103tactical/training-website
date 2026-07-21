@@ -31,7 +31,9 @@ export default function Navbar({
 }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const useWhite = location.pathname !== "/";
+  // The About page (formerly the home page) is the one route that shows the
+  // color logo; every other page uses the white variant.
+  const useWhite = location.pathname !== "/about";
 
   /* Close on route change */
   useEffect(() => {

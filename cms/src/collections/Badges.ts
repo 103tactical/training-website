@@ -5,7 +5,7 @@ export const Badges: CollectionConfig = {
   admin: {
     useAsTitle: "name",
     defaultColumns: ["name", "url"],
-    description: "Partner/affiliation badges shown on the home page. Each links to an external site.",
+    description: "Partner/affiliation badges shown on the About page. Each links to an external site.",
   },
   access: {
     read: () => true,

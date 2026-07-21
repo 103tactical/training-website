@@ -2,7 +2,7 @@ import type { GlobalConfig } from "payload";
 
 export const HomePage: GlobalConfig = {
   slug: "home-page",
-  label: "Home Page",
+  label: "About Page",
   access: {
     read: () => true,
   },
@@ -22,7 +22,7 @@ export const HomePage: GlobalConfig = {
           type: "text",
           label: "Headline Text",
           admin: {
-            description: "Large headline displayed above the featured carousel on the home page.",
+            description: "Large headline displayed above the featured carousel on the About page.",
           },
         },
       ],
@@ -174,7 +174,7 @@ export const HomePage: GlobalConfig = {
           relationTo: "course-groups",
           label: "Course Group",
           admin: {
-            description: "Select the course group to display on the home page. The group's title will be used as the section heading.",
+            description: "Select the course group to display on the About page. The group's title will be used as the section heading.",
           },
         },
       ],
@@ -392,7 +392,7 @@ export const HomePage: GlobalConfig = {
           hasMany: true,
           label: "Badges",
           admin: {
-            description: "Select and order the badges to display on the home page.",
+            description: "Select and order the badges to display on the About page.",
           },
         },
       ],

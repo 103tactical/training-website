@@ -90,7 +90,7 @@ export const Courses: CollectionConfig = {
       required: true,
       label: "Card Image",
       admin: {
-        description: "Image shown on course cards (home page and courses page).",
+        description: "Image shown on course cards (About page and courses page).",
       },
     },
     {
