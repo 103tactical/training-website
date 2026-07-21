@@ -41,14 +41,25 @@ export interface BuildMetaOptions {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MetaDescriptor = Record<string, any>;
 
+/**
+ * Force https on absolute URLs. Render terminates SSL at its proxy and
+ * forwards internally over http, so request-derived URLs (canonical, og:url)
+ * arrive with the wrong scheme unless corrected here.
+ */
+export function forceHttps(url: string | undefined): string | undefined {
+  if (!url) return url;
+  return url.replace(/^http:\/\//, "https://");
+}
+
 export function buildMeta({
   pageTitle,
   siteName = "103 Tactical",
   description,
   ogImage,
-  canonicalUrl,
+  canonicalUrl: rawCanonicalUrl,
   ogType = "website",
 }: BuildMetaOptions): MetaDescriptor[] {
+  const canonicalUrl = forceHttps(rawCanonicalUrl);
   const fullTitle = pageTitle ? `${pageTitle} | ${siteName}` : siteName;
   const tags: MetaDescriptor[] = [];
 

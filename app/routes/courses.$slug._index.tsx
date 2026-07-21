@@ -5,7 +5,7 @@ import { getCourseBySlug, resolveMediaUrl } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
 import RichText from "~/components/RichText";
 import { BulletIcon } from "~/components/Icons";
-import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
+import { buildMeta, getRootSeoDefaults, forceHttps } from "~/lib/meta";
 import { trackCourseView, trackScheduleNowClick } from "~/lib/analytics";
 
 export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
@@ -33,7 +33,7 @@ export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
       "@context": "https://schema.org",
       "@type": "Course",
       name: course.title,
-      url: data?.canonicalUrl,
+      url: forceHttps(data?.canonicalUrl),
       ...(course.price != null && {
         offers: {
           "@type": "Offer",
