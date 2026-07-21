@@ -22,7 +22,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   // Bookings are now protected — supply the CMS_WRITE_SECRET bearer token
   const cmsSecret = process.env.CMS_WRITE_SECRET ?? "";
-  const authHeaders = cmsSecret ? { Authorization: `Bearer ${cmsSecret}` } : {};
+  const authHeaders: Record<string, string> = cmsSecret ? { Authorization: `Bearer ${cmsSecret}` } : {};
 
   const [scheduleRes, attendeesRes, siteRes] = await Promise.all([
     fetch(`${API}/api/course-schedules/${id}?depth=2`),

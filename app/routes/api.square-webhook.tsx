@@ -215,7 +215,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       try {
         const fullPaymentResp = await squareClient.payments.get({ paymentId });
         const fp = fullPaymentResp.payment;
-        const sdkName: string = fp?.cardDetails?.card?.cardHolderName ?? "";
+        const sdkName: string = fp?.cardDetails?.card?.cardholderName ?? "";
         if (sdkName) {
           cardholderName = sdkName;
         } else {

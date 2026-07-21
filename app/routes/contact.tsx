@@ -47,6 +47,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 /* ── Action — validate + submit to Payload ──────────────────────────────── */
 
+type ContactActionData = {
+  success: boolean;
+  errors: Partial<Record<"name" | "email" | "phone" | "topic" | "form", string>>;
+};
+
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const name    = (formData.get("name")    as string | null)?.trim() ?? "";
@@ -55,7 +60,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const topic   = (formData.get("topic")   as string | null)?.trim() ?? "";
   const message = (formData.get("message") as string | null)?.trim() ?? "";
 
-  const errors: Record<string, string> = {};
+  const errors: ContactActionData["errors"] = {};
   if (!name)                                          errors.name  = "Name is required.";
   if (!email)                                         errors.email = "Email is required.";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Please enter a valid email address.";
@@ -64,7 +69,7 @@ export async function action({ request }: ActionFunctionArgs) {
   if (!topic)                                         errors.topic = "Please select a topic.";
 
   if (Object.keys(errors).length > 0) {
-    return json({ success: false, errors }, { status: 400 });
+    return json<ContactActionData>({ success: false, errors }, { status: 400 });
   }
 
   try {
@@ -80,10 +85,10 @@ export async function action({ request }: ActionFunctionArgs) {
       console.error("Admin contact form notification failed:", err);
     });
 
-    return json({ success: true, errors: {} });
+    return json<ContactActionData>({ success: true, errors: {} });
   } catch (err) {
     console.error("Contact form submission error:", err);
-    return json(
+    return json<ContactActionData>(
       { success: false, errors: { form: "Something went wrong. Please try again." } },
       { status: 500 }
     );
