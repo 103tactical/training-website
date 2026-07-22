@@ -21,6 +21,7 @@ import {
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
+import { isScheduleBookable } from "~/lib/schedule.server";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -76,6 +77,10 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
   if (!schedule || !schedule.isActive) {
     throw new Response("Session not available", { status: 404 });
+  }
+
+  if (!isScheduleBookable(schedule)) {
+    throw new Response("This session has already taken place", { status: 410 });
   }
 
   const course = schedule.course as Course;
@@ -170,6 +175,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const schedule = await getCourseScheduleById(scheduleId);
     if (!schedule || !schedule.isActive) {
       return json<BookActionData>({ errors: {}, formError: "This session is no longer available." }, { status: 410 });
+    }
+    if (!isScheduleBookable(schedule)) {
+      return json<BookActionData>({ errors: {}, formError: "This session has already taken place and can no longer be booked." }, { status: 410 });
     }
     const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0);
     if (remaining <= 0) {

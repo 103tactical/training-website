@@ -2,6 +2,7 @@ import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/nod
 import { useLoaderData, Link, useNavigate } from "@remix-run/react";
 import { useEffect } from "react";
 import { getCourseBySlug, getCourseSchedules, resolveMediaUrl } from "~/lib/payload";
+import { isScheduleBookable } from "~/lib/schedule.server";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
 import MiniCalendar from "~/components/MiniCalendar";
 import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
@@ -64,16 +65,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   const schedulesResult = await getCourseSchedules(course.id);
   const allSchedules = (schedulesResult?.docs ?? []) as CourseSchedule[];
 
-  // Filter out schedules whose first session date (Day 1) has already passed.
-  // Compare against midnight UTC today so today's sessions still appear.
-  const todayUTC = new Date();
-  todayUTC.setUTCHours(0, 0, 0, 0);
-
-  const schedules = allSchedules.filter((s) => {
-    const firstDate = s.sessions?.[0]?.date;
-    if (!firstDate) return false;
-    return new Date(firstDate) >= todayUTC;
-  });
+  // Filter out schedules that are no longer bookable — the first session's
+  // start time has passed (or its whole day, if no start time is set).
+  const schedules = allSchedules.filter(isScheduleBookable);
 
   return json({ course, schedules, canonicalUrl: new URL(request.url).toString() });
 }
