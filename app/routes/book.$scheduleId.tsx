@@ -519,11 +519,10 @@ export default function BookSessionPage() {
 
               {surchargePercent > 0 && (
                 <div className="booking-form__cc-notice" role="note">
-                  <span className="booking-form__cc-notice-title">Credit card fee notice</span>
+                  <span className="booking-form__cc-notice-title">Card processing fee</span>
                   <span className="booking-form__cc-notice-body">
-                    If you use a credit card, we will charge an additional {surchargePercent}% fee and
-                    any applicable taxes to help offset processing costs. This is not
-                    more than we pay in fees.
+                    A {surchargePercent}% processing fee applies to card payments.
+                    This fee does not exceed our cost of acceptance.
                   </span>
                 </div>
               )}
