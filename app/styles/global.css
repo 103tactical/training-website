@@ -2145,9 +2145,25 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 
 @media (min-width: 768px) {
   .schedule-page__inner {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: var(--spacing-8);
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-areas:
+      "heading heading"
+      "card    slots";
+    column-gap: var(--spacing-8);
+    row-gap: 0;
+    align-items: start;
+  }
+
+  .schedule-page__slots-col { display: contents; }
+  .schedule-page__heading { grid-area: heading; }
+  .schedule-page__slots,
+  .schedule-page__empty { grid-area: slots; }
+}
+
+@media (min-width: 992px) {
+  .schedule-page__inner {
+    grid-template-columns: 380px minmax(0, 1fr);
   }
 }
 
@@ -2162,15 +2178,10 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 
 @media (min-width: 768px) {
   .schedule-page__course-card {
-    width: 320px;
+    grid-area: card;
+    width: 100%;
     position: sticky;
     top: var(--spacing-8);
-  }
-}
-
-@media (min-width: 992px) {
-  .schedule-page__course-card {
-    width: 380px;
   }
 }
 
@@ -2213,11 +2224,22 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 
 .schedule-page__img-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
   padding: var(--spacing-5);
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .schedule-page__img-overlay {
+    inset: auto 0 0 0;
+    display: block;
+    text-align: left;
+  }
 }
 
 .schedule-page__title {
@@ -2239,6 +2261,11 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   flex-wrap: wrap;
   gap: var(--spacing-2) var(--spacing-4);
   align-items: baseline;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .schedule-page__meta { justify-content: flex-start; }
 }
 
 .schedule-page__meta-item {
@@ -2280,8 +2307,8 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 .schedule-page__empty {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: var(--text-base);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: var(--text-lg);
 }
 
 .schedule-page__slots {
