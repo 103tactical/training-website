@@ -123,6 +123,15 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
         /* ── Nav group spacing ─────────────────────────────────────────────── */
         .nav-group { padding-bottom: 24px !important; margin-bottom: 0 !important; }
 
+        /* ── Dashboard link at the top of the nav ──────────────────────────── */
+        .nav-group--dashboard-link { padding-bottom: 16px !important; }
+        .nav-group--dashboard-link .nav__link-label {
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          font-size: 12px;
+        }
+
         /* ── Admin dashboard cards ─────────────────────────────────────────── */
         .adash-card {
           display: block;

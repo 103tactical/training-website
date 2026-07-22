@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Logout, NavGroup, useNav } from '@payloadcms/ui'
 
-function NavLink({ href, label }: { href: string; label: string }) {
+function NavLink({ href, label, exact }: { href: string; label: string; exact?: boolean }) {
   const pathname = usePathname()
-  const isActive = pathname === href || pathname.startsWith(href + '/')
+  const isActive = exact
+    ? pathname === href
+    : pathname === href || pathname.startsWith(href + '/')
   return (
     <Link
       href={href}
@@ -36,6 +38,10 @@ export default function CustomNav() {
     >
       <div className="nav__scroll" ref={navRef as unknown as React.RefObject<HTMLDivElement>}>
         <nav className="nav__wrap">
+
+          <div className="nav-group nav-group--dashboard-link">
+            <NavLink href="/admin" label="Dashboard" exact />
+          </div>
 
           <NavGroup label="Course Management">
             <NavLink href="/admin/schedule-dashboard"                          label="Course Calendar" />
