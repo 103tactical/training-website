@@ -159,36 +159,53 @@ function DayModal({ dateStr, items, onClose }: {
           >×</button>
         </div>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
           {items.map(s => {
             const todaySessions = s.sessions.filter(x => x.date?.slice(0,10) === dateStr)
+            const seatsLeft = s.maxSeats - s.seatsBooked
             return (
               <div key={s.id} style={{
-                background:'var(--theme-elevation-100)',
+                background:'var(--theme-elevation-50)',
+                border:'1px solid var(--theme-elevation-150)',
+                borderLeft:'3px solid #f97316',
                 borderRadius:'var(--style-radius-s,4px)',
-                padding:'12px',
+                padding:'14px 16px',
               }}>
-                <Link
-                  href={`/admin/collections/course-schedules/${s.id}`}
-                  style={{ fontWeight:600, fontSize:'13px', color:'var(--theme-text)', textDecoration:'none' }}
-                >
-                  {s.courseTitle}
-                </Link>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', gap:'8px', flexWrap:'wrap' }}>
+                  <span style={{ fontWeight:700, fontSize:'14px', color:'var(--theme-text)' }}>
+                    {s.courseTitle}
+                  </span>
+                  {todaySessions.map((x, i) => (
+                    (x.startTime || x.endTime) ? (
+                      <span key={i} style={{ fontSize:'12px', fontWeight:600, color:'var(--theme-text)', opacity:.75, whiteSpace:'nowrap' }}>
+                        {[x.startTime&&fmtTime(x.startTime), x.endTime&&fmtTime(x.endTime)].filter(Boolean).join(' – ')} ET
+                      </span>
+                    ) : null
+                  ))}
+                </div>
+
                 {s.displayLabel && (
-                  <div style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.55, marginTop:'2px' }}>
+                  <div style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.6, marginTop:'2px' }}>
                     {s.displayLabel}
                   </div>
                 )}
-                {todaySessions.map((x, i) => (
-                  (x.startTime || x.endTime) ? (
-                    <div key={i} style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.65, marginTop:'4px' }}>
-                      {[x.startTime&&fmtTime(x.startTime), x.endTime&&fmtTime(x.endTime)].filter(Boolean).join(' – ')} ET
-                    </div>
-                  ) : null
-                ))}
-                <div style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.45, marginTop:'6px' }}>
-                  {s.seatsBooked} / {s.maxSeats} seats booked
-                  {!s.isActive && <span style={{ marginLeft:'8px', color:'#f97316' }}>· Inactive</span>}
+
+                <div style={{
+                  display:'flex', justifyContent:'space-between', alignItems:'center',
+                  marginTop:'12px', gap:'8px', flexWrap:'wrap',
+                }}>
+                  <span style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.6 }}>
+                    {s.seatsBooked} / {s.maxSeats} booked
+                    {seatsLeft <= 0 && <span style={{ marginLeft:'6px', fontWeight:600, opacity:1 }}>· Full</span>}
+                    {!s.isActive && <span style={{ marginLeft:'6px', color:'#f97316', fontWeight:600 }}>· Inactive</span>}
+                  </span>
+                  <Link
+                    href={`/admin/collections/course-schedules/${s.id}`}
+                    className="roster-btn"
+                    style={{ textDecoration:'none', fontSize:'12px', padding:'6px 14px' }}
+                  >
+                    View Session
+                  </Link>
                 </div>
               </div>
             )
