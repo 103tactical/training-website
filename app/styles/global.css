@@ -4694,7 +4694,7 @@ body.layout-print .app-content { transform: none !important; }
 
 .booking-form__subtext {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.78);
   margin: 0;
 }
 
@@ -4777,7 +4777,7 @@ body.layout-print .app-content { transform: none !important; }
   padding: var(--spacing-4) 0;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .booking-form__total {
@@ -4819,8 +4819,7 @@ body.layout-print .app-content { transform: none !important; }
   padding: var(--spacing-2) 0;
   border-top: none;
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .booking-form__summary-line--total {
