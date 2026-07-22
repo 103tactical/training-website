@@ -1,18 +1,79 @@
 /**
  * Server-only email utility for the Remix website.
  * Used by the Square webhook handler and the contact form.
+ *
+ * Sends go through Resend's REST API via raw fetch (not the SDK) so the
+ * x-resend-*-quota response headers can be read and reported to the CMS's
+ * quota cache — the CMS dashboard widget shows combined usage across both
+ * services.
  */
-import { Resend } from "resend";
 
-let _client: Resend | null = null;
+interface SendParams {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  attachments?: { filename: string; path: string }[];
+}
 
-function getClient(): Resend {
-  if (!_client) {
-    const key = process.env.RESEND_API_KEY;
-    if (!key) throw new Error("RESEND_API_KEY is not set");
-    _client = new Resend(key);
+/**
+ * Report quota counts to the CMS cache. Fire-and-forget — quota tracking
+ * must never affect email delivery.
+ */
+function reportQuota(daily: string | null, monthly: string | null): void {
+  if (daily === null && monthly === null) return;
+  const base = process.env.PAYLOAD_API_URL;
+  const secret = process.env.CMS_WRITE_SECRET;
+  if (!base || !secret) return;
+  fetch(`${base}/api/resend-quota`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${secret}`,
+    },
+    body: JSON.stringify({
+      dailyUsed:   daily   !== null ? parseInt(daily, 10)   : undefined,
+      monthlyUsed: monthly !== null ? parseInt(monthly, 10) : undefined,
+    }),
+  }).catch((err) => console.error("[email] quota report failed:", err));
+}
+
+/**
+ * Send one email via the Resend REST API.
+ * Returns { error } in the same shape callers previously got from the SDK.
+ */
+async function sendViaResend(params: SendParams): Promise<{ error: { message: string } | null }> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: params.from,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+      text: params.text,
+      ...(params.attachments?.length ? { attachments: params.attachments } : {}),
+    }),
+  });
+
+  reportQuota(
+    res.headers.get("x-resend-daily-quota"),
+    res.headers.get("x-resend-monthly-quota"),
+  );
+
+  if (!res.ok) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const json: any = await res.json().catch(() => ({}));
+    return { error: { message: json?.message ?? `HTTP ${res.status}` } };
   }
-  return _client;
+  return { error: null };
 }
 
 function getFromAddress(): string {
@@ -117,7 +178,6 @@ export async function sendEnrollmentEmail(args: {
   attachmentFilename?: string;
 }): Promise<void> {
   const { to, firstName, courseTitle, message, attachmentUrl, attachmentFilename } = args;
-  const resend = getClient();
   const subject = `Your Enrollment Forms — ${courseTitle}`;
 
   const bodyHtml = message
@@ -145,7 +205,7 @@ export async function sendEnrollmentEmail(args: {
 
   const text = `Hi ${firstName},\n\nThank you for enrolling in ${courseTitle}. Please review the following before your course date.\n\n${message}${attachmentUrl ? "\n\nAn enrollment document is attached. Please review, complete, and bring it on the first day of class." : ""}`;
 
-  const { error } = await resend.emails.send({
+  const { error } = await sendViaResend({
     from: getFromAddress(),
     to,
     subject,
@@ -173,7 +233,6 @@ export async function sendBookingConfirmationEmail(args: {
   orderId: string;
 }): Promise<void> {
   const { to, firstName, courseTitle, sessionDates, amountDollars, orderId } = args;
-  const resend = getClient();
   const subject = `Booking Confirmed — ${courseTitle}`;
 
   const rows = [
@@ -207,7 +266,7 @@ export async function sendBookingConfirmationEmail(args: {
     `Questions? Reply to this email.`,
   ].join("\n");
 
-  const { error } = await resend.emails.send({
+  const { error } = await sendViaResend({
     from: getFromAddress(),
     to,
     subject,
@@ -229,7 +288,6 @@ export async function sendCancellationEmail(args: {
   amountDollars: string;
 }): Promise<void> {
   const { to, firstName, courseTitle, amountDollars } = args;
-  const resend = getClient();
   const subject = `Booking Cancelled — ${courseTitle}`;
 
   const html = brandedHtml(subject, `
@@ -250,7 +308,7 @@ export async function sendCancellationEmail(args: {
     `Questions? Reply to this email.`,
   ].join("\n");
 
-  const { error } = await resend.emails.send({
+  const { error } = await sendViaResend({
     from: getFromAddress(),
     to,
     subject,
@@ -270,7 +328,6 @@ async function sendAdminEmail(subject: string, rows: string[], textLines: string
   const adminEmail = getAdminEmail();
   if (!adminEmail) return;
 
-  const resend = getClient();
   const rowsHtml = rows
     .map((r) => `<p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:#333;">${r}</p>`)
     .join("");
@@ -280,13 +337,14 @@ async function sendAdminEmail(subject: string, rows: string[], textLines: string
 
   // Non-fatal — never throw on admin notifications
   try {
-    await resend.emails.send({
+    const { error } = await sendViaResend({
       from: getFromAddress(),
       to: adminEmail,
       subject,
       html,
       text,
     });
+    if (error) console.error("[email] Admin notification failed:", error.message);
   } catch (err) {
     console.error("[email] Admin notification failed:", err);
   }
