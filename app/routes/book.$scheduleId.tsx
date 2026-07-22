@@ -130,11 +130,16 @@ export async function action({ request, params }: ActionFunctionArgs) {
   if (!scheduleId) throw new Response("Not found", { status: 404 });
 
   const formData = await request.formData();
+  const firstName = (formData.get("firstName") as string | null)?.trim().slice(0, 100) ?? "";
+  const lastName  = (formData.get("lastName")  as string | null)?.trim().slice(0, 100) ?? "";
   const email = (formData.get("email") as string | null)?.trim() ?? "";
   const phone = (formData.get("phone") as string | null)?.trim() ?? "";
 
   // ── Validation ──────────────────────────────────────────────────────────────
   const errors: Record<string, string> = {};
+
+  if (!firstName)           errors.firstName = "The attendee's first name is required.";
+  if (!lastName)            errors.lastName  = "The attendee's last name is required.";
 
   if (!email)               errors.email     = "Email address is required.";
   else if (email.length > 254) errors.email  = "Email address is too long.";
@@ -194,6 +199,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     if (existing) {
       await updatePendingBooking(existing.id, {
         token,
+        firstName,
+        lastName,
         ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
       });
     } else {
@@ -201,6 +208,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
         token,
         courseSchedule: scheduleIdInt,
         email,
+        firstName,
+        lastName,
         phone: sanitizedPhone || undefined,
       });
     }
@@ -415,8 +424,10 @@ export default function BookSessionPage() {
             <Form method="post" className="booking-form" noValidate>
               <h2 className="booking-form__heading">Schedule Your Session</h2>
               <p className="booking-form__subtext">
-                Enter your contact details below. You&apos;ll then be taken to
-                Square&apos;s secure checkout to complete payment.
+                Tell us who will be attending, then you&apos;ll be taken to
+                Square&apos;s secure checkout to complete payment. If you&apos;re
+                booking for someone else, enter <strong>their</strong> details
+                here — payment details come later.
               </p>
 
               {formError && (
@@ -426,8 +437,48 @@ export default function BookSessionPage() {
               )}
 
               <div className="booking-form__field">
+                <label className="booking-form__label" htmlFor="firstName">
+                  Attendee First Name <span className="booking-form__required">*</span>
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  maxLength={100}
+                  autoComplete="given-name"
+                  className={inputClass("firstName")}
+                  aria-describedby={errors.firstName ? "firstName-error" : undefined}
+                />
+                {errors.firstName && (
+                  <span id="firstName-error" className="booking-form__field-error">
+                    {errors.firstName}
+                  </span>
+                )}
+              </div>
+
+              <div className="booking-form__field">
+                <label className="booking-form__label" htmlFor="lastName">
+                  Attendee Last Name <span className="booking-form__required">*</span>
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  maxLength={100}
+                  autoComplete="family-name"
+                  className={inputClass("lastName")}
+                  aria-describedby={errors.lastName ? "lastName-error" : undefined}
+                />
+                {errors.lastName && (
+                  <span id="lastName-error" className="booking-form__field-error">
+                    {errors.lastName}
+                  </span>
+                )}
+              </div>
+
+              <div className="booking-form__field">
                 <label className="booking-form__label" htmlFor="email">
-                  Email Address <span className="booking-form__required">*</span>
+                  Attendee Email Address <span className="booking-form__required">*</span>
                 </label>
                 <input
                   id="email"
@@ -444,14 +495,14 @@ export default function BookSessionPage() {
                   </span>
                 ) : (
                   <span className="booking-form__field-hint">
-                    Your booking confirmation will be sent here.
+                    The booking confirmation and any course forms will be sent here.
                   </span>
                 )}
               </div>
 
               <div className="booking-form__field">
                 <label className="booking-form__label" htmlFor="phone">
-                  Phone Number
+                  Attendee Phone Number
                 </label>
                 <input
                   id="phone"

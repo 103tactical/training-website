@@ -205,13 +205,15 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     }
 
     // ── Find or create Attendee ─────────────────────────────────────────────
-    // The webhook payload may truncate card_details for PCI reasons.
-    // Fetch the full payment via the SDK to reliably get the cardholder name.
-    // The SDK response uses camelCase; the raw webhook object uses snake_case.
+    // The attendee's name is entered on OUR booking form and stored on the
+    // PendingBooking — that is the authoritative source, because the payer may
+    // not be the attendee (gift purchases, a parent booking for an adult child,
+    // corporate cards). Payment-derived names are only a fallback for legacy
+    // pending records created before the form collected names.
     let cardholderName = "";
     let buyerFirstName = "";
     let buyerLastName  = "";
-    if (squareClient) {
+    if (!pending.firstName && squareClient) {
       try {
         const fullPaymentResp = await squareClient.payments.get({ paymentId });
         const fp = fullPaymentResp.payment;
@@ -231,16 +233,19 @@ async function handlePaymentUpdated(event: Record<string, any>) {
         console.warn("[webhook] Could not fetch full payment for name:", err);
       }
     }
-    // Final name resolution: SDK card name → SDK billing address → form data → fallback
-    const { firstName, lastName } = cardholderName
-      ? parseCardholderName(cardholderName)
-      : buyerFirstName
-        ? { firstName: buyerFirstName, lastName: buyerLastName }
-        : pending.firstName
-          ? { firstName: pending.firstName as string, lastName: (pending.lastName ?? "") as string }
+    // Name resolution: form data → SDK card name → SDK billing address → fallback
+    const { firstName, lastName } = pending.firstName
+      ? { firstName: pending.firstName as string, lastName: (pending.lastName ?? "") as string }
+      : cardholderName
+        ? parseCardholderName(cardholderName)
+        : buyerFirstName
+          ? { firstName: buyerFirstName, lastName: buyerLastName }
           : { firstName: "Customer", lastName: "" };
 
-    const buyerEmail: string = payment.buyer_email_address ?? pending.email;
+    // The attendee's email is the one entered on our booking form (pending.email).
+    // The Square buyer email belongs to the PAYER, which can differ on gift
+    // purchases — fall back to it only if the form email is somehow missing.
+    const buyerEmail: string = pending.email ?? payment.buyer_email_address;
 
     let attendee = await findAttendeeByEmail(buyerEmail);
     if (!attendee) {

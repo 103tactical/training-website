@@ -196,6 +196,8 @@ export async function createPendingBooking(data: {
   token: string;
   courseSchedule: string | number;
   email: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
 }): Promise<PendingBooking> {
   const secret = process.env.CMS_WRITE_SECRET;
@@ -244,7 +246,7 @@ export async function updatePendingBooking(
   id: number,
   data: Partial<Pick<
     PendingBooking,
-    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt" | "token" | "phone"
+    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt" | "token" | "phone" | "firstName" | "lastName"
   >>,
 ): Promise<void> {
   const secret = process.env.CMS_WRITE_SECRET;
