@@ -19,7 +19,9 @@ export async function loader(_: LoaderFunctionArgs) {
   let courseSlugs: string[] = [];
   try {
     const result = await getAllCourses();
-    courseSlugs = result.docs.map((c) => c.slug).filter(Boolean);
+    // Only publicly visible courses belong in the sitemap — inactive courses
+    // include private-group courses that must stay unlisted.
+    courseSlugs = result.docs.filter((c) => c.isActive).map((c) => c.slug).filter(Boolean);
   } catch {
     // Non-fatal — sitemap will still be generated without course URLs
   }

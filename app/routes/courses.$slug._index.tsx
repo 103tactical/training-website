@@ -52,7 +52,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   if (!slug) throw new Response("Not found", { status: 404 });
 
   const result = await getCourseBySlug(slug);
-  if (!result?.docs?.length) {
+  if (!result?.docs?.length || !result.docs[0].isActive) {
     throw new Response("Course not found", { status: 404 });
   }
 
