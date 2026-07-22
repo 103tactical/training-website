@@ -372,6 +372,9 @@ export const CourseSchedules: CollectionConfig = {
       label: "Attendee Roster",
       admin: {
         initCollapsed: false,
+        // Hidden on the create screen — a roster only makes sense once the
+        // session exists and bookings can point at it.
+        condition: (data) => Boolean(data?.id),
       },
       fields: [
         // ── Print + Email action buttons ────────────────────────────────────
