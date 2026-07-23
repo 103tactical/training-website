@@ -2248,7 +2248,7 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   text-transform: uppercase;
   font-size: var(--text-2xl);
   color: var(--color-white);
-  margin: 0 0 var(--spacing-2);
+  margin: 0 0 var(--spacing-1);
   line-height: 1.15;
 }
 
@@ -2269,10 +2269,9 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 }
 
 .schedule-page__meta-item {
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.95);
+  font-size: var(--text-base);
+  color: var(--color-white);
   font-weight: var(--font-semibold, 600);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .schedule-page__meta-price {
