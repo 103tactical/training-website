@@ -2270,8 +2270,9 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
 
 .schedule-page__meta-item {
   font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: var(--font-light);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: var(--font-semibold, 600);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .schedule-page__meta-price {
