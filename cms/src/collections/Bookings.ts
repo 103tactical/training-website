@@ -102,7 +102,7 @@ async function adjustSeats(
  * to Confirmed so the spot doesn't go to waste.
  * Waitlisted → Confirmed is both-active so no second seat adjustment fires.
  */
-async function promoteFromWaitlist(
+export async function promoteFromWaitlist(
   payload: Parameters<CollectionAfterChangeHook>[0]['req']['payload'],
   req: Parameters<CollectionAfterChangeHook>[0]['req'],
   scheduleId: number,

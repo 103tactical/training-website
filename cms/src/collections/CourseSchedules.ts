@@ -1,6 +1,54 @@
 import { APIError } from "payload";
-import type { CollectionConfig, CollectionBeforeChangeHook, CollectionBeforeDeleteHook, PayloadRequest } from "payload";
+import type { CollectionConfig, CollectionAfterChangeHook, CollectionBeforeChangeHook, CollectionBeforeDeleteHook, PayloadRequest } from "payload";
 import { sendBulkEmail, type EmailAttachment } from "../lib/email";
+import { promoteFromWaitlist } from "./Bookings";
+
+/**
+ * When Total Seats is increased on a session that has waitlisted bookings,
+ * promote from the waitlist (oldest first) to fill the newly opened seats —
+ * the same promotion (with notification email) that runs when a booking is
+ * cancelled. Without this, raising the seat count would leave waitlisted
+ * people stranded while the open seats sat exposed to new public bookings.
+ */
+const promoteOnSeatIncrease: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
+  if (operation !== "update") return doc
+
+  const prevMax = typeof previousDoc?.maxSeats === "number" ? previousDoc.maxSeats : 0
+  const newMax = typeof doc.maxSeats === "number" ? doc.maxSeats : 0
+  if (newMax <= prevMax) return doc
+
+  const booked = typeof doc.seatsBooked === "number" ? doc.seatsBooked : 0
+  let openSeats = newMax - booked
+  if (openSeats <= 0) return doc
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+  try {
+    const waitlisted = await p.find({
+      collection: "bookings",
+      where: {
+        and: [
+          { courseSchedule: { equals: doc.id } },
+          { status: { equals: "waitlisted" } },
+        ],
+      },
+      limit: 0,
+      req,
+    })
+    let toPromote = Math.min(openSeats, waitlisted.totalDocs ?? 0)
+    // promoteFromWaitlist promotes exactly one (the oldest) per call.
+    // Waitlisted -> Confirmed is a both-active transition, so seatsBooked
+    // does not change — each promotion genuinely fills one open seat.
+    while (toPromote > 0) {
+      await promoteFromWaitlist(p, req, doc.id)
+      toPromote--
+    }
+  } catch (err) {
+    console.error(`[CourseSchedules] promoteOnSeatIncrease error (id=${doc.id}):`, err)
+  }
+
+  return doc
+}
 
 /**
  * Auto-populates adminTitle as "Course Name: Internal Label" on every save.
@@ -207,6 +255,7 @@ export const CourseSchedules: CollectionConfig = {
   },
   hooks: {
     beforeChange: [syncAdminTitle],
+    afterChange: [promoteOnSeatIncrease],
     beforeDelete: [beforeDeleteHook],
   },
   endpoints: [
