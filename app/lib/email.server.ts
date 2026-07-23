@@ -276,6 +276,55 @@ export async function sendBookingConfirmationEmail(args: {
   if (error) throw new Error(`Resend error: ${error.message}`);
 }
 
+// ── 2b. Waitlisted payment notice (to attendee — seat race edge case) ─────────
+
+/**
+ * Sent instead of the booking confirmation when a payment arrives for a
+ * session that filled up while the person was checking out. Honest about
+ * the situation: payment received, spot in line held, seat not guaranteed.
+ */
+export async function sendWaitlistedPaymentEmail(args: {
+  to: string;
+  firstName: string;
+  courseTitle: string;
+  sessionDates: string;
+  amountDollars: string;
+}): Promise<void> {
+  const { to, firstName, courseTitle, sessionDates, amountDollars } = args;
+  const subject = `Payment Received — You're on the Waitlist for ${courseTitle}`;
+
+  const html = brandedHtml(subject, `
+    <p style="margin:0 0 16px;">Hi ${firstName},</p>
+    <p style="margin:0 0 16px;">We received your payment of <strong>${amountDollars}</strong> for
+      <strong>${courseTitle}</strong>${sessionDates ? ` (${sessionDates})` : ""} — but the last seat
+      was taken just before your payment completed.</p>
+    <p style="margin:0 0 16px;"><strong>Your payment holds your place on the waitlist.</strong> If a seat
+      opens up, you'll be enrolled automatically (in the order payments were received) and emailed right away.</p>
+    <p style="margin:0 0 16px;">If no seat becomes available, we'll contact you to either move you
+      to another session date or refund your payment in full — whichever you prefer.</p>
+    <p style="margin:16px 0 0;font-size:14px;color:#666;">Questions? Reply to this email.</p>
+  `);
+
+  const text = `Hi ${firstName},
+
+We received your payment of ${amountDollars} for ${courseTitle}${sessionDates ? ` (${sessionDates})` : ""} — but the last seat was taken just before your payment completed.
+
+Your payment holds your place on the waitlist. If a seat opens up, you'll be enrolled automatically (in the order payments were received) and emailed right away.
+
+If no seat becomes available, we'll contact you to either move you to another session date or refund your payment in full — whichever you prefer.
+
+Questions? Reply to this email.`;
+
+  const { error } = await sendViaResend({
+    from: getFromAddress(),
+    to,
+    subject,
+    html,
+    text,
+  });
+  if (error) throw new Error(`Resend error: ${error.message}`);
+}
+
 // ── 3. Cancellation confirmation (to attendee) ────────────────────────────────
 
 /**
@@ -360,12 +409,18 @@ export async function sendAdminBookingNotification(args: {
   sessionDates: string;
   amountDollars: string;
   orderId: string;
+  waitlisted?: boolean;
 }): Promise<void> {
-  const { firstName, lastName, email, courseTitle, sessionDates, amountDollars, orderId } = args;
+  const { firstName, lastName, email, courseTitle, sessionDates, amountDollars, orderId, waitlisted } = args;
   await sendAdminEmail(
-    `New Booking — ${firstName} ${lastName} → ${courseTitle}`,
+    waitlisted
+      ? `⚠ PAID BUT WAITLISTED — ${firstName} ${lastName} → ${courseTitle}`
+      : `New Booking — ${firstName} ${lastName} → ${courseTitle}`,
     [
-      `<strong>New booking received.</strong>`,
+      ...(waitlisted
+        ? [`<strong style="color:#b45309;">This person PAID but the session was full — they were placed on the waitlist.</strong>`,
+           `They were told a seat is not yet guaranteed. Free a seat (cancellation or raise Total Seats) to auto-promote them, move them to another session, or refund them from Square.`]
+        : [`<strong>New booking received.</strong>`]),
       `<strong>Name:</strong> ${firstName} ${lastName}`,
       `<strong>Email:</strong> ${email}`,
       `<strong>Course:</strong> ${courseTitle}`,

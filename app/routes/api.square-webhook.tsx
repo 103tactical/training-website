@@ -41,6 +41,7 @@ import {
   formatSessionDates,
   sendEnrollmentEmail,
   sendBookingConfirmationEmail,
+  sendWaitlistedPaymentEmail,
   sendCancellationEmail,
   sendAdminBookingNotification,
   sendAdminBookingFailureAlert,
@@ -258,11 +259,21 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     }
 
     // ── Create Booking ──────────────────────────────────────────────────────
+    // If the session filled between link/checkout creation and payment (the
+    // race: last seat taken by another booking while this person was paying),
+    // create the booking as WAITLISTED instead of failing — the payment is
+    // real and the waitlist machinery (cancellation and seat-increase
+    // promotions, both with notification emails) resolves it from there.
+    const seatsRemaining =
+      (schedule.maxSeats ?? 0) - (schedule.seatsBooked ?? 0);
+    const bookingStatus: "confirmed" | "waitlisted" =
+      seatsRemaining > 0 ? "confirmed" : "waitlisted";
+
     await createBookingRecord({
       attendee: attendee.id,
       course: courseId,      // numeric ID resolved from schedule.course above
       courseSchedule: scheduleId, // numeric ID, not pending.courseSchedule
-      status: "confirmed",
+      status: bookingStatus,
       paymentMethod: "online",
       squareOrderId: orderId,
       squarePaymentId: paymentId,
@@ -289,23 +300,38 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     const sessionDates = formatSessionDates(schedule.sessions ?? []);
     const amountDollars = formatCents(amountCents);
 
-    // ── Booking confirmation email (always sent) ──────────────────────────────
-    try {
-      await sendBookingConfirmationEmail({
-        to: buyerEmail,
-        firstName,
-        courseTitle: course.title,
-        sessionDates,
-        amountDollars,
-        orderId,
-      });
-      console.log(`[webhook] Confirmation email sent to ${buyerEmail}`);
-    } catch (emailErr) {
-      console.error("[webhook] Confirmation email failed:", emailErr);
+    // ── Attendee email: confirmation, or waitlist notice if the seat race hit ─
+    if (bookingStatus === "waitlisted") {
+      try {
+        await sendWaitlistedPaymentEmail({
+          to: buyerEmail,
+          firstName,
+          courseTitle: course.title,
+          sessionDates,
+          amountDollars,
+        });
+        console.log(`[webhook] Waitlisted-payment email sent to ${buyerEmail}`);
+      } catch (emailErr) {
+        console.error("[webhook] Waitlisted-payment email failed:", emailErr);
+      }
+    } else {
+      try {
+        await sendBookingConfirmationEmail({
+          to: buyerEmail,
+          firstName,
+          courseTitle: course.title,
+          sessionDates,
+          amountDollars,
+          orderId,
+        });
+        console.log(`[webhook] Confirmation email sent to ${buyerEmail}`);
+      } catch (emailErr) {
+        console.error("[webhook] Confirmation email failed:", emailErr);
+      }
     }
 
     // ── Enrollment forms email (only if the course has one configured) ────────
-    if (course?.enrollmentMessage) {
+    if (bookingStatus === "confirmed" && course?.enrollmentMessage) {
       try {
         const fileUrl  = course.enrollmentFile?.url
           ? resolveMediaUrl(course.enrollmentFile.url)
@@ -336,6 +362,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       sessionDates,
       amountDollars,
       orderId,
+      waitlisted: bookingStatus === "waitlisted",
     });
 
   } catch (err) {
