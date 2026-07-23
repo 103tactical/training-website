@@ -242,6 +242,88 @@ async function emailAttendeesHandler(req: PayloadRequest): Promise<Response> {
   }
 }
 
+// ── Send payment link endpoint ────────────────────────────────────────────────
+
+async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
+  if (!req.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const scheduleId = req.routeParams?.id
+  if (!scheduleId) {
+    return Response.json({ error: 'Missing schedule id' }, { status: 400 })
+  }
+
+  let body: { firstName?: string; lastName?: string; email?: string; phone?: string }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body = (await (req as any).json()) as typeof body
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const firstName = body.firstName?.trim() ?? ''
+  const lastName = body.lastName?.trim() ?? ''
+  const email = body.email?.trim() ?? ''
+  const phone = body.phone?.trim() || undefined
+
+  if (!firstName || !lastName) {
+    return Response.json({ error: 'First and last name are required.' }, { status: 400 })
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return Response.json({ error: 'A valid email address is required.' }, { status: 400 })
+  }
+
+  try {
+    const { sendPaymentLink } = await import('../lib/payment-link')
+    const result = await sendPaymentLink({
+      req,
+      scheduleId: Number(scheduleId),
+      firstName,
+      lastName,
+      email,
+      phone,
+    })
+    return Response.json(result)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return Response.json({ error: msg }, { status: 400 })
+  }
+}
+
+// ── Outstanding payment links endpoint (who was sent a link, unpaid) ─────────
+
+async function outstandingLinksHandler(req: PayloadRequest): Promise<Response> {
+  if (!req.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const scheduleId = req.routeParams?.id
+  if (!scheduleId) {
+    return Response.json({ error: 'Missing schedule id' }, { status: 400 })
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+  const result = await p.find({
+    collection: 'pending-bookings',
+    where: {
+      and: [
+        { courseSchedule: { equals: Number(scheduleId) } },
+        { status: { equals: 'pending' } },
+      ],
+    },
+    limit: 100,
+    sort: '-createdAt',
+    req,
+  })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pending = result.docs.map((d: any) => ({
+    id: d.id,
+    name: [d.firstName, d.lastName].filter(Boolean).join(' ') || null,
+    email: d.email,
+    sentAt: d.createdAt,
+  }))
+  return Response.json({ pending })
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const CourseSchedules: CollectionConfig = {
@@ -267,6 +349,16 @@ export const CourseSchedules: CollectionConfig = {
       path: '/:id/email-attendees',
       method: 'post',
       handler: emailAttendeesHandler,
+    },
+    {
+      path: '/:id/send-payment-link',
+      method: 'post',
+      handler: sendPaymentLinkHandler,
+    },
+    {
+      path: '/:id/outstanding-links',
+      method: 'get',
+      handler: outstandingLinksHandler,
     },
   ],
   fields: [

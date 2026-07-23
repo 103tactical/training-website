@@ -1,6 +1,7 @@
 'use client'
 import React, { useRef, useState } from 'react'
 import { useDocumentInfo } from '@payloadcms/ui'
+import SendPaymentLinkForm from './SendPaymentLinkForm'
 
 type Phase = 'idle' | 'composing' | 'sending' | 'done' | 'error'
 
@@ -187,6 +188,9 @@ export default function RosterActionsBar() {
           </button>
         </div>
       )}
+
+      {/* ── Send Payment Link (own state machine, hidden while composing an email) ── */}
+      {(phase === 'idle') && <SendPaymentLinkForm scheduleId={id} />}
 
       {/* ── Compose form ──────────────────────────────────────────────────── */}
       {(phase === 'composing' || phase === 'sending' || phase === 'error') && (
