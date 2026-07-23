@@ -15,8 +15,8 @@ export default function EnrollmentTemplateBefore() {
       }}>
         Optional. If a message is entered below <em>or</em> a document is uploaded, this email
         is sent automatically to every attendee the moment their payment is confirmed. Leave
-        both empty and no email is sent. <strong>Type only your message</strong> — everything
-        else shown in the preview is added for you.
+        both empty and no email is sent. <strong>Don&apos;t retype anything shown in the
+        preview</strong> — those parts are added for you.
       </p>
 
       <p style={{
