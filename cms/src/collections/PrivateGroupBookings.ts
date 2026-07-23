@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
 import { Resend } from 'resend'
 import { SquareClient, SquareEnvironment } from 'square'
-import { sendEmail, type EmailAttachment } from '../lib/email'
+import { sendEmail, questionsLine, type EmailAttachment } from '../lib/email'
 
 function getResendClient(): Resend {
   const key = process.env.RESEND_API_KEY
@@ -61,12 +61,14 @@ function buildPaymentLinkEmail({
   sessionDateStr,
   paymentUrl,
   onboardingMessage,
+  questions,
 }: {
   firstName: string
   courseName: string
   sessionDateStr: string
   paymentUrl: string
   onboardingMessage?: string
+  questions: string
 }): { html: string; text: string } {
   const brandName = process.env.FROM_NAME || '103 Tactical Training'
 
@@ -133,7 +135,7 @@ function buildPaymentLinkEmail({
             <td style="background:#f9f9f9;padding:20px 32px;border-top:1px solid #e8e8e8;
                        font-size:12px;color:#888888;text-align:center;">
               <p style="margin:0;">${brandName}</p>
-              <p style="margin:4px 0 0;">Questions? Reply to this email and we will get back to you.</p>
+              <p style="margin:4px 0 0;">${questions}</p>
             </td>
           </tr>
 
@@ -153,7 +155,7 @@ function buildPaymentLinkEmail({
     paymentUrl,
     ``,
     ...(onboardingMessage?.trim() ? [onboardingMessage, ``] : []),
-    `Questions? Reply to this email.`,
+    questions,
   ].join('\n')
 
   return { html, text }
@@ -552,7 +554,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
                 `You have been confirmed for ${courseName}${sessionDateStr ? ` on ${sessionDateStr}` : ''}.`,
                 ``,
                 ...(onboardingMessage?.trim() ? [onboardingMessage.trim(), ``] : []),
-                `Questions? Reply to this email.`,
+                await questionsLine(p),
                 ``,
                 `— ${from}`,
               ].join('\n'),
@@ -657,6 +659,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
           sessionDateStr,
           paymentUrl: checkoutUrl,
           onboardingMessage: onboardingMessage?.trim() || undefined,
+          questions: await questionsLine(p),
         })
 
         const resendClient = getResendClient()

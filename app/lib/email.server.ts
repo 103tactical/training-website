@@ -86,6 +86,29 @@ function getAdminEmail(): string | null {
   return process.env.ADMIN_EMAIL?.trim() || null;
 }
 
+// ── Contact phone (from CMS Site Settings, cached 5 min) ─────────────────────
+
+let _phoneCache: { value: string | null; at: number } | null = null;
+
+async function getContactPhone(): Promise<string | null> {
+  if (_phoneCache && Date.now() - _phoneCache.at < 5 * 60 * 1000) return _phoneCache.value;
+  try {
+    const res = await fetch(`${process.env.PAYLOAD_API_URL}/api/globals/site-settings?depth=0`);
+    const json = await res.json();
+    const phone: string | null = json?.contact?.phone?.trim() || null;
+    _phoneCache = { value: phone, at: Date.now() };
+    return phone;
+  } catch {
+    return _phoneCache?.value ?? null;
+  }
+}
+
+/** "Questions? Please call us at NUMBER." — falls back if no phone is set. */
+export async function questionsLine(): Promise<string> {
+  const phone = await getContactPhone();
+  return phone ? `Questions? Please call us at ${phone}.` : `Questions? Contact us through the website.`;
+}
+
 /** Format cents as a dollar string, e.g. 20000 → "$200.00" */
 function formatCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
@@ -178,6 +201,7 @@ export async function sendEnrollmentEmail(args: {
   attachmentFilename?: string;
 }): Promise<void> {
   const { to, firstName, courseTitle, message, attachmentUrl, attachmentFilename } = args;
+  const q = await questionsLine();
   const subject = `Your Enrollment Forms — ${courseTitle}`;
 
   const bodyHtml = message
@@ -200,7 +224,7 @@ export async function sendEnrollmentEmail(args: {
       Please review the following information before your course date.</p>
     <div style="margin:0 0 16px;">${bodyHtml}</div>
     ${attachmentNote}
-    <p style="margin:16px 0 0;font-size:14px;color:#666;">Questions? Reply to this email.</p>
+    <p style="margin:16px 0 0;font-size:14px;color:#666;">${q}</p>
   `);
 
   const text = `Hi ${firstName},\n\nThank you for enrolling in ${courseTitle}. Please review the following before your course date.\n\n${message}${attachmentUrl ? "\n\nAn enrollment document is attached. Please review, complete, and bring it on the first day of class." : ""}`;
@@ -233,6 +257,7 @@ export async function sendBookingConfirmationEmail(args: {
   orderId: string;
 }): Promise<void> {
   const { to, firstName, courseTitle, sessionDates, amountDollars, orderId } = args;
+  const q = await questionsLine();
   const subject = `Booking Confirmed — ${courseTitle}`;
 
   const rows = [
@@ -250,7 +275,7 @@ export async function sendBookingConfirmationEmail(args: {
              background:#f9f9f9;">
       ${rows}
     </table>
-    <p style="margin:0;font-size:14px;color:#666;">Questions? Reply to this email or contact us directly.</p>
+    <p style="margin:0;font-size:14px;color:#666;">${q}</p>
   `);
 
   const text = [
@@ -263,7 +288,7 @@ export async function sendBookingConfirmationEmail(args: {
     `Amount Paid: ${amountDollars}`,
     `Order: ${orderId}`,
     ``,
-    `Questions? Reply to this email.`,
+    q,
   ].join("\n");
 
   const { error } = await sendViaResend({
@@ -291,6 +316,7 @@ export async function sendWaitlistedPaymentEmail(args: {
   amountDollars: string;
 }): Promise<void> {
   const { to, firstName, courseTitle, sessionDates, amountDollars } = args;
+  const q = await questionsLine();
   const subject = `Payment Received — You're on the Waitlist for ${courseTitle}`;
 
   const html = brandedHtml(subject, `
@@ -302,7 +328,7 @@ export async function sendWaitlistedPaymentEmail(args: {
       opens up, you'll be enrolled automatically (in the order payments were received) and emailed right away.</p>
     <p style="margin:0 0 16px;">If no seat becomes available, we'll contact you to either move you
       to another session date or refund your payment in full — whichever you prefer.</p>
-    <p style="margin:16px 0 0;font-size:14px;color:#666;">Questions? Reply to this email.</p>
+    <p style="margin:16px 0 0;font-size:14px;color:#666;">${q}</p>
   `);
 
   const text = `Hi ${firstName},
@@ -313,7 +339,7 @@ Your payment holds your place on the waitlist. If a seat opens up, you'll be enr
 
 If no seat becomes available, we'll contact you to either move you to another session date or refund your payment in full — whichever you prefer.
 
-Questions? Reply to this email.`;
+${q}`;
 
   const { error } = await sendViaResend({
     from: getFromAddress(),
@@ -337,6 +363,7 @@ export async function sendCancellationEmail(args: {
   amountDollars: string;
 }): Promise<void> {
   const { to, firstName, courseTitle, amountDollars } = args;
+  const q = await questionsLine();
   const subject = `Booking Cancelled — ${courseTitle}`;
 
   const html = brandedHtml(subject, `
@@ -344,7 +371,7 @@ export async function sendCancellationEmail(args: {
     <p style="margin:0 0 16px;">Your booking for <strong>${courseTitle}</strong> has been cancelled
       and a refund of <strong>${amountDollars}</strong> has been submitted through Square.</p>
     <p style="margin:0 0 16px;">Refunds typically appear on your statement within 5–10 business days.</p>
-    <p style="margin:0;font-size:14px;color:#666;">Questions? Reply to this email.</p>
+    <p style="margin:0;font-size:14px;color:#666;">${q}</p>
   `);
 
   const text = [
@@ -354,7 +381,7 @@ export async function sendCancellationEmail(args: {
     ``,
     `Refunds typically appear within 5–10 business days.`,
     ``,
-    `Questions? Reply to this email.`,
+    q,
   ].join("\n");
 
   const { error } = await sendViaResend({

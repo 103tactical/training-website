@@ -1,5 +1,19 @@
 import { saveQuota } from './resend-quota-cache'
 
+/**
+ * "Questions? Please call us at NUMBER." sourced from Site Settings contact
+ * phone via the local Payload API. Falls back when unset/unavailable.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function questionsLine(payload: any): Promise<string> {
+  try {
+    const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
+    const phone: string | undefined = settings?.contact?.phone?.trim()
+    if (phone) return `Questions? Please call us at ${phone}.`
+  } catch { /* fall through */ }
+  return 'Questions? Contact us through the website.'
+}
+
 function getFromAddress(): string {
   const name  = process.env.FROM_NAME  || '103 Tactical Training'
   const email = process.env.FROM_EMAIL || 'onboarding@resend.dev'

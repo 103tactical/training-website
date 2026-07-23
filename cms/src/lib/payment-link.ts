@@ -14,6 +14,7 @@
  */
 import { SquareClient, SquareEnvironment } from 'square'
 import type { PayloadRequest } from 'payload'
+import { questionsLine } from './email'
 
 function getSquareClient(): SquareClient | null {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
@@ -179,6 +180,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
 
   // ── Branded email with the payment button ────────────────────────────────
   const brandName = process.env.FROM_NAME || '103 Tactical Training'
+  const questions = await questionsLine(p)
   const escapedUrl = checkoutUrl.replace(/&/g, '&amp;')
   const totalStr = `$${(totalCents / 100).toFixed(2)}`
 
@@ -203,7 +205,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
         </td></tr>
         <tr><td style="background:#f9f9f9;padding:20px 32px;border-top:1px solid #e8e8e8;font-size:12px;color:#888888;text-align:center;">
           <p style="margin:0;">${brandName}</p>
-          <p style="margin:4px 0 0;">Questions? Reply to this email and we will get back to you.</p>
+          <p style="margin:4px 0 0;">${questions}</p>
         </td></tr>
       </table>
     </td></tr>
@@ -219,7 +221,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
     `To secure your seat, please complete your payment of ${totalStr} here:`,
     checkoutUrl,
     ``,
-    `Questions? Reply to this email.`,
+    questions,
   ].join('\n')
 
   // Send via the raw Resend API (same as lib/email.ts — captures quota headers)

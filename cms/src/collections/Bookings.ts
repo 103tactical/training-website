@@ -6,7 +6,7 @@ import type {
   CollectionBeforeChangeHook,
 } from 'payload'
 import { SquareClient, SquareEnvironment } from 'square'
-import { sendEmail } from '../lib/email'
+import { sendEmail, questionsLine } from '../lib/email'
 
 function getSquareClient() {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
@@ -155,7 +155,7 @@ export async function promoteFromWaitlist(
                 ``,
                 `You're all set — we'll see you there!`,
                 ``,
-                `Questions? Reply to this email.`,
+                await questionsLine(p),
               ].join('\n'),
             })
             console.log(`[Bookings] Waitlist promotion email sent to ${attendee.email}`)
