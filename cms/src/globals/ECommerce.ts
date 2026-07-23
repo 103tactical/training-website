@@ -49,14 +49,17 @@ export const ECommerce: GlobalConfig = {
         {
           name: "creditCardFixedFeeCents",
           type: "number",
-          label: "Credit Card Surcharge — Fixed Fee (cents)",
+          label: "Credit Card Surcharge — Fixed Fee",
           defaultValue: 30,
           min: 0,
           admin: {
             description:
-              "The flat per-transaction component of Square's fee, in cents. " +
-              "Square's standard rate includes a $0.30 fixed fee — enter 30. " +
+              "The flat per-transaction component of Square's fee. " +
+              "Square's standard rate includes a $0.30 fixed fee — enter 0.30. " +
               "Both fields together ensure you fully recoup Square's exact fee on every transaction.",
+            components: {
+              Field: "./components/DollarsField",
+            },
           },
         },
       ],

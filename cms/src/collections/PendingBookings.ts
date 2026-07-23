@@ -349,10 +349,13 @@ export const PendingBookings: CollectionConfig = {
     {
       name: 'amountPaidCents',
       type: 'number',
-      label: 'Amount Paid (cents)',
+      label: 'Amount Paid',
       admin: {
         readOnly: true,
-        description: 'e.g. 22500 = $225.00',
+        description: 'Set when Square confirms payment.',
+        components: {
+          Field: './components/DollarsField',
+        },
       },
     },
 

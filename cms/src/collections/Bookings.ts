@@ -530,12 +530,15 @@ export const Bookings: CollectionConfig = {
     {
       name: 'amountPaidCents',
       type: 'number',
-      label: 'Amount Paid (cents)',
+      label: 'Amount Paid',
       min: 0,
       admin: {
         description:
-          'Amount charged in cents (e.g. 22500 = $225.00). Auto-populated from Square for online bookings. ' +
-          'For manual/cash bookings, enter the amount collected here.',
+          'Auto-populated from Square for online bookings. ' +
+          'For manual/cash bookings, enter the dollar amount collected (e.g. 225 or 225.00).',
+        components: {
+          Field: './components/DollarsField',
+        },
       },
     },
     {
@@ -580,13 +583,16 @@ export const Bookings: CollectionConfig = {
     {
       name: 'manualRefundAmountCents',
       type: 'number',
-      label: 'Manual Refund Amount (cents)',
+      label: 'Manual Refund Amount',
       min: 0,
       admin: {
         description:
-          'If you issued a refund outside of Square (cash, POS, etc.), enter the amount refunded in cents ' +
-          '(e.g. 22500 = $225.00). This is recorded for reporting purposes only — it does not trigger any payment action.',
+          'If you issued a refund outside of Square (cash, POS, etc.), enter the dollar amount refunded ' +
+          '(e.g. 225 or 225.00). This is recorded for reporting purposes only — it does not trigger any payment action.',
         condition: (data) => data.skipRefund === true || data.status === 'cancelled',
+        components: {
+          Field: './components/DollarsField',
+        },
       },
     },
     {

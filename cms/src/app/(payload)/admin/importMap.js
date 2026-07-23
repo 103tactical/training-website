@@ -11,6 +11,7 @@ import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997e
 import { default as default_450a3164491ee8fe5d1c3c57d12dd376 } from '../../../components/DayRowLabel'
 import { default as default_175f6af1742db38737ebb79587176c49 } from '../../../components/RosterActionsBar'
 import { default as default_7422917546197b1d1046645adfa2aef0 } from '../../../components/EmailCell'
+import { default as default_258b4e4bae21a1095aba89615b4b3700 } from '../../../components/DollarsField'
 import { default as default_7baec65108cb02d8e0cf632f679d131d } from '../../../components/StatusBadge'
 import { default as default_b719d8f218e5540f8556d426b5f44971 } from '../../../components/TransferRowLabel'
 import { default as default_7e3846181524ab75490cb0d9df5959c7 } from '../../../components/PrintRosterListAction'
@@ -45,6 +46,7 @@ export const importMap = {
   "./components/DayRowLabel#default": default_450a3164491ee8fe5d1c3c57d12dd376,
   "./components/RosterActionsBar#default": default_175f6af1742db38737ebb79587176c49,
   "./components/EmailCell#default": default_7422917546197b1d1046645adfa2aef0,
+  "./components/DollarsField#default": default_258b4e4bae21a1095aba89615b4b3700,
   "./components/StatusBadge#default": default_7baec65108cb02d8e0cf632f679d131d,
   "./components/TransferRowLabel#default": default_b719d8f218e5540f8556d426b5f44971,
   "./components/PrintRosterListAction#default": default_7e3846181524ab75490cb0d9df5959c7,
