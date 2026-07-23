@@ -333,7 +333,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
     return Response.json({ error: 'Cannot process a cancelled booking.' }, { status: 400 })
   }
 
-  const { attendees, paymentMethod, sessions, course, pricePerSeat, onboardingMessage, manualPaymentNote } =
+  const { attendees, paymentMethod, sessions, course, pricePerSeat, onboardingMessage, manualPaymentNote, manualPaymentMethod } =
     groupBooking
 
   // ── Validation ────────────────────────────────────────────────────────────
@@ -342,6 +342,12 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
   }
   if (!paymentMethod) {
     return Response.json({ error: 'Select a payment method before processing.' }, { status: 400 })
+  }
+  if (paymentMethod === 'manual' && !manualPaymentMethod) {
+    return Response.json(
+      { error: 'Select "How was payment collected?" before processing — it drives the accounting reports.' },
+      { status: 400 },
+    )
   }
   if (!sessions?.length) {
     return Response.json({ error: 'Add at least one session date before processing.' }, { status: 400 })
@@ -534,6 +540,8 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
               course: courseId,
               courseSchedule: scheduleId,
               status: 'confirmed',
+              paymentMethod: manualPaymentMethod ?? 'other',
+              amountPaidCents: priceInCents,
               paymentReference: payRef,
             },
             req,
@@ -1016,6 +1024,22 @@ export const PrivateGroupBookings: CollectionConfig = {
             description:
               '"Payment links" emails each attendee a unique Square checkout link. ' +
               '"Manual" immediately confirms all attendees as booked — use when you have already collected or arranged payment separately.',
+          },
+        },
+        {
+          name: 'manualPaymentMethod',
+          type: 'select',
+          label: 'How was payment collected?',
+          options: [
+            { label: 'Square (POS / payment link)', value: 'square-manual' },
+            { label: 'Cash', value: 'cash' },
+            { label: 'Check', value: 'check' },
+            { label: 'Other', value: 'other' },
+          ],
+          admin: {
+            description:
+              'Recorded on each attendee\'s booking and used by the accounting reports (Revenue by payment method).',
+            condition: (data) => data.paymentMethod === 'manual',
           },
         },
         {
