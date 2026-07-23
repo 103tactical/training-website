@@ -47,7 +47,7 @@ export default function EnrollmentTemplateAfter() {
         color: 'var(--theme-text)',
       }}>
         <p style={{ margin: 0 }}>
-          Questions? Please call us at <em>[phone number from Site Settings]</em>.
+          Questions? Please call us at <strong><em>[phone number from Site Settings]</em></strong>.
         </p>
       </div>
     </div>

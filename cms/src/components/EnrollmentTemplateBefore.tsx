@@ -34,7 +34,7 @@ export default function EnrollmentTemplateBefore() {
         fontSize: '13px', lineHeight: 1.6,
         color: 'var(--theme-text)',
       }}>
-        <p style={{ margin: '0 0 8px' }}>Hi <em>[attendee&apos;s first name]</em>,</p>
+        <p style={{ margin: '0 0 8px' }}>Hi <strong><em>[attendee&apos;s first name]</em></strong>,</p>
         <p style={{ margin: 0 }}>
           Thank you for enrolling in <strong><em>[course title]</em></strong>. Please review the
           following information before your course date.
