@@ -48,6 +48,7 @@ import * as migration_20260429_ecommerce_global from './20260429_ecommerce_globa
 import * as migration_20260429_bookings_manual_refund from './20260429_bookings_manual_refund';
 import * as migration_20260429_bookings_skip_refund from './20260429_bookings_skip_refund';
 import * as migration_20260527_courses_page_featured_course from './20260527_courses_page_featured_course';
+import * as migration_20260723_bookings_payment_method from './20260723_bookings_payment_method';
 
 export const migrations = [
   {
@@ -299,5 +300,10 @@ export const migrations = [
     up: migration_20260527_courses_page_featured_course.up,
     down: migration_20260527_courses_page_featured_course.down,
     name: '20260527_courses_page_featured_course'
+  },
+  {
+    up: migration_20260723_bookings_payment_method.up,
+    down: migration_20260723_bookings_payment_method.down,
+    name: '20260723_bookings_payment_method'
   },
 ];
