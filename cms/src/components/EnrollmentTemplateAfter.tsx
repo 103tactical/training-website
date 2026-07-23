@@ -1,36 +1,53 @@
 'use client'
 /**
- * Shown BELOW the enrollment Message field on a Course — renders the fixed
- * closing of the enrollment email (attachment note + questions footer).
+ * Shown BELOW the enrollment Message field on a Course — the fixed closing
+ * of the email. The attachment note is clearly marked as conditional on a
+ * document being uploaded in the field below.
  */
 import React from 'react'
 
-const wrap: React.CSSProperties = {
-  padding: '2px 14px 12px',
-  background: 'var(--theme-elevation-50)',
-  border: '1px solid var(--theme-elevation-150)',
-  borderTop: 'none',
-  borderRadius: '0 0 var(--style-radius-s, 4px) var(--style-radius-s, 4px)',
-  fontSize: '12px',
-  lineHeight: 1.6,
-  color: 'var(--theme-elevation-500)',
-}
-
 export default function EnrollmentTemplateAfter() {
   return (
-    <div style={{ marginTop: '-12px', marginBottom: '18px' }}>
-      <div style={wrap}>
-        <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--theme-elevation-400)' }}>
-          ▲ Your message appears above ▲
+    <div style={{ marginTop: '-10px', marginBottom: '20px' }}>
+      <p style={{
+        margin: '0 0 4px', fontSize: '11px', fontWeight: 600,
+        color: 'var(--theme-text)', opacity: 0.65, textAlign: 'center',
+      }}>
+        ▲ your message ends here ▲
+      </p>
+
+      {/* Conditional block — only sent when a document is uploaded */}
+      <div style={{
+        padding: '10px 14px',
+        background: 'var(--theme-elevation-100)',
+        border: '1px dashed var(--theme-elevation-400)',
+        borderRadius: 'var(--style-radius-s, 4px)',
+        fontSize: '13px', lineHeight: 1.6,
+        color: 'var(--theme-text)',
+      }}>
+        <p style={{
+          margin: '0 0 8px', fontSize: '10.5px', fontWeight: 700,
+          textTransform: 'uppercase', letterSpacing: '0.05em', color: '#ea580c',
+        }}>
+          Included only when an Enrollment Document is uploaded below
         </p>
-        <p style={{ margin: '0 0 8px', fontStyle: 'italic' }}>
+        <p style={{ margin: 0 }}>
           <strong>An enrollment document is attached.</strong><br />
           Please review it before your first day of class. If it includes a form,
           please complete it and bring it with you.
-          <span style={{ color: 'var(--theme-elevation-400)' }}> (only when a document is uploaded below)</span>
         </p>
-        <p style={{ margin: 0, fontStyle: 'italic' }}>
-          Questions? Please call us at [phone from Site Settings].
+      </div>
+
+      {/* Always included */}
+      <div style={{
+        padding: '10px 14px', marginTop: '6px',
+        background: 'var(--theme-elevation-100)',
+        borderRadius: '0 0 var(--style-radius-s, 4px) var(--style-radius-s, 4px)',
+        fontSize: '13px', lineHeight: 1.6,
+        color: 'var(--theme-text)',
+      }}>
+        <p style={{ margin: 0 }}>
+          Questions? Please call us at <em>[phone number from Site Settings]</em>.
         </p>
       </div>
     </div>

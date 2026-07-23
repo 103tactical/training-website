@@ -181,9 +181,6 @@ export const Courses: CollectionConfig = {
           type: "textarea",
           label: false,
           admin: {
-            description:
-              "Optional. When filled in, this email is sent automatically to every attendee upon payment confirmation. " +
-              "Type ONLY your message — the grey parts above and below are added for you.",
             placeholder: "e.g. The class will start at 8:00 AM. The classroom portion will be held at…",
           },
         },

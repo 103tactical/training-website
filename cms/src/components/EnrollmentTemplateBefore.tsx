@@ -1,39 +1,50 @@
 'use client'
 /**
- * Shown ABOVE the enrollment Message field on a Course — renders the fixed
- * opening of the enrollment email so the admin sees exactly where their
- * message lands. The greyed text is supplied by the email template
- * automatically and cannot be edited here.
+ * Shown ABOVE the enrollment Message field on a Course. Explains the feature,
+ * then renders the fixed opening of the email so the admin sees exactly
+ * where their message lands.
  */
 import React from 'react'
-
-const wrap: React.CSSProperties = {
-  padding: '12px 14px 2px',
-  background: 'var(--theme-elevation-50)',
-  border: '1px solid var(--theme-elevation-150)',
-  borderBottom: 'none',
-  borderRadius: 'var(--style-radius-s, 4px) var(--style-radius-s, 4px) 0 0',
-  fontSize: '12px',
-  lineHeight: 1.6,
-  color: 'var(--theme-elevation-500)',
-}
 
 export default function EnrollmentTemplateBefore() {
   return (
     <div style={{ marginBottom: 0 }}>
-      <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--theme-elevation-600)' }}>
-        Email preview — the grey text is added automatically
+      <p style={{
+        margin: '0 0 12px', fontSize: '13px', lineHeight: 1.55,
+        color: 'var(--theme-text)',
+      }}>
+        Optional. When a message is entered below, this email is sent automatically to every
+        attendee the moment their payment is confirmed. <strong>Type only your message</strong> —
+        everything else shown in the preview is added for you.
       </p>
-      <div style={wrap}>
-        <p style={{ margin: '0 0 8px', fontStyle: 'italic' }}>Hi [attendee's first name],</p>
-        <p style={{ margin: '0 0 8px', fontStyle: 'italic' }}>
-          Thank you for enrolling in <strong>[course title]</strong>. Please review the
+
+      <p style={{
+        margin: '0 0 6px', fontSize: '11px', fontWeight: 700,
+        textTransform: 'uppercase', letterSpacing: '0.05em',
+        color: 'var(--theme-text)', opacity: 0.7,
+      }}>
+        Email preview
+      </p>
+
+      <div style={{
+        padding: '12px 14px',
+        background: 'var(--theme-elevation-100)',
+        borderRadius: 'var(--style-radius-s, 4px) var(--style-radius-s, 4px) 0 0',
+        fontSize: '13px', lineHeight: 1.6,
+        color: 'var(--theme-text)',
+      }}>
+        <p style={{ margin: '0 0 8px' }}>Hi <em>[attendee&apos;s first name]</em>,</p>
+        <p style={{ margin: 0 }}>
+          Thank you for enrolling in <strong><em>[course title]</em></strong>. Please review the
           following information before your course date.
         </p>
-        <p style={{ margin: 0, fontSize: '11px', color: 'var(--theme-elevation-400)' }}>
-          ▼ Your message appears here ▼
-        </p>
       </div>
+      <p style={{
+        margin: '6px 0 4px', fontSize: '11px', fontWeight: 600,
+        color: 'var(--theme-text)', opacity: 0.65, textAlign: 'center',
+      }}>
+        ▼ your message goes here ▼
+      </p>
     </div>
   )
 }
