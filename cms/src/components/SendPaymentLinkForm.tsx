@@ -116,10 +116,10 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   }
 
   return (
-    <div style={{ marginTop: '4px' }}>
+    <>
 
       {phase === 'idle' && (
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <>
           <button type="button" onClick={() => setPhase('composing')} className="roster-btn">
             <span className="roster-btn__icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -130,16 +130,34 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
             Send Payment Link
           </button>
           {outstanding.length > 0 && (
-            <span style={{ fontSize: '12px', color: 'var(--theme-elevation-600)' }}>
-              {outstanding.length} link{outstanding.length === 1 ? '' : 's'} awaiting payment:{' '}
-              {outstanding.map((o) => o.name ?? o.email).join(', ')}
-            </span>
+            <div style={{
+              flexBasis: '100%',
+              marginTop: '2px',
+              padding: '8px 12px',
+              background: 'var(--theme-elevation-50)',
+              border: '1px solid var(--theme-elevation-150)',
+              borderRadius: 'var(--style-radius-s, 4px)',
+              fontSize: '12px',
+              color: 'var(--theme-elevation-600)',
+              maxWidth: '560px',
+            }}>
+              <strong style={{ color: 'var(--theme-text)' }}>
+                {outstanding.length} payment link{outstanding.length === 1 ? '' : 's'} awaiting payment
+              </strong>
+              <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
+                {outstanding.map((o) => (
+                  <li key={o.id}>
+                    {o.name ?? o.email}{o.name ? ` — ${o.email}` : ''} · sent {new Date(o.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {(phase === 'composing' || phase === 'sending' || phase === 'error') && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '560px' }}>
+        <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '560px' }}>
           <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--theme-text)' }}>
             Send Payment Link
           </p>
@@ -192,7 +210,7 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
       )}
 
       {phase === 'done' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '560px' }}>
+        <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '560px' }}>
           <span style={{ fontSize: '13px', color: '#065f46', fontWeight: 500 }}>✓ {feedback}</span>
           {resultTotal && (
             <span style={{ fontSize: '12px', color: 'var(--theme-elevation-600)' }}>
@@ -211,6 +229,6 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
         </div>
       )}
 
-    </div>
+    </>
   )
 }

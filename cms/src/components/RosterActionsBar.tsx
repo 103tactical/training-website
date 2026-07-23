@@ -186,11 +186,10 @@ export default function RosterActionsBar() {
             </span>
             Email Attendees
           </button>
+          {/* Send Payment Link — inline button; its pending list wraps to its own line */}
+          <SendPaymentLinkForm scheduleId={id} />
         </div>
       )}
-
-      {/* ── Send Payment Link (own state machine, hidden while composing an email) ── */}
-      {(phase === 'idle') && <SendPaymentLinkForm scheduleId={id} />}
 
       {/* ── Compose form ──────────────────────────────────────────────────── */}
       {(phase === 'composing' || phase === 'sending' || phase === 'error') && (
