@@ -231,7 +231,7 @@ const validateBookingRules: CollectionBeforeChangeHook = async ({ data, original
     const seatsBooked: number = schedule?.seatsBooked ?? 0
     const available = maxSeats - seatsBooked
 
-    if (available <= 0) {
+    if (available <= 0 && newStatus !== 'waitlisted') {
       throw new APIError(
         `Session full: ${seatsBooked} of ${maxSeats} seats are taken. ` +
         `Set the status to Waitlisted to add this person to the waitlist instead.`,

@@ -17,10 +17,6 @@ const promoteOnSeatIncrease: CollectionAfterChangeHook = async ({ doc, previousD
   const newMax = typeof doc.maxSeats === "number" ? doc.maxSeats : 0
   if (newMax <= prevMax) return doc
 
-  const booked = typeof doc.seatsBooked === "number" ? doc.seatsBooked : 0
-  let openSeats = newMax - booked
-  if (openSeats <= 0) return doc
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = req.payload as any
   try {
@@ -35,7 +31,15 @@ const promoteOnSeatIncrease: CollectionAfterChangeHook = async ({ doc, previousD
       limit: 0,
       req,
     })
-    let toPromote = Math.min(openSeats, waitlisted.totalDocs ?? 0)
+    const waitlistedCount: number = waitlisted.totalDocs ?? 0
+    if (waitlistedCount === 0) return doc
+
+    // seatsBooked counts BOTH confirmed and waitlisted (both are "active").
+    // Seats actually available for promotion = newMax - confirmed only.
+    const booked = typeof doc.seatsBooked === "number" ? doc.seatsBooked : 0
+    const confirmedCount = booked - waitlistedCount
+    let toPromote = Math.min(newMax - confirmedCount, waitlistedCount)
+    if (toPromote <= 0) return doc
     // promoteFromWaitlist promotes exactly one (the oldest) per call.
     // Waitlisted -> Confirmed is a both-active transition, so seatsBooked
     // does not change — each promotion genuinely fills one open seat.
