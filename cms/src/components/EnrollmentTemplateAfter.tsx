@@ -19,8 +19,8 @@ export default function EnrollmentTemplateAfter() {
       {/* Conditional block — only sent when a document is uploaded */}
       <div style={{
         padding: '10px 14px',
-        background: 'var(--theme-elevation-100)',
-        border: '1px dashed var(--theme-elevation-400)',
+        background: 'rgba(234, 88, 12, 0.08)',
+        border: '1px dashed #ea580c',
         borderRadius: 'var(--style-radius-s, 4px)',
         fontSize: '13px', lineHeight: 1.6,
         color: 'var(--theme-text)',
