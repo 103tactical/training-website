@@ -331,7 +331,9 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     }
 
     // ── Enrollment forms email (only if the course has one configured) ────────
-    if (bookingStatus === "confirmed" && course?.enrollmentMessage) {
+    // Send when a message OR a document is configured — a document uploaded
+    // without a message must still reach the attendee.
+    if (bookingStatus === "confirmed" && (course?.enrollmentMessage || course?.enrollmentFile)) {
       try {
         const fileUrl  = course.enrollmentFile?.url
           ? resolveMediaUrl(course.enrollmentFile.url)
@@ -343,7 +345,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
           to:               buyerEmail,
           firstName,
           courseTitle:      course.title,
-          message:          course.enrollmentMessage,
+          message:          course.enrollmentMessage ?? "",
           attachmentUrl:    fileUrl,
           attachmentFilename: fileUrl ? filename : undefined,
         });

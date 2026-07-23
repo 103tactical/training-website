@@ -13,9 +13,10 @@ export default function EnrollmentTemplateBefore() {
         margin: '0 0 12px', fontSize: '13px', lineHeight: 1.55,
         color: 'var(--theme-text)',
       }}>
-        Optional. When a message is entered below, this email is sent automatically to every
-        attendee the moment their payment is confirmed. <strong>Type only your message</strong> —
-        everything else shown in the preview is added for you.
+        Optional. If a message is entered below <em>or</em> a document is uploaded, this email
+        is sent automatically to every attendee the moment their payment is confirmed. Leave
+        both empty and no email is sent. <strong>Type only your message</strong> — everything
+        else shown in the preview is added for you.
       </p>
 
       <p style={{
