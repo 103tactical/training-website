@@ -327,6 +327,7 @@ export async function createBookingRecord(data: {
   squareOrderId?: string;
   squarePaymentId?: string;
   amountPaidCents?: number;
+  paymentMethod?: string;
   paymentReference?: string;
 }): Promise<{ id: number }> {
   const secret = process.env.CMS_WRITE_SECRET;

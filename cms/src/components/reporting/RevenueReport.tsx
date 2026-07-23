@@ -3,7 +3,8 @@ import { DefaultTemplate } from '@payloadcms/next/templates'
 import { SetStepNav } from '@payloadcms/ui'
 import CsvButton from './CsvButton'
 import {
-  formatCents, formatDate, getDateRange, getCourseName,
+  formatCents,
+  getPaymentMethod, formatDate, getDateRange, getCourseName,
   getAttendeeName, getAttendeeEmail, getSessionLabel,
   PERIOD_LABELS,
 } from './shared'
@@ -44,8 +45,15 @@ export default async function RevenueReport(props: any) {
   }) as { docs: RawBooking[] }
 
   const totalRevenue   = bookings.reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
-  const onlineBookings = bookings.filter(b => b.squareOrderId)
-  const onlineRevenue  = onlineBookings.reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
+  // Per-payment-method breakdown ('Online', 'Square', 'Cash', 'Check', 'Other', '—')
+  const byMethod: Record<string, { count: number; revenue: number }> = {}
+  for (const b of bookings) {
+    const m = getPaymentMethod(b)
+    if (!byMethod[m]) byMethod[m] = { count: 0, revenue: 0 }
+    byMethod[m].count++
+    byMethod[m].revenue += b.amountPaidCents ?? 0
+  }
+  const methodBreakdown = Object.entries(byMethod).sort((a, b) => b[1].revenue - a[1].revenue)
 
   // Revenue by course breakdown
   const byCourse: Record<string, { count: number; revenue: number }> = {}
@@ -58,7 +66,7 @@ export default async function RevenueReport(props: any) {
   const courseBreakdown = Object.entries(byCourse).sort((a, b) => b[1].revenue - a[1].revenue)
 
   // CSV rows
-  const csvHeaders = ['Date', 'Attendee', 'Email', 'Course', 'Session', 'Amount', 'Square Order ID']
+  const csvHeaders = ['Date', 'Attendee', 'Email', 'Course', 'Session', 'Amount', 'Payment Method', 'Square Order ID']
   const csvRows = bookings.map(b => [
     formatDate(b.createdAt),
     getAttendeeName(b),
@@ -66,6 +74,7 @@ export default async function RevenueReport(props: any) {
     getCourseName(b),
     getSessionLabel(b),
     b.amountPaidCents != null ? (b.amountPaidCents / 100).toFixed(2) : '',
+    getPaymentMethod(b),
     b.squareOrderId ?? '',
   ])
 
@@ -165,16 +174,13 @@ export default async function RevenueReport(props: any) {
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Total Revenue</span>
           <span style={{ fontSize: '26px', fontWeight: 700 }}>{formatCents(totalRevenue)}</span>
         </div>
-        <div style={statCard}>
-          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Online (Square)</span>
-          <span style={{ fontSize: '26px', fontWeight: 700 }}>{formatCents(onlineRevenue)}</span>
-          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{onlineBookings.length} bookings</span>
-        </div>
-        <div style={statCard}>
-          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Other / Manual</span>
-          <span style={{ fontSize: '26px', fontWeight: 700 }}>{formatCents(totalRevenue - onlineRevenue)}</span>
-          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{bookings.length - onlineBookings.length} bookings</span>
-        </div>
+        {methodBreakdown.map(([method, { count, revenue }]) => (
+          <div key={method} style={statCard}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>{method === '—' ? 'Unspecified' : method}</span>
+            <span style={{ fontSize: '26px', fontWeight: 700 }}>{formatCents(revenue)}</span>
+            <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{count} booking{count !== 1 ? 's' : ''}</span>
+          </div>
+        ))}
         <div style={statCard}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Avg Per Booking</span>
           <span style={{ fontSize: '26px', fontWeight: 700 }}>
@@ -223,7 +229,7 @@ export default async function RevenueReport(props: any) {
         ) : (
           <table style={tableStyle}>
             <thead><tr>
-              {['Date', 'Attendee', 'Course', 'Session', 'Amount', 'Square Order'].map(h => (
+              {['Date', 'Attendee', 'Course', 'Session', 'Amount', 'Payment', 'Square Order'].map(h => (
                 <th key={h} style={thStyle}>{h}</th>
               ))}
             </tr></thead>
@@ -235,6 +241,7 @@ export default async function RevenueReport(props: any) {
                   <td style={tdStyle}>{getCourseName(b)}</td>
                   <td style={tdStyle}>{getSessionLabel(b)}</td>
                   <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatCents(b.amountPaidCents)}</td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{getPaymentMethod(b)}</td>
                   <td style={{ ...tdStyle, fontSize: '11px', color: 'var(--theme-elevation-500)' }}>
                     {b.squareOrderId ?? '—'}
                   </td>

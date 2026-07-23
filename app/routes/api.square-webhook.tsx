@@ -263,6 +263,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       course: courseId,      // numeric ID resolved from schedule.course above
       courseSchedule: scheduleId, // numeric ID, not pending.courseSchedule
       status: "confirmed",
+      paymentMethod: "online",
       squareOrderId: orderId,
       squarePaymentId: paymentId,
       amountPaidCents: amountCents,
@@ -398,6 +399,7 @@ async function handleLegacyPayment(args: {
     course: courseId,
     courseSchedule: scheduleId,
     status: "confirmed",
+    paymentMethod: "online",
     squareOrderId: orderId,
     squarePaymentId: paymentId,
     amountPaidCents: amountCents,

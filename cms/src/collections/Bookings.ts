@@ -528,6 +528,25 @@ export const Bookings: CollectionConfig = {
       },
     },
     {
+      name: 'paymentMethod',
+      type: 'select',
+      label: 'Payment Method',
+      options: [
+        { label: 'Online (website booking)', value: 'online' },
+        { label: 'Square (POS / payment link)', value: 'square-manual' },
+        { label: 'Cash', value: 'cash' },
+        { label: 'Check', value: 'check' },
+        { label: 'Other', value: 'other' },
+      ],
+      admin: {
+        description:
+          'Set automatically to "Online" for website bookings. For manually entered bookings, select how the attendee paid.',
+        components: {
+          Cell: './components/PaymentMethodCell',
+        },
+      },
+    },
+    {
       name: 'amountPaidCents',
       type: 'number',
       label: 'Amount Paid',

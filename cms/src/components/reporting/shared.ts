@@ -85,3 +85,21 @@ export function getSessionLabel(b: RawBooking): string {
   }
   return '—'
 }
+
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  'online':        'Online',
+  'square-manual': 'Square',
+  'cash':          'Cash',
+  'check':         'Check',
+  'other':         'Other',
+}
+
+/** Human label for a booking's payment method; falls back for legacy rows. */
+export function getPaymentMethod(b: RawBooking): string {
+  if (b.paymentMethod && PAYMENT_METHOD_LABELS[b.paymentMethod]) {
+    return PAYMENT_METHOD_LABELS[b.paymentMethod]
+  }
+  // Legacy rows without the field: infer online from the Square order id
+  if (b.squareOrderId) return 'Online'
+  return '—'
+}
