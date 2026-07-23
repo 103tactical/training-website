@@ -8,6 +8,8 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { default as default_d2c9548299dc1c78ef66dd064c4de41e } from '../../../components/EnrollmentTemplateBefore'
+import { default as default_c32fde47c2b04b923594b590bd7396a0 } from '../../../components/EnrollmentTemplateAfter'
 import { default as default_450a3164491ee8fe5d1c3c57d12dd376 } from '../../../components/DayRowLabel'
 import { default as default_175f6af1742db38737ebb79587176c49 } from '../../../components/RosterActionsBar'
 import { default as default_7422917546197b1d1046645adfa2aef0 } from '../../../components/EmailCell'
@@ -44,6 +46,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "./components/EnrollmentTemplateBefore#default": default_d2c9548299dc1c78ef66dd064c4de41e,
+  "./components/EnrollmentTemplateAfter#default": default_c32fde47c2b04b923594b590bd7396a0,
   "./components/DayRowLabel#default": default_450a3164491ee8fe5d1c3c57d12dd376,
   "./components/RosterActionsBar#default": default_175f6af1742db38737ebb79587176c49,
   "./components/EmailCell#default": default_7422917546197b1d1046645adfa2aef0,

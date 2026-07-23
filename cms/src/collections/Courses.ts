@@ -172,15 +172,25 @@ export const Courses: CollectionConfig = {
       },
       fields: [
         {
+          name: "enrollmentTemplateBefore",
+          type: "ui",
+          admin: { components: { Field: "./components/EnrollmentTemplateBefore" } },
+        },
+        {
           name: "enrollmentMessage",
           type: "textarea",
-          label: "Message / Instructions",
+          label: false,
           admin: {
             description:
-              "Optional. When filled in, a branded email with this message (and the PDF below if provided) " +
-              "will be sent automatically to every attendee upon payment confirmation. " +
-              "e.g. instructions for completing the attached form before the course date.",
+              "Optional. When filled in, this email is sent automatically to every attendee upon payment confirmation. " +
+              "Type ONLY your message — the grey parts above and below are added for you.",
+            placeholder: "e.g. The class will start at 8:00 AM. The classroom portion will be held at…",
           },
+        },
+        {
+          name: "enrollmentTemplateAfter",
+          type: "ui",
+          admin: { components: { Field: "./components/EnrollmentTemplateAfter" } },
         },
         {
           name: "enrollmentFile",
