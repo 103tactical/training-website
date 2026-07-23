@@ -213,8 +213,8 @@ export async function sendEnrollmentEmail(args: {
   const attachmentNote = attachmentUrl
     ? `<p style="margin:16px 0 0;padding:14px 16px;background:#fff8f0;
                  border-left:3px solid #ea580c;font-size:14px;color:#444;">
-         <strong>📎 An enrollment document is attached.</strong><br>
-         Please review, complete, and bring it with you on the first day of class.
+         <strong>An enrollment document is attached.</strong><br>
+         Please review it before your first day of class. If it includes a form, please complete it and bring it with you.
        </p>`
     : "";
 
@@ -227,7 +227,7 @@ export async function sendEnrollmentEmail(args: {
     <p style="margin:16px 0 0;font-size:14px;color:#666;">${q}</p>
   `);
 
-  const text = `Hi ${firstName},\n\nThank you for enrolling in ${courseTitle}. Please review the following before your course date.\n\n${message}${attachmentUrl ? "\n\nAn enrollment document is attached. Please review, complete, and bring it on the first day of class." : ""}`;
+  const text = `Hi ${firstName},\n\nThank you for enrolling in ${courseTitle}. Please review the following before your course date.\n\n${message}${attachmentUrl ? "\n\nAn enrollment document is attached. Please review it before your first day of class. If it includes a form, please complete it and bring it with you." : ""}`;
 
   const { error } = await sendViaResend({
     from: getFromAddress(),
