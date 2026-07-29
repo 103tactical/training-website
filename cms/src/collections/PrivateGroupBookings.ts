@@ -999,10 +999,10 @@ export const PrivateGroupBookings: CollectionConfig = {
       ],
     },
 
-    // ── 4. Payment Direction ──────────────────────────────────────────────────
+    // ── 4. Payment — one section: choose how money moves, then execute ───────
     {
       type: 'collapsible',
-      label: 'Payment Direction',
+      label: 'Payment',
       admin: { initCollapsed: false },
       fields: [
         {
@@ -1016,14 +1016,12 @@ export const PrivateGroupBookings: CollectionConfig = {
               value: 'payment-links',
             },
             {
-              label: 'Manual — I will collect payment directly (cash, invoice, etc.)',
+              label: 'Manual — payment already collected (cash, invoice, etc.)',
               value: 'manual',
             },
           ],
           admin: {
-            description:
-              '"Payment links" emails each attendee a unique Square checkout link. ' +
-              '"Manual" immediately confirms all attendees as booked — use when you have already collected or arranged payment separately.',
+            description: 'This choice controls what the button below does.',
           },
         },
         {
@@ -1052,18 +1050,17 @@ export const PrivateGroupBookings: CollectionConfig = {
             condition: (data) => data.paymentMethod === 'manual',
           },
         },
-      ],
-    },
-
-    // ── Action button ─────────────────────────────────────────────────────────
-    {
-      name: 'processAction',
-      type: 'ui',
-      admin: {
-        components: {
-          Field: './components/ProcessGroupBookingButton',
+        // The action box — lives directly under the choice it executes
+        {
+          name: 'processAction',
+          type: 'ui',
+          admin: {
+            components: {
+              Field: './components/ProcessGroupBookingButton',
+            },
+          },
         },
-      },
+      ],
     },
 
     // ── Internal tracking (not shown in UI) ───────────────────────────────────

@@ -183,7 +183,11 @@ export default function ProcessGroupBookingButton() {
           color: 'var(--theme-elevation-800)',
         }}
       >
-        {isDone ? 'Process More' : 'Process Booking'}
+        {isDone
+          ? 'Process New Attendees'
+          : isManual
+            ? 'Book the Group'
+            : 'Send the Payment Links'}
       </p>
       <p
         style={{
@@ -193,24 +197,32 @@ export default function ProcessGroupBookingButton() {
           lineHeight: '1.5',
         }}
       >
-        {isManual
-          ? 'Creates a private course schedule and confirms all attendees as booked. ' +
-            'Already-confirmed attendees are skipped automatically.'
-          : 'Creates a private course schedule, generates a unique Square checkout link for each attendee, ' +
-            'and emails them their payment link. ' +
-            'Attendees who already received a link are skipped automatically.'}
+        {isDone
+          ? 'Anyone added to the attendee list since the last run will be processed. Everyone already handled is skipped.'
+          : isManual
+            ? 'The button below books every attendee immediately — no emails asking for payment. Use only when payment is already taken care of.'
+            : 'The button below emails every attendee their own secure Square payment link. Each person’s seat is confirmed automatically when they pay.'}
         {' '}
         <strong style={{ color: 'var(--theme-elevation-700)' }}>
-          Save before clicking.
+          Save any changes first.
         </strong>
       </p>
 
-      {/* ── Attachments ──────────────────────────────────────────────────────── */}
+      {/* ── Attachments (optional, collapsed out of the way) ─────────────────── */}
       {phase === 'idle' && (
-        <div style={{ marginBottom: '16px' }}>
-          <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 600, color: 'var(--theme-elevation-700)' }}>
-            Attachments (optional)
-          </p>
+        <details open={files.length > 0} style={{ marginBottom: '16px' }}>
+          <summary
+            style={{
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'var(--theme-elevation-600)',
+              userSelect: 'none',
+            }}
+          >
+            Attach files to the attendee email (optional)
+          </summary>
+          <div style={{ marginTop: '8px' }}>
           <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--theme-elevation-500)', lineHeight: '1.5' }}>
             Files attached here are sent with the email to every attendee.
             PDF, JPG, Word (.doc/.docx), TXT — up to 5 files, 5 MB each, 10 MB total.
@@ -288,7 +300,8 @@ export default function ProcessGroupBookingButton() {
               />
             </label>
           )}
-        </div>
+          </div>
+        </details>
       )}
 
       {/* ── Action button ────────────────────────────────────────────────────── */}
