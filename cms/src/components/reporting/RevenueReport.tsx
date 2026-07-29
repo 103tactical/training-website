@@ -45,6 +45,7 @@ export default async function RevenueReport(props: any) {
   }) as { docs: RawBooking[] }
 
   const totalRevenue   = bookings.reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
+  const totalDiscounts = bookings.reduce((s, b) => s + (b.discountCents ?? 0), 0)
   // Per-payment-method breakdown ('Online', 'Square', 'Cash', 'Check', 'Other', '—')
   const byMethod: Record<string, { count: number; revenue: number }> = {}
   for (const b of bookings) {
@@ -66,7 +67,7 @@ export default async function RevenueReport(props: any) {
   const courseBreakdown = Object.entries(byCourse).sort((a, b) => b[1].revenue - a[1].revenue)
 
   // CSV rows
-  const csvHeaders = ['Date', 'Attendee', 'Email', 'Course', 'Session', 'Amount', 'Payment Method', 'Square Order ID']
+  const csvHeaders = ['Date', 'Attendee', 'Email', 'Course', 'Session', 'Amount', 'Discount Code', 'Discount', 'Payment Method', 'Square Order ID']
   const csvRows = bookings.map(b => [
     formatDate(b.createdAt),
     getAttendeeName(b),
@@ -74,6 +75,8 @@ export default async function RevenueReport(props: any) {
     getCourseName(b),
     getSessionLabel(b),
     b.amountPaidCents != null ? (b.amountPaidCents / 100).toFixed(2) : '',
+    b.discountCode ?? '',
+    b.discountCents != null && b.discountCents > 0 ? (b.discountCents / 100).toFixed(2) : '',
     getPaymentMethod(b),
     b.squareOrderId ?? '',
   ])
@@ -181,6 +184,15 @@ export default async function RevenueReport(props: any) {
             <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{count} booking{count !== 1 ? 's' : ''}</span>
           </div>
         ))}
+        {totalDiscounts > 0 && (
+          <div style={statCard}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Discounts Given</span>
+            <span style={{ fontSize: '26px', fontWeight: 700 }}>{formatCents(totalDiscounts)}</span>
+            <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>
+              {bookings.filter(b => (b.discountCents ?? 0) > 0).length} booking{bookings.filter(b => (b.discountCents ?? 0) > 0).length !== 1 ? 's' : ''} with a code
+            </span>
+          </div>
+        )}
         <div style={statCard}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Avg Per Booking</span>
           <span style={{ fontSize: '26px', fontWeight: 700 }}>
@@ -229,7 +241,7 @@ export default async function RevenueReport(props: any) {
         ) : (
           <table style={tableStyle}>
             <thead><tr>
-              {['Date', 'Attendee', 'Course', 'Session', 'Amount', 'Payment', 'Square Order'].map(h => (
+              {['Date', 'Attendee', 'Course', 'Session', 'Amount', 'Discount', 'Payment', 'Square Order'].map(h => (
                 <th key={h} style={thStyle}>{h}</th>
               ))}
             </tr></thead>
@@ -241,6 +253,9 @@ export default async function RevenueReport(props: any) {
                   <td style={tdStyle}>{getCourseName(b)}</td>
                   <td style={tdStyle}>{getSessionLabel(b)}</td>
                   <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatCents(b.amountPaidCents)}</td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    {b.discountCode ? `${b.discountCode} (−${formatCents(b.discountCents ?? 0)})` : '—'}
+                  </td>
                   <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{getPaymentMethod(b)}</td>
                   <td style={{ ...tdStyle, fontSize: '11px', color: 'var(--theme-elevation-500)' }}>
                     {b.squareOrderId ?? '—'}

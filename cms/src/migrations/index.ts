@@ -50,6 +50,9 @@ import * as migration_20260429_bookings_skip_refund from './20260429_bookings_sk
 import * as migration_20260527_courses_page_featured_course from './20260527_courses_page_featured_course';
 import * as migration_20260723_bookings_payment_method from './20260723_bookings_payment_method';
 import * as migration_20260723_pgb_manual_payment_method from './20260723_pgb_manual_payment_method';
+import * as migration_20260729_discount_codes from './20260729_discount_codes';
+import * as migration_20260729_pending_bookings_discount from './20260729_pending_bookings_discount';
+import * as migration_20260729_bookings_discount from './20260729_bookings_discount';
 
 export const migrations = [
   {
@@ -311,5 +314,20 @@ export const migrations = [
     up: migration_20260723_pgb_manual_payment_method.up,
     down: migration_20260723_pgb_manual_payment_method.down,
     name: '20260723_pgb_manual_payment_method'
+  },
+  {
+    up: migration_20260729_discount_codes.up,
+    down: migration_20260729_discount_codes.down,
+    name: '20260729_discount_codes'
+  },
+  {
+    up: migration_20260729_pending_bookings_discount.up,
+    down: migration_20260729_pending_bookings_discount.down,
+    name: '20260729_pending_bookings_discount'
+  },
+  {
+    up: migration_20260729_bookings_discount.up,
+    down: migration_20260729_bookings_discount.down,
+    name: '20260729_bookings_discount'
   },
 ];

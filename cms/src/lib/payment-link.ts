@@ -15,6 +15,7 @@
 import { SquareClient, SquareEnvironment } from 'square'
 import type { PayloadRequest } from 'payload'
 import { questionsLine } from './email'
+import { validateDiscountCode } from './discount'
 
 function getSquareClient(): SquareClient | null {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
@@ -41,12 +42,16 @@ export interface SendPaymentLinkArgs {
   lastName: string
   email: string
   phone?: string
+  /** Optional discount code — validated with the same rules as the website */
+  discountCode?: string
 }
 
 export interface SendPaymentLinkResult {
   checkoutUrl: string
   totalCents: number
   surchargeCents: number
+  discountCents: number
+  discountCode?: string
   emailSent: boolean
   emailError?: string
 }
@@ -87,11 +92,29 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   const priceInCents = Math.round((course.price ?? 0) * 100)
   if (priceInCents <= 0) throw new Error('Course has no price set.')
 
+  // Optional discount code — same rules as the website checkout. The discount
+  // comes off the course price; the surcharge is computed on the lower amount.
+  let discountCents = 0
+  let appliedCode: string | undefined
+  if (args.discountCode?.trim()) {
+    const check = await validateDiscountCode({
+      payload: p,
+      req,
+      code: args.discountCode,
+      courseId: Number(course.id),
+      priceInCents,
+    })
+    if (!check.valid) throw new Error(`Discount code: ${check.reason}`)
+    discountCents = check.discountCents
+    appliedCode = check.code
+  }
+  const discountedPriceCents = priceInCents - discountCents
+
   const ecom = await p.findGlobal({ slug: 'e-commerce' })
   const surchargePercent: number = ecom?.payments?.creditCardSurchargePercent ?? 0
   const fixedFeeCents: number = ecom?.payments?.creditCardFixedFeeCents ?? 0
   const surchargeCents = surchargePercent > 0
-    ? Math.round((priceInCents + fixedFeeCents) / (1 - surchargePercent / 100)) - priceInCents
+    ? Math.round((discountedPriceCents + fixedFeeCents) / (1 - surchargePercent / 100)) - discountedPriceCents
     : 0
 
   // ── PendingBooking with token (webhook claim ticket) ─────────────────────
@@ -106,6 +129,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
       lastName,
       phone: phone || undefined,
       status: 'pending',
+      ...(appliedCode ? { discountCode: appliedCode, discountCents } : {}),
     },
     req,
   })
@@ -152,6 +176,16 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
           basePriceMoney: { amount: BigInt(priceInCents), currency: 'USD' },
         },
       ],
+      ...(discountCents > 0 && appliedCode ? {
+        discounts: [
+          {
+            name: `Discount (${appliedCode})`,
+            type: 'FIXED_AMOUNT' as const,
+            amountMoney: { amount: BigInt(discountCents), currency: 'USD' },
+            scope: 'ORDER' as const,
+          },
+        ],
+      } : {}),
       ...(surchargeCents > 0 ? {
         serviceCharges: [
           {
@@ -176,7 +210,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   const checkoutUrl = response.paymentLink?.url
   if (!checkoutUrl) throw new Error('Square did not return a checkout URL.')
 
-  const totalCents = priceInCents + surchargeCents
+  const totalCents = discountedPriceCents + surchargeCents
 
   // ── Branded email with the payment button ────────────────────────────────
   const brandName = process.env.FROM_NAME || '103 Tactical Training'
@@ -196,7 +230,8 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
         </td></tr>
         <tr><td style="padding:32px 32px 20px;font-size:15px;line-height:1.6;color:#333333;">
           <p style="margin:0 0 12px;">Hi ${firstName},</p>
-          <p style="margin:0 0 12px;">You have been registered for <strong>${course.title}</strong>${sessionDateStr ? ` on <strong>${sessionDateStr}</strong>` : ''}.</p>
+          <p style="margin:0 0 12px;">You have been registered for <strong>${course.title}</strong>${sessionDateStr ? ` on <strong>${sessionDateStr}</strong>` : ''}.</p>${appliedCode ? `
+          <p style="margin:0 0 12px;">A discount of <strong>$${(discountCents / 100).toFixed(2)}</strong> (code ${appliedCode}) has been applied to your registration.</p>` : ''}
           <p style="margin:0;">To secure your seat, please complete your payment of <strong>${totalStr}</strong> using the button below:</p>
         </td></tr>
         <tr><td align="center" style="padding:8px 32px 28px;">
@@ -217,6 +252,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
     `Hi ${firstName},`,
     ``,
     `You have been registered for ${course.title}${sessionDateStr ? ` on ${sessionDateStr}` : ''}.`,
+    ...(appliedCode ? [``, `A discount of $${(discountCents / 100).toFixed(2)} (code ${appliedCode}) has been applied to your registration.`] : []),
     ``,
     `To secure your seat, please complete your payment of ${totalStr} here:`,
     checkoutUrl,
@@ -265,5 +301,5 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
     }
   }
 
-  return { checkoutUrl, totalCents, surchargeCents, emailSent, emailError }
+  return { checkoutUrl, totalCents, surchargeCents, discountCents, discountCode: appliedCode, emailSent, emailError }
 }

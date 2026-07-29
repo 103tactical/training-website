@@ -8,16 +8,18 @@ import {
 import {
   Form,
   useActionData,
+  useFetcher,
   useLoaderData,
   useNavigation,
 } from "@remix-run/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   getCourseScheduleById,
   createPendingBooking,
   findActivePendingBooking,
   updatePendingBooking,
   getECommerceSettings,
+  validateDiscountCode,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
@@ -28,6 +30,18 @@ import { isScheduleBookable } from "~/lib/schedule.server";
 type BookActionData = {
   errors: Record<string, string>;
   formError: string | null;
+};
+
+/** Response shape for the "apply discount code" fetcher submission */
+type ApplyCodeData = {
+  discount?: {
+    code: string;
+    label: string;
+    discountAmount: number;   // dollars
+    surchargeAmount: number;  // dollars, recomputed on the discounted price
+    totalPrice: number;       // dollars
+  };
+  discountError?: string;
 };
 
 // ── Meta ─────────────────────────────────────────────────────────────────────
@@ -135,6 +149,45 @@ export async function action({ request, params }: ActionFunctionArgs) {
   if (!scheduleId) throw new Response("Not found", { status: 404 });
 
   const formData = await request.formData();
+
+  // ── "Apply discount code" fetcher submission (no other fields required) ────
+  if (formData.get("intent") === "apply-code") {
+    const rawCode = (formData.get("discountCode") as string | null)?.trim().slice(0, 32) ?? "";
+    if (!rawCode) {
+      return json<ApplyCodeData>({ discountError: "Enter a discount code first." });
+    }
+    try {
+      const schedule = await getCourseScheduleById(scheduleId);
+      if (!schedule || !schedule.isActive || !isScheduleBookable(schedule)) {
+        return json<ApplyCodeData>({ discountError: "This session is no longer available." });
+      }
+      const course = schedule.course as Course;
+      const priceInCents = Math.round((course?.price ?? 0) * 100);
+      const check = await validateDiscountCode(rawCode, Number(course?.id), priceInCents);
+      if (!check.valid) {
+        return json<ApplyCodeData>({ discountError: check.reason });
+      }
+      const ecommerceSettings = await getECommerceSettings();
+      const surchargePercent = ecommerceSettings.payments?.creditCardSurchargePercent ?? 0;
+      const fixedFeeCents = ecommerceSettings.payments?.creditCardFixedFeeCents ?? 0;
+      const surchargeCents = surchargePercent > 0
+        ? Math.round((check.discountedPriceCents + fixedFeeCents) / (1 - surchargePercent / 100)) - check.discountedPriceCents
+        : 0;
+      return json<ApplyCodeData>({
+        discount: {
+          code: check.code,
+          label: check.label,
+          discountAmount: check.discountCents / 100,
+          surchargeAmount: surchargeCents / 100,
+          totalPrice: (check.discountedPriceCents + surchargeCents) / 100,
+        },
+      });
+    } catch (err) {
+      console.error("[book] apply-code error:", err);
+      return json<ApplyCodeData>({ discountError: "Could not check that code right now. Please try again." });
+    }
+  }
+
   const firstName = (formData.get("firstName") as string | null)?.trim().slice(0, 100) ?? "";
   const lastName  = (formData.get("lastName")  as string | null)?.trim().slice(0, 100) ?? "";
   const email = (formData.get("email") as string | null)?.trim() ?? "";
@@ -186,13 +239,33 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
     const course = schedule.course as Course;
     const priceInCents = Math.round((course?.price ?? 0) * 100);
+
+    // ── Discount code (re-validated server-side — the applied UI state is
+    // only a preview; this is the authoritative check) ──────────────────────
+    const discountCodeInput = (formData.get("discountCode") as string | null)?.trim().slice(0, 32) ?? "";
+    let discountCents = 0;
+    let appliedCode: string | undefined;
+    if (discountCodeInput) {
+      const check = await validateDiscountCode(discountCodeInput, Number(course?.id), priceInCents);
+      if (!check.valid) {
+        return json<BookActionData>(
+          { errors: {}, formError: `Discount code: ${check.reason} Remove the code or correct it, then try again.` },
+          { status: 422 },
+        );
+      }
+      discountCents = check.discountCents;
+      appliedCode = check.code;
+    }
+    const discountedPriceCents = priceInCents - discountCents;
+
     const ecommerceSettings = await getECommerceSettings();
     const surchargePercent = ecommerceSettings.payments?.creditCardSurchargePercent ?? 0;
     const fixedFeeCents = ecommerceSettings.payments?.creditCardFixedFeeCents ?? 0;
     // Pass-through formula: (price + fixedFee) / (1 - rate%) - price
     // Fully recoups both the percentage and fixed components of Square's fee.
+    // Computed on the DISCOUNTED price — the fee only covers money actually charged.
     const surchargeCents = surchargePercent > 0
-      ? Math.round((priceInCents + fixedFeeCents) / (1 - surchargePercent / 100)) - priceInCents
+      ? Math.round((discountedPriceCents + fixedFeeCents) / (1 - surchargePercent / 100)) - discountedPriceCents
       : 0;
 
     // ── Upsert PendingBooking ───────────────────────────────────────────────
@@ -210,6 +283,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
         firstName,
         lastName,
         ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
+        // Always overwrite — a resubmit may add, change, or remove the code
+        discountCode: appliedCode ?? null,
+        discountCents: appliedCode ? discountCents : null,
       });
     } else {
       await createPendingBooking({
@@ -219,6 +295,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         firstName,
         lastName,
         phone: sanitizedPhone || undefined,
+        ...(appliedCode ? { discountCode: appliedCode, discountCents } : {}),
       });
     }
 
@@ -268,6 +345,16 @@ export async function action({ request, params }: ActionFunctionArgs) {
             },
           },
         ],
+        ...(discountCents > 0 && appliedCode ? {
+          discounts: [
+            {
+              name: `Discount (${appliedCode})`,
+              type: "FIXED_AMOUNT" as const,
+              amountMoney: { amount: BigInt(discountCents), currency: "USD" },
+              scope: "ORDER" as const,
+            },
+          ],
+        } : {}),
         ...(surchargeCents > 0 ? {
           serviceCharges: [
             {
@@ -323,6 +410,35 @@ export default function BookSessionPage() {
 
   const errors = actionData?.errors ?? {};
   const formError = actionData?.formError ?? null;
+
+  // ── Discount code (fetcher preview; server re-validates on final submit) ──
+  const codeFetcher = useFetcher<ApplyCodeData>();
+  const [codeInput, setCodeInput] = useState("");
+  const [applied, setApplied] = useState<NonNullable<ApplyCodeData["discount"]> | null>(null);
+  const applying = codeFetcher.state !== "idle";
+  const discountError = !applied && codeFetcher.state === "idle" ? codeFetcher.data?.discountError : undefined;
+
+  useEffect(() => {
+    if (codeFetcher.state === "idle" && codeFetcher.data?.discount) {
+      setApplied(codeFetcher.data.discount);
+    }
+  }, [codeFetcher.state, codeFetcher.data]);
+
+  const applyCode = () => {
+    if (!codeInput.trim() || applying) return;
+    codeFetcher.submit(
+      { intent: "apply-code", discountCode: codeInput.trim() },
+      { method: "post" },
+    );
+  };
+  const removeCode = () => {
+    setApplied(null);
+    setCodeInput("");
+  };
+
+  // Displayed totals: the applied discount overrides the loader's defaults
+  const shownSurcharge = applied ? applied.surchargeAmount : surchargeAmount;
+  const shownTotal = applied ? applied.totalPrice : totalPrice;
 
   // When the user clicks back from Square checkout, the browser may restore
   // this page from bfcache with the button frozen in "Preparing checkout…".
@@ -525,6 +641,62 @@ export default function BookSessionPage() {
                 </span>
               </div>
 
+              {/* ── Discount code ── */}
+              <div className="booking-form__field booking-form__discount">
+                <label className="booking-form__label" htmlFor="discountCodeInput">
+                  Discount Code
+                </label>
+                {applied ? (
+                  <div className="booking-form__discount-applied">
+                    <span className="booking-form__discount-applied-text">
+                      Code <strong>{applied.code}</strong> applied — {applied.label}
+                    </span>
+                    <button
+                      type="button"
+                      className="booking-form__discount-remove"
+                      onClick={removeCode}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="booking-form__discount-row">
+                    <input
+                      id="discountCodeInput"
+                      type="text"
+                      maxLength={32}
+                      autoComplete="off"
+                      autoCapitalize="characters"
+                      spellCheck={false}
+                      className="booking-form__input booking-form__discount-input"
+                      value={codeInput}
+                      onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          applyCode();
+                        }
+                      }}
+                      placeholder="Enter code"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn--outline booking-form__discount-apply"
+                      onClick={applyCode}
+                      disabled={applying || !codeInput.trim()}
+                    >
+                      {applying ? "Checking…" : "Apply"}
+                    </button>
+                  </div>
+                )}
+                {discountError && (
+                  <span className="booking-form__field-error">{discountError}</span>
+                )}
+              </div>
+              {/* The APPLIED code travels with the booking submit; the server
+                  re-validates it before creating the Square checkout. */}
+              <input type="hidden" name="discountCode" value={applied?.code ?? ""} />
+
               {surchargePercent > 0 && (
                 <div className="booking-form__cc-notice" role="note">
                   <span className="booking-form__cc-notice-title">Card processing fee</span>
@@ -535,19 +707,27 @@ export default function BookSessionPage() {
                 </div>
               )}
 
-              {surchargePercent > 0 ? (
+              {surchargePercent > 0 || applied ? (
                 <div className="booking-form__summary-breakdown">
                   <div className="booking-form__summary-line booking-form__summary-line--sub">
                     <span>Course fee</span>
                     <span>${price.toLocaleString()}.00</span>
                   </div>
-                  <div className="booking-form__summary-line booking-form__summary-line--sub">
-                    <span>Credit card processing ({surchargePercent}%)</span>
-                    <span>${surchargeAmount.toFixed(2)}</span>
-                  </div>
+                  {applied && (
+                    <div className="booking-form__summary-line booking-form__summary-line--sub booking-form__summary-line--discount">
+                      <span>Discount ({applied.code})</span>
+                      <span>−${applied.discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {surchargePercent > 0 && (
+                    <div className="booking-form__summary-line booking-form__summary-line--sub">
+                      <span>Credit card processing ({surchargePercent}%)</span>
+                      <span>${shownSurcharge.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="booking-form__summary-line booking-form__summary-line--total">
                     <span>Total due today</span>
-                    <span className="booking-form__total">${totalPrice.toFixed(2)}</span>
+                    <span className="booking-form__total">${shownTotal.toFixed(2)}</span>
                   </div>
                 </div>
               ) : (

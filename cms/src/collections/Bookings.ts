@@ -561,6 +561,29 @@ export const Bookings: CollectionConfig = {
       },
     },
     {
+      name: 'discountCode',
+      type: 'text',
+      label: 'Discount Code',
+      admin: {
+        readOnly: true,
+        description: 'Discount code applied at checkout, if any.',
+        condition: (data) => Boolean(data?.discountCode),
+      },
+    },
+    {
+      name: 'discountCents',
+      type: 'number',
+      label: 'Discount Amount',
+      admin: {
+        readOnly: true,
+        description: 'Amount taken off the course price by the discount code. Amount Paid already reflects this.',
+        condition: (data) => Boolean(data?.discountCode),
+        components: {
+          Field: './components/DollarsField',
+        },
+      },
+    },
+    {
       name: 'notes',
       type: 'textarea',
       label: 'Admin Notes',

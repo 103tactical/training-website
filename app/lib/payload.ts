@@ -187,6 +187,8 @@ export interface PendingBooking {
   squareOrderId?: string;
   squarePaymentId?: string;
   amountPaidCents?: number;
+  discountCode?: string | null;
+  discountCents?: number | null;
   failureReason?: string;
   attemptedAt?: string;
 }
@@ -199,6 +201,8 @@ export async function createPendingBooking(data: {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  discountCode?: string;
+  discountCents?: number;
 }): Promise<PendingBooking> {
   const secret = process.env.CMS_WRITE_SECRET;
   const res = await fetch(`${PAYLOAD_API_URL}/api/pending-bookings`, {
@@ -246,7 +250,7 @@ export async function updatePendingBooking(
   id: number,
   data: Partial<Pick<
     PendingBooking,
-    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt" | "token" | "phone" | "firstName" | "lastName"
+    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt" | "token" | "phone" | "firstName" | "lastName" | "discountCode" | "discountCents"
   >>,
 ): Promise<void> {
   const secret = process.env.CMS_WRITE_SECRET;
@@ -329,6 +333,8 @@ export async function createBookingRecord(data: {
   amountPaidCents?: number;
   paymentMethod?: string;
   paymentReference?: string;
+  discountCode?: string;
+  discountCents?: number;
 }): Promise<{ id: number }> {
   const secret = process.env.CMS_WRITE_SECRET;
   // Payload's REST relationship validation requires numeric IDs — coerce here
@@ -384,6 +390,68 @@ export async function markPrivateGroupAttendeePaid(
   } catch (err) {
     // Non-fatal — log and move on
     console.error("[payload] markPrivateGroupAttendeePaid failed:", err);
+  }
+}
+
+// ── Discount codes ────────────────────────────────────────────────────────────
+
+export type DiscountCheck =
+  | {
+      valid: true;
+      code: string;
+      discountCents: number;
+      discountedPriceCents: number;
+      label: string;
+    }
+  | { valid: false; reason: string };
+
+/**
+ * Validate a discount code against the CMS (the single source of truth for
+ * discount rules). Fails closed: any error → code treated as invalid.
+ */
+export async function validateDiscountCode(
+  code: string,
+  courseId: number,
+  priceInCents: number,
+): Promise<DiscountCheck> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  try {
+    const res = await fetch(`${PAYLOAD_API_URL}/api/discount-codes/validate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+      },
+      body: JSON.stringify({ code, courseId, priceInCents }),
+    });
+    if (!res.ok) {
+      console.error(`[payload] validateDiscountCode HTTP ${res.status}`);
+      return { valid: false, reason: "Could not check that code right now. Please try again." };
+    }
+    return (await res.json()) as DiscountCheck;
+  } catch (err) {
+    console.error("[payload] validateDiscountCode failed:", err);
+    return { valid: false, reason: "Could not check that code right now. Please try again." };
+  }
+}
+
+/**
+ * Count a successful redemption against a code (called by the payment
+ * webhook AFTER the booking exists). Non-fatal — never throws.
+ */
+export async function redeemDiscountCode(code: string): Promise<void> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  try {
+    await fetch(`${PAYLOAD_API_URL}/api/discount-codes/redeem`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+      },
+      body: JSON.stringify({ code }),
+    });
+  } catch (err) {
+    console.error("[payload] redeemDiscountCode failed:", err);
   }
 }
 

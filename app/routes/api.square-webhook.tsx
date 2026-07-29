@@ -33,6 +33,7 @@ import {
   findPendingBookingByToken,
   updatePendingBooking,
   markPrivateGroupAttendeePaid,
+  redeemDiscountCode,
   resolveMediaUrl,
 } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
@@ -279,10 +280,18 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       squarePaymentId: paymentId,
       amountPaidCents: amountCents,
       paymentReference: orderId,
+      ...(pending.discountCode
+        ? { discountCode: pending.discountCode, discountCents: pending.discountCents ?? 0 }
+        : {}),
     });
 
     // ── Mark PendingBooking completed ───────────────────────────────────────
     await updatePendingBooking(pending.id, { status: "completed" });
+
+    // ── Count the discount redemption (non-fatal, after the booking exists) ──
+    if (pending.discountCode) {
+      await redeemDiscountCode(pending.discountCode);
+    }
 
     // ── Update Private Group Booking attendee status if applicable ───────────
     // Non-fatal — if this isn't a private group booking the CMS returns a
@@ -365,6 +374,12 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       amountDollars,
       orderId,
       waitlisted: bookingStatus === "waitlisted",
+      ...(pending.discountCode
+        ? {
+            discountCode: pending.discountCode,
+            discountDollars: formatCents(pending.discountCents ?? 0),
+          }
+        : {}),
     });
 
   } catch (err) {

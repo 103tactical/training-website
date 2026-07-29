@@ -24,6 +24,7 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [discountCode, setDiscountCode] = useState('')
   const [feedback, setFeedback] = useState('')
   const [resultUrl, setResultUrl] = useState('')
   const [resultTotal, setResultTotal] = useState('')
@@ -45,7 +46,7 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   useEffect(() => { loadOutstanding() }, [loadOutstanding])
 
   const close = () => {
-    setPhase('idle'); setFirstName(''); setLastName(''); setEmail(''); setPhone('')
+    setPhase('idle'); setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setDiscountCode('')
     setFeedback(''); setResultUrl(''); setResultTotal(''); setCopied(false)
   }
 
@@ -65,6 +66,7 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
           lastName: lastName.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
+          discountCode: discountCode.trim() || undefined,
         }),
       })
       const json = await res.json() as {
@@ -186,6 +188,20 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               <label style={labelStyle}>Phone (optional)</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} disabled={phase === 'sending'} />
             </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Discount Code (optional)</label>
+              <input
+                type="text"
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                style={inputStyle}
+                disabled={phase === 'sending'}
+                placeholder="e.g. VET10"
+              />
+            </div>
+            <div style={{ flex: 1 }} />
           </div>
 
           {feedback && (

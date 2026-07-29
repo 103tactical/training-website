@@ -303,6 +303,31 @@ export const PendingBookings: CollectionConfig = {
       label: 'Phone Number',
     },
 
+    // ── Discount (set when a code was applied at checkout) ──────────────────
+    {
+      name: 'discountCode',
+      type: 'text',
+      label: 'Discount Code',
+      admin: {
+        readOnly: true,
+        description: 'Code applied when this checkout was created.',
+        condition: (data) => Boolean(data?.discountCode),
+      },
+    },
+    {
+      name: 'discountCents',
+      type: 'number',
+      label: 'Discount Amount',
+      admin: {
+        readOnly: true,
+        description: 'Amount taken off the course price by the code.',
+        condition: (data) => Boolean(data?.discountCode),
+        components: {
+          Field: './components/DollarsField',
+        },
+      },
+    },
+
     // ── Status ──────────────────────────────────────────────────────────────
     {
       name: 'status',

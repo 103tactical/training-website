@@ -253,7 +253,7 @@ async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
     return Response.json({ error: 'Missing schedule id' }, { status: 400 })
   }
 
-  let body: { firstName?: string; lastName?: string; email?: string; phone?: string }
+  let body: { firstName?: string; lastName?: string; email?: string; phone?: string; discountCode?: string }
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body = (await (req as any).json()) as typeof body
@@ -265,6 +265,7 @@ async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
   const lastName = body.lastName?.trim() ?? ''
   const email = body.email?.trim() ?? ''
   const phone = body.phone?.trim() || undefined
+  const discountCode = body.discountCode?.trim() || undefined
 
   if (!firstName || !lastName) {
     return Response.json({ error: 'First and last name are required.' }, { status: 400 })
@@ -282,6 +283,7 @@ async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
       lastName,
       email,
       phone,
+      discountCode,
     })
     return Response.json(result)
   } catch (err) {

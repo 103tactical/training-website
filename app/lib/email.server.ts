@@ -437,8 +437,10 @@ export async function sendAdminBookingNotification(args: {
   amountDollars: string;
   orderId: string;
   waitlisted?: boolean;
+  discountCode?: string;
+  discountDollars?: string;
 }): Promise<void> {
-  const { firstName, lastName, email, courseTitle, sessionDates, amountDollars, orderId, waitlisted } = args;
+  const { firstName, lastName, email, courseTitle, sessionDates, amountDollars, orderId, waitlisted, discountCode, discountDollars } = args;
   await sendAdminEmail(
     waitlisted
       ? `⚠ PAID BUT WAITLISTED — ${firstName} ${lastName} → ${courseTitle}`
@@ -453,6 +455,7 @@ export async function sendAdminBookingNotification(args: {
       `<strong>Course:</strong> ${courseTitle}`,
       ...(sessionDates ? [`<strong>Date(s):</strong> ${sessionDates}`] : []),
       `<strong>Amount:</strong> ${amountDollars}`,
+      ...(discountCode ? [`<strong>Discount:</strong> ${discountCode}${discountDollars ? ` (−${discountDollars})` : ""}`] : []),
       `<strong>Order ID:</strong> <code style="font-size:12px;">${orderId}</code>`,
     ],
     [
@@ -463,6 +466,7 @@ export async function sendAdminBookingNotification(args: {
       `Course: ${courseTitle}`,
       ...(sessionDates ? [`Date(s): ${sessionDates}`] : []),
       `Amount: ${amountDollars}`,
+      ...(discountCode ? [`Discount: ${discountCode}${discountDollars ? ` (−${discountDollars})` : ""}`] : []),
       `Order ID: ${orderId}`,
     ],
   );
