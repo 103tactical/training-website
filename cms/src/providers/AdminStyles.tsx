@@ -138,18 +138,51 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           padding: 10px 14px;
           border-radius: var(--style-radius-s, 4px);
           background: var(--theme-elevation-100);
+          transition: background 0.12s;
+          border: 1px solid var(--theme-elevation-200);
+        }
+        .adash-card:hover {
+          background: var(--theme-elevation-150, var(--theme-elevation-200));
+        }
+        .adash-card__link {
+          display: block;
           color: var(--theme-text);
           text-decoration: none;
           font-size: 13px;
           font-weight: 500;
-          transition: background 0.12s, color 0.12s;
-          border: 1px solid var(--theme-elevation-200);
         }
-        .adash-card:hover {
-          background: var(--theme-elevation-200);
+        .adash-card__link:hover {
           color: var(--theme-text);
-          text-decoration: none;
+          text-decoration: underline;
         }
+        .adash-card__info {
+          margin-top: 4px;
+        }
+        .adash-card__info summary {
+          list-style: none;
+          cursor: pointer;
+          font-size: 11px;
+          color: var(--theme-elevation-500);
+          user-select: none;
+        }
+        .adash-card__info summary::-webkit-details-marker { display: none; }
+        .adash-card__info summary::before {
+          content: 'ⓘ ';
+        }
+        .adash-card__info summary:hover {
+          color: var(--theme-text);
+        }
+        .adash-card__info[open] summary {
+          color: var(--theme-text);
+        }
+        .adash-card__info ul {
+          margin: 6px 0 2px;
+          padding-left: 16px;
+          font-size: 12px;
+          line-height: 1.5;
+          color: var(--theme-elevation-600);
+        }
+        .adash-card__info li + li { margin-top: 3px; }
 
         /* ── Reporting page responsive grids ───────────────────────────────── */
         .rpt-stat-grid {
