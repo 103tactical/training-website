@@ -63,6 +63,94 @@ function formatSessionDates(sessions: { date?: string }[]): string {
 }
 
 /**
+ * Format sessions as one line each with date AND time range (ET), for the
+ * transfer notification where the attendee needs their full new schedule.
+ * e.g. "Thu, Aug 14, 2026 — 8:00 AM to 4:00 PM"
+ */
+function formatSessionDateTimeLines(
+  sessions: { date?: string; startTime?: string; endTime?: string }[],
+): string[] {
+  if (!sessions?.length) return []
+  const dateFmt = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  })
+  const timeFmt = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York',
+  })
+  return sessions
+    .filter((s) => s.date)
+    .map((s) => {
+      let line: string
+      try { line = dateFmt.format(new Date(s.date!)) } catch { return s.date! }
+      const start = s.startTime ? (() => { try { return timeFmt.format(new Date(s.startTime!)) } catch { return '' } })() : ''
+      const end   = s.endTime   ? (() => { try { return timeFmt.format(new Date(s.endTime!))   } catch { return '' } })() : ''
+      if (start && end) line += ` — ${start} to ${end}`
+      else if (start)   line += ` — starts ${start}`
+      return line
+    })
+}
+
+/**
+ * Email the attendee when their booking is moved to a different session.
+ * Non-fatal — the transfer has already succeeded; a mail failure only logs.
+ */
+async function sendTransferEmail(
+  payload: Parameters<CollectionAfterChangeHook>[0]['req']['payload'],
+  req: Parameters<CollectionAfterChangeHook>[0]['req'],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  doc: any,
+  fromScheduleId: number | null,
+  toScheduleId: number,
+): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = payload as any
+    const attendeeId = resolveId(doc.attendee)
+    if (!attendeeId) return
+
+    const [attendee, fromSchedule, toSchedule] = await Promise.all([
+      p.findByID({ collection: 'attendees', id: attendeeId, req }),
+      fromScheduleId
+        ? p.findByID({ collection: 'course-schedules', id: fromScheduleId, req }).catch(() => null)
+        : Promise.resolve(null),
+      p.findByID({ collection: 'course-schedules', id: toScheduleId, depth: 2, req }),
+    ])
+    if (!attendee?.email || !toSchedule) return
+
+    const course = typeof toSchedule.course === 'object' && toSchedule.course !== null ? toSchedule.course : null
+    const courseTitle: string = course?.title ?? 'your course'
+    const newLines = formatSessionDateTimeLines(toSchedule.sessions ?? [])
+    const oldDates = formatSessionDates(fromSchedule?.sessions ?? [])
+    const waitlisted = doc.status === 'waitlisted'
+
+    await sendEmail({
+      to: attendee.email,
+      subject: `Schedule Change — ${courseTitle}`,
+      message: [
+        `Hi ${attendee.firstName ?? 'there'},`,
+        ``,
+        `Your registration for ${courseTitle} has been moved to a new session.`,
+        ``,
+        newLines.length === 1 ? `Your new session:` : `Your new session dates:`,
+        ...newLines.map((l) => `  • ${l}`),
+        ...(oldDates ? [``, `This replaces your previous session on ${oldDates}.`] : []),
+        ...(waitlisted
+          ? [``, `Please note: you are currently on the waitlist for this session. We'll email you as soon as your seat is confirmed.`]
+          : []),
+        ``,
+        `If this change doesn't work for you, please get in touch and we'll help.`,
+        ``,
+        await questionsLine(p),
+      ].join('\n'),
+    })
+    console.log(`[Bookings] Transfer notification sent to ${attendee.email}`)
+  } catch (err) {
+    // Email failure is non-fatal — the transfer itself already succeeded
+    console.error('[Bookings] Transfer notification email failed:', err)
+  }
+}
+
+/**
  * Resolve a relationship field value to a numeric ID.
  * Payload populates relationship fields as either a number or a populated object.
  */
@@ -339,7 +427,11 @@ const afterChangeHook: CollectionAfterChangeHook = async ({ doc, previousDoc, op
         await adjustSeats(payload, req, prevScheduleId, -1)
         await promoteFromWaitlist(payload, req, prevScheduleId)
       }
-      if (newActive && newScheduleId) await adjustSeats(payload, req, newScheduleId, +1)
+      if (newActive && newScheduleId) {
+        await adjustSeats(payload, req, newScheduleId, +1)
+        // Tell the attendee their session changed (non-fatal)
+        await sendTransferEmail(payload, req, doc, prevScheduleId, newScheduleId)
+      }
     } else if (newScheduleId && previousDoc?.status !== doc.status) {
       // Same session, status changed
       if (prevActive && !newActive) {
