@@ -225,8 +225,8 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:6px;overflow:hidden;">
-        <tr><td style="background:#111111;padding:24px 32px;">
-          <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">${brandName}</p>
+        <tr><td align="center" style="background:#111111;padding:20px 32px;">
+          <img src="https://103tactical.com/email-logo.png" alt="103 Tactical" width="220" height="53" style="display:block;margin:0 auto;max-width:220px;height:auto;border:0;color:#ffffff;font-size:20px;font-weight:700;" />
         </td></tr>
         <tr><td style="padding:32px 32px 20px;font-size:15px;line-height:1.6;color:#333333;">
           <p style="margin:0 0 12px;">Hi ${firstName},</p>

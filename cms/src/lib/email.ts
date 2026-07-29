@@ -111,8 +111,8 @@ function buildHtml(message: string): string {
 
           <!-- Header -->
           <tr>
-            <td style="background:#111111;padding:24px 32px;">
-              <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">${brandName}</p>
+            <td align="center" style="background:#111111;padding:20px 32px;">
+              <img src="https://103tactical.com/email-logo.png" alt="103 Tactical" width="220" height="53" style="display:block;margin:0 auto;max-width:220px;height:auto;border:0;color:#ffffff;font-size:20px;font-weight:700;" />
             </td>
           </tr>
 
