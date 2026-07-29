@@ -15,6 +15,7 @@ const SECTIONS = [
       { href: '/admin/collections/bookings',                        label: 'Bookings' },
       { href: '/admin/collections/attendees',                       label: 'Attendees' },
       { href: '/admin/collections/instructors',                     label: 'Instructors' },
+      { href: '/admin/collections/discount-codes',                  label: 'Discount Codes' },
     ],
   },
   {

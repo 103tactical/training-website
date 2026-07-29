@@ -53,6 +53,7 @@ export default function CustomNav() {
             <NavLink href="/admin/collections/bookings"                        label="Bookings" />
             <NavLink href="/admin/collections/attendees"                       label="Attendees" />
             <NavLink href="/admin/collections/instructors"                     label="Instructors" />
+            <NavLink href="/admin/collections/discount-codes"                  label="Discount Codes" />
           </NavGroup>
 
           <NavGroup label="Accounting & Reports">
