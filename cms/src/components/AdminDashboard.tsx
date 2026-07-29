@@ -291,29 +291,23 @@ export default function AdminDashboard() {
         You must be signed in with <strong>103tactical.developer@gmail.com</strong> to access the property.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem', paddingBottom: '3rem' }}>
         {SECTIONS.map((section) => (
           <div key={section.label}>
-            {/* Orange-highlighted section header */}
+            {/* Solid orange header bar with knockout text — fixed brand colors,
+                identical in light and dark mode */}
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '12px',
+              background: '#ea580c',
+              borderRadius: '6px',
+              padding: '9px 14px',
+              marginBottom: '14px',
             }}>
-              <div style={{
-                width: '3px',
-                height: '18px',
-                borderRadius: '2px',
-                background: '#ea580c',
-                flexShrink: 0,
-              }} />
               <span style={{
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: 700,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: '#ea580c',
+                color: '#ffffff',
               }}>
                 {section.label}
               </span>
