@@ -1029,7 +1029,7 @@ export const PrivateGroupBookings: CollectionConfig = {
           type: 'select',
           label: 'How was payment collected?',
           options: [
-            { label: 'Square (POS / payment link)', value: 'square-manual' },
+            { label: 'Square — charged through Square directly', value: 'square-manual' },
             { label: 'Cash', value: 'cash' },
             { label: 'Check', value: 'check' },
             { label: 'Other', value: 'other' },

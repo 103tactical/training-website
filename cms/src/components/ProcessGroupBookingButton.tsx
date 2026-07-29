@@ -51,10 +51,8 @@ function formatBytes(n: number): string {
 export default function ProcessGroupBookingButton() {
   const { id } = useDocumentInfo()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const paymentMethod = useFormFields((fields: any) => (fields?.paymentMethod?.value as string) ?? '')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const status = useFormFields((fields: any) => (fields?.status?.value as string) ?? 'draft')
+  const paymentMethod = useFormFields(([fields]) => (fields?.paymentMethod?.value as string) ?? '')
+  const status = useFormFields(([fields]) => (fields?.status?.value as string) ?? 'draft')
 
   const [phase, setPhase]           = useState<Phase>('idle')
   const [response, setResponse]     = useState<ProcessResponse | null>(null)
