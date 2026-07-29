@@ -128,6 +128,7 @@ export default async function Dashboard(props: any) {
     if (b.squarePaymentId) return s + (b.amountPaidCents ?? 0)
     return s + (b.manualRefundAmountCents ?? 0)
   }, 0)
+  const totalDiscounts    = confirmed.reduce((s, b) => s + (b.discountCents ?? 0), 0)
   const avgBooking        = confirmed.length > 0
     ? Math.round(totalRevenue / confirmed.length)
     : 0
@@ -241,10 +242,11 @@ export default async function Dashboard(props: any) {
       {/* ── Revenue metrics ── */}
       <SectionHeading>Revenue</SectionHeading>
       <div className="rpt-stat-grid" style={grid4}>
-        <StatCard label="Total Revenue"     value={formatCents(totalRevenue)} sub="All confirmed bookings" />
-        <StatCard label="This Month"        value={formatCents(monthRevenue)} />
-        <StatCard label="This Year"         value={formatCents(yearRevenue)} />
-        <StatCard label="Total Refunded"    value={formatCents(totalRefunded)} sub="Square + manual" accent />
+        <StatCard label="Total Revenue"     value={formatCents(totalRevenue)} sub="Money collected — all confirmed bookings" />
+        <StatCard label="This Month"        value={formatCents(monthRevenue)} sub="Collected this month" />
+        <StatCard label="This Year"         value={formatCents(yearRevenue)} sub="Collected this year" />
+        <StatCard label="Total Refunded"    value={formatCents(totalRefunded)} sub="Returned to customers (Square + manual)" accent />
+        <StatCard label="Discounts Given"   value={formatCents(totalDiscounts)} sub="Taken off course prices by discount codes" />
       </div>
 
       {/* ── Booking metrics ── */}

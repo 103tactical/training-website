@@ -56,6 +56,18 @@ export default async function RevenueReport(props: any) {
   }
   const methodBreakdown = Object.entries(byMethod).sort((a, b) => b[1].revenue - a[1].revenue)
 
+  // Per-discount-code breakdown (only bookings that used a code)
+  const byCode: Record<string, { count: number; discounted: number; collected: number }> = {}
+  for (const b of bookings) {
+    if (!b.discountCode) continue
+    const c = String(b.discountCode)
+    if (!byCode[c]) byCode[c] = { count: 0, discounted: 0, collected: 0 }
+    byCode[c].count++
+    byCode[c].discounted += b.discountCents ?? 0
+    byCode[c].collected += b.amountPaidCents ?? 0
+  }
+  const codeBreakdown = Object.entries(byCode).sort((a, b) => b[1].discounted - a[1].discounted)
+
   // Revenue by course breakdown
   const byCourse: Record<string, { count: number; revenue: number }> = {}
   for (const b of bookings) {
@@ -176,6 +188,7 @@ export default async function RevenueReport(props: any) {
         <div style={statCard}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Total Revenue</span>
           <span style={{ fontSize: '26px', fontWeight: 700 }}>{formatCents(totalRevenue)}</span>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>Money collected (after any discounts)</span>
         </div>
         {methodBreakdown.map(([method, { count, revenue }]) => (
           <div key={method} style={statCard}>
@@ -221,6 +234,35 @@ export default async function RevenueReport(props: any) {
                     <td style={tdStyle}>
                       {totalRevenue > 0 ? `${Math.round((revenue / totalRevenue) * 100)}%` : '—'}
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* By discount code breakdown */}
+      {codeBreakdown.length > 0 && (
+        <div style={{ marginBottom: '28px' }}>
+          <h2 style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)', margin: '0 0 4px' }}>
+            By Discount Code
+          </h2>
+          <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'var(--theme-elevation-500)' }}>
+            What each code cost you in this period. &ldquo;Discounted&rdquo; is money taken off course prices; &ldquo;Collected&rdquo; is what those customers actually paid.
+          </p>
+          <div className="rpt-table-scroll" style={{ background: 'var(--theme-elevation-100, #1a1a1a)', borderRadius: '8px', overflow: 'hidden' }}>
+            <table style={tableStyle}>
+              <thead><tr>
+                {['Code', 'Times Used', 'Discounted', 'Collected'].map(h => <th key={h} style={thStyle}>{h}</th>)}
+              </tr></thead>
+              <tbody>
+                {codeBreakdown.map(([code, { count, discounted, collected }], i) => (
+                  <tr key={i} className="rpt-row">
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{code}</td>
+                    <td style={tdStyle}>{count}</td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>−{formatCents(discounted)}</td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatCents(collected)}</td>
                   </tr>
                 ))}
               </tbody>
