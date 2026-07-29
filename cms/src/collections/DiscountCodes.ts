@@ -114,7 +114,7 @@ export const DiscountCodes: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'code',
-    group: 'Course Management',
+    group: 'Accounting & Reports',
     defaultColumns: ['code', 'active', 'appliesTo', 'timesRedeemed', 'expiresAt'],
     description:
       'Discount codes for online course bookings. Customers enter a code on the booking page; ' +

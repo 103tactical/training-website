@@ -94,16 +94,6 @@ const SECTIONS: { label: string; links: DashLink[] }[] = [
           'Instructor profiles that get assigned to sessions',
         ],
       },
-      {
-        href: '/admin/collections/discount-codes',
-        label: 'Discount Codes',
-        bullets: [
-          'Percent or dollar-off codes customers enter at checkout',
-          'Limit to specific courses, set an expiration date or usage cap',
-          'Usage is counted automatically when someone pays',
-          'Never create coupons inside Square itself — they bypass the website',
-        ],
-      },
     ],
   },
   {
@@ -136,6 +126,16 @@ const SECTIONS: { label: string; links: DashLink[] }[] = [
         label: 'Refunds & Cancellations',
         bullets: [
           'Cancelled bookings and any refunds issued',
+        ],
+      },
+      {
+        href: '/admin/collections/discount-codes',
+        label: 'Discount Codes',
+        bullets: [
+          'Percent or dollar-off codes customers enter at checkout',
+          'Limit to specific courses, set an expiration date or usage cap',
+          'Usage is counted automatically when someone pays',
+          'Never create coupons inside Square itself — they bypass the website',
         ],
       },
       {
