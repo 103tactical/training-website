@@ -499,6 +499,18 @@ export const Bookings: CollectionConfig = {
           'Select a Course first — this list will then show only sessions for that course.',
       },
     },
+    // Live warning shown when the Session above is changed to a different
+    // session (a transfer): flags overbooking and waitlist queue-jumping.
+    // Informational only — never blocks the save. No DB column (ui field).
+    {
+      name: 'transferWarning',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: './components/TransferWarning',
+        },
+      },
+    },
     {
       name: 'paymentReference',
       type: 'text',
