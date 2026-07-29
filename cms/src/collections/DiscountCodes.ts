@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
-import { validateDiscountCode, redeemDiscountCode, normalizeCode } from '../lib/discount'
+import { validateDiscountCode, redeemDiscountCode } from '../lib/discount'
 
 // ── Access control (same pattern as Attendees / Bookings / PendingBookings) ───
 
@@ -136,7 +136,9 @@ export const DiscountCodes: CollectionConfig = {
   hooks: {
     beforeValidate: [
       ({ data }) => {
-        if (data?.code) data.code = normalizeCode(String(data.code))
+        // Trim only — the field's validate enforces the strict format so the
+        // admin always sees exactly what will be saved (no silent rewriting).
+        if (typeof data?.code === 'string') data.code = data.code.trim()
         return data
       },
     ],
@@ -153,15 +155,17 @@ export const DiscountCodes: CollectionConfig = {
       maxLength: 32,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       validate: (val: any) => {
-        const v = typeof val === 'string' ? val : ''
-        if (!/^[A-Z0-9-]{3,32}$/.test(normalizeCode(v))) {
-          return 'Codes must be 3–32 characters using only letters, numbers, and hyphens.'
+        const v = typeof val === 'string' ? val.trim() : ''
+        if (/\s/.test(v)) return 'Codes cannot contain spaces.'
+        if (/[a-z]/.test(v)) return 'Codes must be ALL CAPS (e.g. VET10).'
+        if (!/^[A-Z0-9]{3,32}$/.test(v)) {
+          return 'Use capital letters and numbers only, 3–32 characters (e.g. VET10).'
         }
         return true
       },
       admin: {
         description:
-          'What the customer types at checkout (e.g. VET10). Saved in UPPERCASE; customers can enter it in any case.',
+          'What the customer types at checkout. CAPITAL letters and numbers only, no spaces (e.g. VET10). Customers can enter it in any case — it will still match.',
       },
     },
     {
