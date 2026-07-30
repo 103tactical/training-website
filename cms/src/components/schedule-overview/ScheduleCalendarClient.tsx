@@ -165,6 +165,30 @@ function localToISO(date: string, time: string): string {
   return new Date(`${date}T${time}:00`).toISOString()
 }
 
+/** Earliest allowed start for a session created for TODAY: one hour from
+ *  now (raw, for validation). */
+function minStartTodayRaw(): string {
+  const d = new Date(Date.now() + 60 * 60 * 1000)
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+/** Same, rounded up to the next quarter hour (for tidy seeded defaults). */
+function minStartTodayRounded(): string {
+  const d = new Date(Date.now() + 60 * 60 * 1000)
+  const add = (15 - (d.getMinutes() % 15)) % 15
+  d.setMinutes(d.getMinutes() + add, 0, 0)
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+function hhmmToMinutes(t: string): number {
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + m
+}
+function minutesToHHMM(mins: number): string {
+  const clamped = Math.min(mins, 23 * 60 + 59)
+  return `${pad2(Math.floor(clamped / 60))}:${pad2(clamped % 60)}`
+}
+
 function addDays(dateStr: string, n: number): string {
   const d = new Date(`${dateStr}T12:00:00Z`)
   d.setUTCDate(d.getUTCDate() + n)
@@ -240,6 +264,19 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
     const seeded: SessionRow[] = Array.from({ length: c.durationDays }, (_, i) => ({
       date: addDays(dateStr, i), start, end,
     }))
+    // Creating for today: the first day can't start in the past — bump the
+    // seeded start to at least an hour from now, keeping the session length.
+    if (seeded.length > 0 && seeded[0].date === todayKey()) {
+      const minStart = minStartTodayRounded()
+      if (seeded[0].start < minStart) {
+        const duration = Math.max(hhmmToMinutes(end) - hhmmToMinutes(start), 60)
+        seeded[0] = {
+          ...seeded[0],
+          start: minStart,
+          end: minutesToHHMM(hhmmToMinutes(minStart) + duration),
+        }
+      }
+    }
     setRows(seeded)
     setMaxSeats(String(c.defaultMaxSeats ?? 20))
   }
@@ -265,8 +302,13 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
     setError(null)
     if (!selectedCourse) { setError('Choose a course first.'); return }
     if (rows.length === 0) { setError('Add at least one day.'); return }
+    const today = todayKey()
     for (const r of rows) {
       if (!r.date || !r.start || !r.end) { setError('Every day needs a date, start time, and end time.'); return }
+      if (r.date < today) { setError('One of the days is in the past — sessions cannot be scheduled on past dates.'); return }
+      if (r.date === today && r.start < minStartTodayRaw()) {
+        setError('A session today must start at least an hour from now.'); return
+      }
     }
     const seats = parseInt(maxSeats, 10)
     if (isNaN(seats) || seats < 1) { setError('Total Seats must be at least 1.'); return }
@@ -438,7 +480,8 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
 function DayModal({ dateStr, items, courses, instructors, onClose }: {
   dateStr: string; items: ScheduleItem[]; courses: CourseOption[]; instructors: InstructorOption[]; onClose: () => void
 }) {
-  const [adding, setAdding]     = useState(items.length === 0)
+  const isPast = dateStr < todayKey()
+  const [adding, setAdding]     = useState(items.length === 0 && !isPast)
   const [createdAny, setCreatedAny] = useState(false)
 
   // If a session was created, refresh so the calendar (server-fetched) shows it
@@ -483,6 +526,11 @@ function DayModal({ dateStr, items, courses, instructors, onClose }: {
           {items.length === 0 && !adding && (
             <p style={{ margin:0, fontSize:'13px', color:'var(--theme-text)', opacity:.55 }}>
               No sessions on this day.
+            </p>
+          )}
+          {isPast && (
+            <p style={{ margin:0, fontSize:'12px', color:'var(--theme-text)', opacity:.45 }}>
+              This date has passed — new sessions can't be added here.
             </p>
           )}
           {items.map(s => {
@@ -537,8 +585,8 @@ function DayModal({ dateStr, items, courses, instructors, onClose }: {
             )
           })}
 
-          {/* Add-a-session: button first, form when opened */}
-          {adding ? (
+          {/* Add-a-session: button first, form when opened (never on past days) */}
+          {isPast ? null : adding ? (
             <div style={{
               background:'var(--theme-elevation-50)',
               borderRadius:'var(--style-radius-s,4px)',
@@ -753,6 +801,7 @@ export default function ScheduleCalendarClient({ schedules, courses: courseOptio
             const dayItems  = dateMap.get(dateStr) ?? []
             const hasEvents = dayItems.length > 0
             const isToday   = dateStr === TODAY
+            const clickable = hasEvents || dateStr >= TODAY
             const dayNum    = parseInt(dateStr.slice(8), 10)
             const visible   = dayItems.slice(0, 2)
             const overflow  = dayItems.length - 2
@@ -761,13 +810,13 @@ export default function ScheduleCalendarClient({ schedules, courses: courseOptio
               <div
                 key={dateStr}
                 className="cal-cell"
-                onClick={() => setSelectedDay(dateStr)}
+                onClick={() => clickable && setSelectedDay(dateStr)}
                 style={{
                   background: isToday ? 'var(--theme-elevation-100)' : 'var(--theme-elevation-0)',
-                  cursor: 'pointer',
+                  cursor: clickable ? 'pointer' : 'default',
                   transition: 'background .12s',
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-200)' }}
+                onMouseEnter={e => { if (clickable) (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-200)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? 'var(--theme-elevation-100)' : 'var(--theme-elevation-0)' }}
               >
                 <div style={{
