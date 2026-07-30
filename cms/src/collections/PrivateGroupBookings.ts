@@ -590,7 +590,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
         const token = crypto.randomUUID().replace(/-/g, '')
 
         // Create PendingBooking (webhook uses this to create Booking on payment)
-        await p.create({
+        const pgbPending = await p.create({
           collection: 'pending-bookings',
           data: {
             token,
@@ -660,6 +660,13 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
         const checkoutUrl = squareResponse.paymentLink?.url
         if (!checkoutUrl) {
           throw new Error('Square did not return a checkout URL.')
+        }
+
+        // Store the link on the pending record so it can be re-copied later
+        try {
+          await p.update({ collection: 'pending-bookings', id: pgbPending.id, data: { checkoutUrl }, req })
+        } catch (err) {
+          console.error('[PrivateGroupBookings] could not store checkoutUrl:', err)
         }
 
         // Send email with payment link button (custom HTML template)

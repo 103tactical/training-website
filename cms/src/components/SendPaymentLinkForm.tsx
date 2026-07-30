@@ -16,6 +16,7 @@ interface PendingLink {
   name: string | null
   email: string
   sentAt: string
+  url: string | null
 }
 
 export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number | string }) {
@@ -30,6 +31,16 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   const [resultTotal, setResultTotal] = useState('')
   const [outstanding, setOutstanding] = useState<PendingLink[]>([])
   const [copied, setCopied] = useState(false)
+  const [copiedRowId, setCopiedRowId] = useState<number | null>(null)
+
+  const copyRowLink = async (row: PendingLink) => {
+    if (!row.url) return
+    try {
+      await navigator.clipboard.writeText(row.url)
+      setCopiedRowId(row.id)
+      setTimeout(() => setCopiedRowId((cur) => (cur === row.id ? null : cur)), 2000)
+    } catch { /* clipboard unavailable */ }
+  }
 
   const loadOutstanding = React.useCallback(async () => {
     try {
@@ -148,8 +159,31 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               </strong>
               <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
                 {outstanding.map((o) => (
-                  <li key={o.id}>
-                    {o.name ?? o.email}{o.name ? ` — ${o.email}` : ''} · sent {new Date(o.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  <li key={o.id} style={{ marginBottom: '2px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span>
+                        {o.name ?? o.email}{o.name ? ` — ${o.email}` : ''} · sent {new Date(o.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                      {o.url && (
+                        <button
+                          type="button"
+                          onClick={() => copyRowLink(o)}
+                          style={{
+                            padding: '1px 8px',
+                            borderRadius: 'var(--style-radius-s, 4px)',
+                            border: '1px solid var(--theme-elevation-250)',
+                            background: 'transparent',
+                            color: copiedRowId === o.id ? '#065f46' : 'var(--theme-text)',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {copiedRowId === o.id ? 'Copied ✓' : 'Copy Payment Link'}
+                        </button>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>

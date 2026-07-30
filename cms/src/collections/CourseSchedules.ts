@@ -334,6 +334,7 @@ async function outstandingLinksHandler(req: PayloadRequest): Promise<Response> {
     name: [d.firstName, d.lastName].filter(Boolean).join(' ') || null,
     email: d.email,
     sentAt: d.createdAt,
+    url: d.checkoutUrl ?? null,
   }))
   return Response.json({ pending })
 }

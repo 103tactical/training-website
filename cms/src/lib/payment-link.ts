@@ -138,7 +138,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
 
   // ── PendingBooking with token (webhook claim ticket) ─────────────────────
   const token = crypto.randomUUID().replace(/-/g, '')
-  await p.create({
+  const pendingDoc = await p.create({
     collection: 'pending-bookings',
     data: {
       token,
@@ -229,6 +229,19 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
 
   const checkoutUrl = response.paymentLink?.url
   if (!checkoutUrl) throw new Error('Square did not return a checkout URL.')
+
+  // Store the link on the pending record so it can be re-copied later
+  // (session page outstanding-links list). Non-fatal if it fails.
+  try {
+    await p.update({
+      collection: 'pending-bookings',
+      id: pendingDoc.id,
+      data: { checkoutUrl },
+      req,
+    })
+  } catch (err) {
+    console.error('[payment-link] could not store checkoutUrl:', err)
+  }
 
   const totalCents = discountedPriceCents + surchargeCents
 

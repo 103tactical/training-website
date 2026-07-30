@@ -320,6 +320,16 @@ export const PendingBookings: CollectionConfig = {
           'Website checkouts hold nothing.',
       },
     },
+    {
+      name: 'checkoutUrl',
+      type: 'text',
+      label: 'Payment Link URL',
+      admin: {
+        readOnly: true,
+        description: 'The Square checkout link that was sent. Copy it to resend to the customer.',
+        condition: (data) => Boolean(data?.checkoutUrl),
+      },
+    },
 
     // ── Discount (set when a code was applied at checkout) ──────────────────
     {

@@ -54,6 +54,7 @@ import * as migration_20260729_discount_codes from './20260729_discount_codes';
 import * as migration_20260729_pending_bookings_discount from './20260729_pending_bookings_discount';
 import * as migration_20260729_bookings_discount from './20260729_bookings_discount';
 import * as migration_20260730_pending_bookings_source from './20260730_pending_bookings_source';
+import * as migration_20260730_pending_bookings_checkout_url from './20260730_pending_bookings_checkout_url';
 
 export const migrations = [
   {
@@ -335,5 +336,10 @@ export const migrations = [
     up: migration_20260730_pending_bookings_source.up,
     down: migration_20260730_pending_bookings_source.down,
     name: '20260730_pending_bookings_source'
+  },
+  {
+    up: migration_20260730_pending_bookings_checkout_url.up,
+    down: migration_20260730_pending_bookings_checkout_url.down,
+    name: '20260730_pending_bookings_checkout_url'
   },
 ];
