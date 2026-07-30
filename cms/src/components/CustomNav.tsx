@@ -49,7 +49,6 @@ export default function CustomNav() {
             <NavLink href="/admin/collections/course-groups"                   label="Course Groups" />
             <NavLink href="/admin/collections/course-schedules"                label="Course Schedules" />
             <NavLink href="/admin/collections/private-group-bookings"          label="Private Group Bookings" />
-            <NavLink href="/admin/collections/pending-bookings"                label="Pending Bookings" />
             <NavLink href="/admin/collections/bookings"                        label="Bookings" />
             <NavLink href="/admin/collections/attendees"                       label="Attendees" />
             <NavLink href="/admin/collections/instructors"                     label="Instructors" />

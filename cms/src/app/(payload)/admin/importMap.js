@@ -21,6 +21,7 @@ import { default as default_258b4e4bae21a1095aba89615b4b3700 } from '../../../co
 import { default as default_7baec65108cb02d8e0cf632f679d131d } from '../../../components/StatusBadge'
 import { default as default_adde1bf222f3685bf97f64c72a7a6842 } from '../../../components/BookingStatusPanel'
 import { default as default_b719d8f218e5540f8556d426b5f44971 } from '../../../components/TransferRowLabel'
+import { default as default_cada39f35b9f15fa64f5af52c943bf34 } from '../../../components/PendingBookingsNote'
 import { default as default_7e3846181524ab75490cb0d9df5959c7 } from '../../../components/PrintRosterListAction'
 import { default as default_cc4c59d6ad86f4c68273019d6b0f1f79 } from '../../../components/RetryBookingButton'
 import { default as default_f487dfdd77be435859d6b3e5c019c12c } from '../../../components/PendingStatusBadge'
@@ -63,6 +64,7 @@ export const importMap = {
   "./components/StatusBadge#default": default_7baec65108cb02d8e0cf632f679d131d,
   "./components/BookingStatusPanel#default": default_adde1bf222f3685bf97f64c72a7a6842,
   "./components/TransferRowLabel#default": default_b719d8f218e5540f8556d426b5f44971,
+  "./components/PendingBookingsNote#default": default_cada39f35b9f15fa64f5af52c943bf34,
   "./components/PrintRosterListAction#default": default_7e3846181524ab75490cb0d9df5959c7,
   "./components/RetryBookingButton#default": default_cc4c59d6ad86f4c68273019d6b0f1f79,
   "./components/PendingStatusBadge#default": default_f487dfdd77be435859d6b3e5c019c12c,

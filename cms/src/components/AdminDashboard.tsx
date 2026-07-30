@@ -62,21 +62,13 @@ const SECTIONS: { label: string; links: DashLink[] }[] = [
         ],
       },
       {
-        href: '/admin/collections/pending-bookings',
-        label: 'Pending Bookings',
-        bullets: [
-          'Checkouts that were started — paid ones become Completed, unpaid ones Expire',
-          'Failed records (paid but booking errored) can be retried here',
-          'Expired records double as a prospect list you can email',
-        ],
-      },
-      {
         href: '/admin/collections/bookings',
         label: 'Bookings',
         bullets: [
           'The master registration list — one record per attendee per session',
           'Cancel here to automatically refund (if paid online) and free the seat',
           'Payment method and amount paid feed the accounting reports',
+          'Pending Bookings (started checkouts & outstanding links) is linked at the bottom of this list',
         ],
       },
       {

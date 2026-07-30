@@ -532,6 +532,7 @@ export const Bookings: CollectionConfig = {
       'Course registrations. Each booking links an Attendee to a specific course session.',
     components: {
       beforeList: ['./components/PrintRosterListAction'],
+      afterList: ['./components/PendingBookingsNote'],
     },
   },
   disableDuplicate: true,
