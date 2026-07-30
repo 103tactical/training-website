@@ -63,6 +63,10 @@ export interface ECommerceSettings {
   payments?: {
     creditCardSurchargePercent?: number | null;
     creditCardFixedFeeCents?: number | null;
+    /** Booking-page fee notice heading; empty → site default */
+    surchargeNoticeHeading?: string | null;
+    /** Booking-page fee notice body; {percent} is replaced with the live rate */
+    surchargeNoticeBody?: string | null;
   };
 }
 

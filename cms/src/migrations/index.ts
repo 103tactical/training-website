@@ -58,6 +58,7 @@ import * as migration_20260730_pending_bookings_checkout_url from './20260730_pe
 import * as migration_20260730_pending_bookings_resend from './20260730_pending_bookings_resend';
 import * as migration_20260730_courses_seo_description from './20260730_courses_seo_description';
 import * as migration_20260730_discount_codes_show_on_site from './20260730_discount_codes_show_on_site';
+import * as migration_20260730_ecommerce_surcharge_notice from './20260730_ecommerce_surcharge_notice';
 
 export const migrations = [
   {
@@ -359,5 +360,10 @@ export const migrations = [
     up: migration_20260730_discount_codes_show_on_site.up,
     down: migration_20260730_discount_codes_show_on_site.down,
     name: '20260730_discount_codes_show_on_site'
+  },
+  {
+    up: migration_20260730_ecommerce_surcharge_notice.up,
+    down: migration_20260730_ecommerce_surcharge_notice.down,
+    name: '20260730_ecommerce_surcharge_notice'
   },
 ];

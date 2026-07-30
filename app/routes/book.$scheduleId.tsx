@@ -127,6 +127,15 @@ export async function loader({ params }: LoaderFunctionArgs) {
     : 0;
   const totalPrice = basePrice + surchargeAmount;
 
+  // Fee-notice copy (CMS-editable in E-Commerce; falls back to the original
+  // wording). {percent} in the body is replaced with the live surcharge rate.
+  const surchargeNoticeHeading =
+    ecommerceSettings.payments?.surchargeNoticeHeading?.trim() || "Card processing fee";
+  const surchargeNoticeBody = (
+    ecommerceSettings.payments?.surchargeNoticeBody?.trim() ||
+    "A {percent}% processing fee applies to card payments. This fee does not exceed our cost of acceptance."
+  ).replaceAll("{percent}", String(surchargePercent));
+
   // Auto-apply a publicly advertised ("Show on Website") code for this course.
   // Validated authoritatively so the advertised price is exactly what gets
   // charged; failures are silent — advertising never blocks the booking page.
@@ -172,6 +181,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
     full: remaining <= 0,
     squareConfigured: SQUARE_CONFIGURED,
     autoDiscount,
+    surchargeNoticeHeading,
+    surchargeNoticeBody,
   });
 }
 
@@ -443,6 +454,7 @@ export default function BookSessionPage() {
     courseName, courseSlug, price, surchargePercent, surchargeAmount, totalPrice,
     durationHours, durationDays, sessions, instructorName, displayLabel,
     remaining, full, squareConfigured, autoDiscount,
+    surchargeNoticeHeading, surchargeNoticeBody,
   } = data;
 
   const errors = actionData?.errors ?? {};
@@ -743,11 +755,8 @@ export default function BookSessionPage() {
 
               {surchargePercent > 0 && (
                 <div className="booking-form__cc-notice" role="note">
-                  <span className="booking-form__cc-notice-title">Card processing fee</span>
-                  <span className="booking-form__cc-notice-body">
-                    A {surchargePercent}% processing fee applies to card payments.
-                    This fee does not exceed our cost of acceptance.
-                  </span>
+                  <span className="booking-form__cc-notice-title">{surchargeNoticeHeading}</span>
+                  <span className="booking-form__cc-notice-body">{surchargeNoticeBody}</span>
                 </div>
               )}
 

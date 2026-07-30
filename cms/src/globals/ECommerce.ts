@@ -62,6 +62,24 @@ export const ECommerce: GlobalConfig = {
             },
           },
         },
+        {
+          name: "surchargeNoticeHeading",
+          type: "text",
+          label: "Surcharge Notice — Heading",
+          admin: {
+            description:
+              'The bold heading of the fee notice shown on the booking page. Leave empty to use the default: "Card processing fee".',
+          },
+        },
+        {
+          name: "surchargeNoticeBody",
+          type: "textarea",
+          label: "Surcharge Notice — Text",
+          admin: {
+            description:
+              'The notice text under the heading. Write {percent} wherever the current surcharge percentage should appear — it is filled in automatically, so this text always matches the fee set above. Leave empty to use the default: "A {percent}% processing fee applies to card payments. This fee does not exceed our cost of acceptance."',
+          },
+        },
       ],
     },
     {
