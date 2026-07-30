@@ -216,6 +216,51 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           .rpt-stat-grid        { grid-template-columns: 1fr; }
           .rpt-quick-links-grid { grid-template-columns: 1fr; }
         }
+
+        /* ── Edit-view section legibility (2026-07-30) ──────────────────────
+           Sections read as soft CARDS separated by surface + space + type —
+           deliberately NO dividing lines and NO visible borders (existing
+           1px border made transparent, not thickened, so layout is stable).
+           Scoped to .collapsible-field > .collapsible = true page sections;
+           array rows (Session Days, Transfer History) are untouched. */
+
+        /* Card surface: gentle fill instead of an outline */
+        .collapsible-field > .collapsible--style-default {
+          border-color: transparent;
+          background: var(--theme-elevation-50);
+        }
+        .collapsible-field > .collapsible--style-default:hover {
+          border-color: transparent;
+        }
+
+        /* Section header: a clear landmark — slightly stronger surface,
+           roomier padding, bolder title with a restrained orange accent */
+        .collapsible-field > .collapsible > .collapsible__toggle-wrap {
+          background: var(--theme-elevation-100);
+          padding-top: 0.85rem;
+          padding-bottom: 0.85rem;
+        }
+        .collapsible-field > .collapsible > .collapsible__toggle-wrap:not(.toggle-disabled):hover {
+          background: var(--theme-elevation-150, var(--theme-elevation-100));
+        }
+        .collapsible-field > .collapsible .collapsible__row-label-wrap .row-label {
+          font-weight: 700;
+          color: var(--theme-text);
+        }
+        .collapsible-field > .collapsible .collapsible__indicator svg,
+        .collapsible-field > .collapsible .collapsible__toggle-wrap .icon path {
+          stroke: #ea580c;
+        }
+
+        /* Breathing room BETWEEN sections — grouping by proximity */
+        .collapsible-field {
+          margin-bottom: 1.75rem;
+        }
+
+        /* A little air inside the card so fields don't hug the header */
+        .collapsible-field > .collapsible .collapsible__content {
+          padding-top: 1.25rem;
+        }
       `}</style>
       {children}
     </>
