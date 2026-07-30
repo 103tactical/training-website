@@ -1,5 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { getAllCourses, PAYLOAD_API_URL } from "~/lib/payload";
+import { getHostRedirect } from "~/lib/redirects.server";
 
 const SITE_URL =
   typeof process !== "undefined" && process.env.PUBLIC_SITE_URL
@@ -14,7 +16,10 @@ function urlEntry(loc: string, priority: string, changefreq: string): string {
   </url>`;
 }
 
-export async function loader(_: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
+  const redirectTarget = getHostRedirect(request);
+  if (redirectTarget) throw redirect(redirectTarget, 301);
+
   // Fetch active courses for individual course URLs
   let courseSlugs: string[] = [];
   try {

@@ -9,7 +9,9 @@ import {
 } from "@remix-run/react";
 import { useEffect } from "react";
 import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
+
+import { getHostRedirect } from "~/lib/redirects.server";
 
 import siteMetadata from "./data/site-metadata.json";
 import { overlayNavRoutes } from "./config/layouts";
@@ -96,7 +98,10 @@ interface LoaderData {
   defaultSiteName: string | null;
 }
 
-export async function loader(_: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
+  const redirectTarget = getHostRedirect(request);
+  if (redirectTarget) throw redirect(redirectTarget, 301);
+
   try {
     const apiUrl = process.env.PAYLOAD_API_URL ?? "https://training-cms.onrender.com";
     const res = await fetch(`${apiUrl}/api/globals/site-settings`, {

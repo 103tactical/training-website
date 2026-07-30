@@ -1,11 +1,16 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
+import { getHostRedirect } from "~/lib/redirects.server";
 
 const SITE_URL =
   typeof process !== "undefined" && process.env.PUBLIC_SITE_URL
     ? process.env.PUBLIC_SITE_URL
     : "https://one03tactical-training-website.onrender.com";
 
-export async function loader(_: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
+  const redirectTarget = getHostRedirect(request);
+  if (redirectTarget) throw redirect(redirectTarget, 301);
+
   const content = `User-agent: *
 Allow: /
 
