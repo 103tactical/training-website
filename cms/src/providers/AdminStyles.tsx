@@ -217,25 +217,40 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
           .rpt-quick-links-grid { grid-template-columns: 1fr; }
         }
 
-        /* ── Shared borderless-card shadow (2026-07-30) ─────────────────────
-           One shadow language for every card surface in the admin: soft
-           elevation instead of borders. Dark mode gets a deeper shadow since
-           subtle ones vanish on dark backgrounds. */
-        :root {
-          --adm-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 4px 12px rgba(16, 24, 40, 0.08);
-        }
-        html[data-theme='dark'] {
-          --adm-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.32);
-        }
+        /* ── Recessed page, solid surfaces (2026-07-30) ─────────────────────
+           Containment WITHOUT borders, lines, or shadows: the page sits a
+           whisper darker than every card/section/list surface, so surfaces
+           read as solid raised panels purely by background contrast.
+           Chrome (header, nav, drawers, popups) keeps Payload's own
+           backgrounds. --adm-card-shadow kept as a no-op so any inline
+           references resolve harmlessly. */
+        :root { --adm-card-shadow: none; }
+        html[data-theme='light'] { background: #f4f5f7 !important; }
+        html[data-theme='dark']  { background: #0e0f11 !important; }
 
-        /* Dashboard link cards + quota widget: shadow replaces the border */
-        .adash-card {
+        /* Dashboard link cards + quota widget: solid surface, no border */
+        .adash-card, .rq-card {
           border-color: transparent !important;
-          box-shadow: var(--adm-card-shadow);
         }
-        .rq-card {
-          border-color: transparent !important;
-          box-shadow: var(--adm-card-shadow);
+        html[data-theme='light'] .adash-card,
+        html[data-theme='light'] .rq-card,
+        html[data-theme='light'] .adash-note {
+          background: #ffffff;
+        }
+        html[data-theme='light'] .adash-card:hover {
+          background: var(--theme-elevation-50);
+        }
+        html[data-theme='dark'] .adash-note {
+          background: var(--theme-elevation-100);
+        }
+        .adash-note {
+          margin-bottom: 28px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          background: var(--theme-elevation-50);
+          font-size: 13px;
+          line-height: 1.5;
+          color: var(--theme-elevation-700);
         }
 
         /* ── Edit-view section legibility (2026-07-30) ──────────────────────
@@ -245,11 +260,13 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
            Scoped to .collapsible-field > .collapsible = true page sections;
            array rows (Session Days, Transfer History) are untouched. */
 
-        /* Card surface: gentle fill + soft shadow instead of an outline */
+        /* Card surface: solid raised panel on the recessed page */
         .collapsible-field > .collapsible--style-default {
           border-color: transparent;
           background: var(--theme-elevation-50);
-          box-shadow: var(--adm-card-shadow);
+        }
+        html[data-theme='light'] .collapsible-field > .collapsible--style-default {
+          background: #ffffff;
         }
         .collapsible-field > .collapsible--style-default:hover {
           border-color: transparent;

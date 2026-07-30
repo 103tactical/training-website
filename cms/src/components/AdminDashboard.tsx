@@ -268,16 +268,7 @@ export default function AdminDashboard() {
       <ResendQuotaWidget />
 
       {/* Google Analytics link */}
-      <div style={{
-        marginBottom: '28px',
-        padding: '12px 16px',
-        borderRadius: '8px',
-        background: 'var(--theme-elevation-50)',
-        boxShadow: 'var(--adm-card-shadow)',
-        fontSize: '13px',
-        lineHeight: 1.5,
-        color: 'var(--theme-elevation-700)',
-      }}>
+      <div className="adash-note">
         For detailed traffic and behaviour analytics, visit{' '}
         <a
           href="https://analytics.google.com"

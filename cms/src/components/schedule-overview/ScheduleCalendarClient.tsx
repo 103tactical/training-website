@@ -345,6 +345,23 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           color: #374151;
         }
         [data-theme="dark"] .sch-filter-label { color: rgba(255,255,255,0.4); }
+
+        /* Day-of-week header band — solid with knockout text, inverted per
+           theme; mid-tone grays so it's neither harsh black nor stark white */
+        .cal-dow-row {
+          border-radius: var(--style-radius-s, 4px);
+          overflow: hidden;
+          margin-bottom: 6px;
+        }
+        .cal-dow {
+          padding: 7px 4px; text-align: center;
+          font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: .5px;
+          background: #4b5058; color: #ffffff;
+        }
+        [data-theme="dark"] .cal-dow {
+          background: #cfd3d8; color: #23272e;
+        }
       `}</style>
 
       {/* ════════════════════════════
@@ -371,28 +388,23 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           </div>
         </div>
 
-        {/* Day-of-week header */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:'1px' }}>
+        {/* Day-of-week header — solid band with knockout text (inverted per theme) */}
+        <div className="cal-dow-row" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
           {DOW.map(d => (
-            <div key={d} style={{
-              padding:'6px 4px', textAlign:'center',
-              fontSize:'11px', fontWeight:600, textTransform:'uppercase', letterSpacing:'.5px',
-              color:'var(--theme-text)', opacity:.35,
-            }}>
+            <div key={d} className="cal-dow">
               {d}
             </div>
           ))}
         </div>
 
-        {/* Calendar grid — soft shadow instead of an outer border (internal
-            1px cell separation stays; a calendar needs its grid) */}
+        {/* Calendar grid — solid surface on the recessed page (internal 1px
+            cell separation stays; a calendar needs its grid) */}
         <div style={{
           display:'grid', gridTemplateColumns:'repeat(7,1fr)',
           gap:'1px',
           background:'var(--theme-elevation-200)',
           borderRadius:'var(--style-radius-m,8px)',
           overflow:'hidden',
-          boxShadow:'var(--adm-card-shadow)',
         }}>
           {grid.map((dateStr, i) => {
             if (!dateStr) {
@@ -519,7 +531,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           <p style={{ fontSize:'14px', color:'var(--theme-text)', opacity:.45 }}>No schedules found.</p>
         ) : (
           <>
-            <div style={{ overflowX:'auto', borderRadius:'var(--style-radius-m,8px)', overflow:'hidden', boxShadow:'var(--adm-card-shadow)', background:'var(--theme-elevation-0)' }}>
+            <div style={{ overflowX:'auto', borderRadius:'var(--style-radius-m,8px)', overflow:'hidden', background:'var(--theme-elevation-0)' }}>
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{ background:'var(--theme-elevation-100)' }}>
