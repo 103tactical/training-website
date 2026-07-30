@@ -25,6 +25,17 @@ export type ScheduleItem = {
   isActive: boolean
 }
 
+/** Active course + sensible defaults (from its most recent schedule) for the
+ *  add-session form on the calendar. */
+export type CourseOption = {
+  id: number
+  title: string
+  durationDays: number
+  defaultStartTime: string | null // ISO — from the course's latest schedule
+  defaultEndTime: string | null
+  defaultMaxSeats: number | null
+}
+
 // ── Server component ─────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,6 +102,45 @@ export default async function ScheduleOverviewPage(props: any) {
     }
   })
 
+  // Active courses + per-course defaults for the calendar's add-session form.
+  // Defaults come from the course's most recent existing schedule so a new
+  // session starts pre-filled with the times/seats the admin last used.
+  let courseOptions: CourseOption[] = []
+  try {
+    const coursesRes = await payload.find({
+      collection: 'courses',
+      where: { isActive: { equals: true } },
+      limit: 0,
+      depth: 0,
+      sort: 'title',
+      overrideAccess: true,
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    courseOptions = (coursesRes.docs as any[]).map((c) => {
+      const own = schedules
+        .filter((s) => s.courseId === c.id && s.sessions.length > 0)
+        .sort((a, b) => {
+          const ad = a.sessions.map((x) => x.date ?? '').sort().reverse()[0] ?? ''
+          const bd = b.sessions.map((x) => x.date ?? '').sort().reverse()[0] ?? ''
+          return bd.localeCompare(ad)
+        })
+      const latest = own[0]
+      const firstSession = latest?.sessions
+        .slice()
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))[0]
+      return {
+        id: c.id as number,
+        title: (c.title as string) ?? 'Untitled Course',
+        durationDays: typeof c.durationDays === 'number' && c.durationDays > 0 ? c.durationDays : 1,
+        defaultStartTime: firstSession?.startTime ?? null,
+        defaultEndTime: firstSession?.endTime ?? null,
+        defaultMaxSeats: latest?.maxSeats ?? null,
+      }
+    })
+  } catch {
+    // Non-fatal — the form falls back to generic defaults
+  }
+
   return (
     <DefaultTemplate
       i18n={initPageResult.req.i18n}
@@ -116,7 +166,7 @@ export default async function ScheduleOverviewPage(props: any) {
         }}>
           Course Calendar
         </h1>
-        <ScheduleCalendarClient schedules={schedules} />
+        <ScheduleCalendarClient schedules={schedules} courses={courseOptions} />
       </div>
     </DefaultTemplate>
   )

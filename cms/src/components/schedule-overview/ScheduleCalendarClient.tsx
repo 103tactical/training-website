@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import Link from 'next/link'
-import type { ScheduleItem } from './ScheduleOverviewPage'
+import type { ScheduleItem, CourseOption } from './ScheduleOverviewPage'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -144,14 +144,309 @@ function generatePrintHTML(items: ScheduleItem[], filterLabel: string): string {
 </table></body></html>`
 }
 
+// ── Add-session form (inside the day modal) ───────────────────────────────────
+
+type SessionRow = { date: string; start: string; end: string }
+
+function pad2(n: number): string { return String(n).padStart(2, '0') }
+
+/** ISO datetime → "HH:MM" in the admin's local time (matches how the admin's
+ *  own time pickers interpret times). */
+function isoToLocalHHMM(iso: string | null): string | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return null
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+/** "YYYY-MM-DD" + "HH:MM" in local time → ISO datetime (same convention the
+ *  admin's time pickers store). */
+function localToISO(date: string, time: string): string {
+  return new Date(`${date}T${time}:00`).toISOString()
+}
+
+function addDays(dateStr: string, n: number): string {
+  const d = new Date(`${dateStr}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Suggest an internal label from the chosen dates, matching the house style:
+ *  "Dec 1" · "Dec 1/2" · "Dec 30 / Jan 2" */
+function suggestLabel(rows: SessionRow[]): string {
+  const dates = rows.map((r) => r.date).filter(Boolean).sort()
+  if (dates.length === 0) return ''
+  const parts = dates.map((d) => {
+    const dt = new Date(`${d}T12:00:00Z`)
+    return {
+      mon: dt.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }),
+      day: dt.getUTCDate(),
+    }
+  })
+  const sameMonth = parts.every((p) => p.mon === parts[0].mon)
+  if (sameMonth) return `${parts[0].mon} ${parts.map((p) => p.day).join('/')}`
+  return parts.map((p) => `${p.mon} ${p.day}`).join(' / ')
+}
+
+const inputStyle: React.CSSProperties = {
+  background: 'var(--theme-elevation-100)',
+  border: 'none',
+  borderRadius: 'var(--style-radius-s,4px)',
+  color: 'var(--theme-text)',
+  padding: '7px 10px',
+  fontSize: '13px',
+  width: '100%',
+  boxSizing: 'border-box',
+}
+
+const fieldLabelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '.5px',
+  color: 'var(--theme-text)',
+  opacity: 0.55,
+  marginBottom: '4px',
+}
+
+function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
+  dateStr: string
+  courses: CourseOption[]
+  onCreated: () => void
+  onCancel: () => void
+}) {
+  const [courseId, setCourseId]         = useState<string>('')
+  const [rows, setRows]                 = useState<SessionRow[]>([])
+  const [label, setLabel]               = useState('')
+  const [labelTouched, setLabelTouched] = useState(false)
+  const [maxSeats, setMaxSeats]         = useState<string>('20')
+  const [saving, setSaving]             = useState(false)
+  const [error, setError]               = useState<string | null>(null)
+  const [justCreated, setJustCreated]   = useState<string | null>(null)
+
+  const selectedCourse = courses.find((c) => String(c.id) === courseId) ?? null
+
+  // Choosing a course seeds one row per course day (consecutive, starting on
+  // the clicked date) with the times/seats from that course's last schedule.
+  const chooseCourse = (id: string) => {
+    setCourseId(id)
+    setError(null)
+    const c = courses.find((x) => String(x.id) === id)
+    if (!c) { setRows([]); return }
+    const start = isoToLocalHHMM(c.defaultStartTime) ?? '10:00'
+    const end   = isoToLocalHHMM(c.defaultEndTime)   ?? '18:00'
+    const seeded: SessionRow[] = Array.from({ length: c.durationDays }, (_, i) => ({
+      date: addDays(dateStr, i), start, end,
+    }))
+    setRows(seeded)
+    setMaxSeats(String(c.defaultMaxSeats ?? 20))
+    if (!labelTouched) setLabel(suggestLabel(seeded))
+  }
+
+  const updateRow = (i: number, patch: Partial<SessionRow>) => {
+    setRows((prev) => {
+      const next = prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r))
+      if (!labelTouched) setLabel(suggestLabel(next))
+      return next
+    })
+  }
+  const addRow = () => {
+    setRows((prev) => {
+      const last = prev[prev.length - 1]
+      const next = [...prev, {
+        date: last ? addDays(last.date, 1) : dateStr,
+        start: last?.start ?? '10:00',
+        end: last?.end ?? '18:00',
+      }]
+      if (!labelTouched) setLabel(suggestLabel(next))
+      return next
+    })
+  }
+  const removeRow = (i: number) => {
+    setRows((prev) => {
+      const next = prev.filter((_, idx) => idx !== i)
+      if (!labelTouched) setLabel(suggestLabel(next))
+      return next
+    })
+  }
+
+  const save = async () => {
+    setError(null)
+    if (!selectedCourse) { setError('Choose a course first.'); return }
+    if (rows.length === 0) { setError('Add at least one day.'); return }
+    for (const r of rows) {
+      if (!r.date || !r.start || !r.end) { setError('Every day needs a date, start time, and end time.'); return }
+    }
+    const seats = parseInt(maxSeats, 10)
+    if (isNaN(seats) || seats < 1) { setError('Total Seats must be at least 1.'); return }
+
+    setSaving(true)
+    try {
+      const res = await fetch('/api/course-schedules', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          course: selectedCourse.id,
+          label: label.trim() || suggestLabel(rows),
+          maxSeats: seats,
+          isActive: true,
+          sessions: rows.map((r) => ({
+            date: `${r.date}T00:00:00.000Z`,
+            startTime: localToISO(r.date, r.start),
+            endTime: localToISO(r.date, r.end),
+          })),
+        }),
+      })
+      if (!res.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const j: any = await res.json().catch(() => ({}))
+        const msg = j?.errors?.[0]?.message ?? `Save failed (${res.status}). Please try again.`
+        setError(msg)
+        return
+      }
+      onCreated()
+      setJustCreated(`${selectedCourse.title} — ${label.trim() || suggestLabel(rows)}`)
+    } catch {
+      setError('Network error — please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Success state: confirm + offer to add another (form values are kept so a
+  // second session for the same course only needs new dates)
+  if (justCreated) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{
+          background: 'rgba(34,197,94,0.1)', color: 'var(--theme-text)',
+          borderRadius: 'var(--style-radius-s,4px)', padding: '12px 14px', fontSize: '13px',
+        }}>
+          ✓ Session created: <strong>{justCreated}</strong>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="roster-btn"
+            onClick={() => { setJustCreated(null); setError(null) }}
+          >
+            Add Another Session
+          </button>
+          <button type="button" className="cal-btn" onClick={onCancel}>
+            Done
+          </button>
+        </div>
+        <p style={{ margin: 0, fontSize: '12px', color: 'var(--theme-text)', opacity: 0.5 }}>
+          The calendar refreshes when you close this window.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div>
+        <label style={fieldLabelStyle}>Course</label>
+        <select value={courseId} onChange={(e) => chooseCourse(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+          <option value="">Choose a course…</option>
+          {courses.map((c) => (
+            <option key={c.id} value={String(c.id)}>{c.title}</option>
+          ))}
+        </select>
+        {selectedCourse && selectedCourse.durationDays > 1 && (
+          <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--theme-text)', opacity: 0.55 }}>
+            This course runs {selectedCourse.durationDays} days — one row per day below, starting on the day you clicked. Adjust any of them.
+          </p>
+        )}
+      </div>
+
+      {rows.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ ...fieldLabelStyle, marginBottom: 0 }}>Class Days &amp; Times (ET)</label>
+          {rows.map((r, i) => (
+            <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input type="date" value={r.date} onChange={(e) => updateRow(i, { date: e.target.value })} style={{ ...inputStyle, width: 'auto', flex: '1 1 130px' }} />
+              <input type="time" value={r.start} onChange={(e) => updateRow(i, { start: e.target.value })} style={{ ...inputStyle, width: 'auto', flex: '1 1 90px' }} />
+              <span style={{ color: 'var(--theme-text)', opacity: 0.4, fontSize: '12px' }}>to</span>
+              <input type="time" value={r.end} onChange={(e) => updateRow(i, { end: e.target.value })} style={{ ...inputStyle, width: 'auto', flex: '1 1 90px' }} />
+              {rows.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeRow(i)}
+                  title="Remove this day"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--theme-text)', opacity: 0.5, fontSize: '16px', padding: '2px 6px' }}
+                >×</button>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addRow} className="cal-btn" style={{ alignSelf: 'flex-start', fontSize: '12px' }}>
+            + Add another day
+          </button>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '2 1 180px' }}>
+            <label style={fieldLabelStyle}>Session Label</label>
+            <input
+              type="text"
+              value={label}
+              onChange={(e) => { setLabel(e.target.value); setLabelTouched(true) }}
+              placeholder="e.g. Dec 1/2"
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ flex: '1 1 90px' }}>
+            <label style={fieldLabelStyle}>Total Seats</label>
+            <input type="number" min={1} value={maxSeats} onChange={(e) => setMaxSeats(e.target.value)} style={inputStyle} />
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div style={{
+          background: 'rgba(220,38,38,0.1)', color: '#dc2626',
+          borderRadius: 'var(--style-radius-s,4px)', padding: '10px 12px', fontSize: '13px',
+        }}>
+          {error}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button type="button" className="roster-btn" onClick={save} disabled={saving || !selectedCourse}>
+          {saving ? 'Saving…' : 'Save Session'}
+        </button>
+        <button type="button" className="cal-btn" onClick={onCancel} disabled={saving}>
+          Cancel
+        </button>
+      </div>
+      <p style={{ margin: 0, fontSize: '12px', color: 'var(--theme-text)', opacity: 0.5 }}>
+        The session is created Active (visible on the website). Open it afterward to set an instructor or display label.
+      </p>
+    </div>
+  )
+}
+
 // ── Day modal ─────────────────────────────────────────────────────────────────
 
-function DayModal({ dateStr, items, onClose }: {
-  dateStr: string; items: ScheduleItem[]; onClose: () => void
+function DayModal({ dateStr, items, courses, onClose }: {
+  dateStr: string; items: ScheduleItem[]; courses: CourseOption[]; onClose: () => void
 }) {
+  const [adding, setAdding]     = useState(items.length === 0)
+  const [createdAny, setCreatedAny] = useState(false)
+
+  // If a session was created, refresh so the calendar (server-fetched) shows it
+  const close = () => {
+    if (createdAny) { window.location.reload(); return }
+    onClose()
+  }
+
   return (
     <div
-      onClick={onClose}
+      onClick={close}
       style={{
         position:'fixed', inset:0, zIndex:9999,
         background:'rgba(0,0,0,0.65)',
@@ -173,7 +468,7 @@ function DayModal({ dateStr, items, onClose }: {
             {fmtDateLong(dateStr+'T00:00:00Z')}
           </h3>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{
               background:'none', border:'none', cursor:'pointer',
               color:'var(--theme-text)', fontSize:'22px', lineHeight:1, padding:'0 0 0 12px',
@@ -182,6 +477,11 @@ function DayModal({ dateStr, items, onClose }: {
         </div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+          {items.length === 0 && !adding && (
+            <p style={{ margin:0, fontSize:'13px', color:'var(--theme-text)', opacity:.55 }}>
+              No sessions on this day.
+            </p>
+          )}
           {items.map(s => {
             const todaySessions = s.sessions.filter(x => x.date?.slice(0,10) === dateStr)
             const seatsLeft = s.maxSeats - s.seatsBooked
@@ -233,6 +533,35 @@ function DayModal({ dateStr, items, onClose }: {
               </div>
             )
           })}
+
+          {/* Add-a-session: button first, form when opened */}
+          {adding ? (
+            <div style={{
+              background:'var(--theme-elevation-50)',
+              borderRadius:'var(--style-radius-s,4px)',
+              padding:'16px',
+              marginTop: items.length > 0 ? '4px' : 0,
+            }}>
+              <h4 style={{ margin:'0 0 12px', fontSize:'13px', fontWeight:700, color:'var(--theme-text)' }}>
+                Add a Session — starting {fmtDateLong(dateStr+'T00:00:00Z')}
+              </h4>
+              <AddSessionForm
+                dateStr={dateStr}
+                courses={courses}
+                onCreated={() => setCreatedAny(true)}
+                onCancel={close}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="roster-btn"
+              onClick={() => setAdding(true)}
+              style={{ alignSelf:'flex-start', marginTop: items.length > 0 ? '4px' : 0 }}
+            >
+              + Add a Session on This Day
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -241,7 +570,7 @@ function DayModal({ dateStr, items, onClose }: {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ScheduleCalendarClient({ schedules }: { schedules: ScheduleItem[] }) {
+export default function ScheduleCalendarClient({ schedules, courses: courseOptions = [] }: { schedules: ScheduleItem[]; courses?: CourseOption[] }) {
   const now = new Date()
   const [year,        setYear]        = useState(now.getFullYear())
   const [month,       setMonth]       = useState(now.getMonth())
@@ -428,13 +757,13 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
               <div
                 key={dateStr}
                 className="cal-cell"
-                onClick={() => hasEvents && setSelectedDay(dateStr)}
+                onClick={() => setSelectedDay(dateStr)}
                 style={{
                   background: isToday ? 'var(--theme-elevation-100)' : 'var(--theme-elevation-0)',
-                  cursor: hasEvents ? 'pointer' : 'default',
+                  cursor: 'pointer',
                   transition: 'background .12s',
                 }}
-                onMouseEnter={e => { if (hasEvents) (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-200)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--theme-elevation-200)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? 'var(--theme-elevation-100)' : 'var(--theme-elevation-0)' }}
               >
                 <div style={{
@@ -487,7 +816,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         </div>
 
         <p style={{ fontSize:'11px', color:'var(--theme-text)', opacity:.3, margin:'8px 0 0' }}>
-          Click any day with sessions to view details.
+          Click any day to view its sessions or add a new one.
         </p>
       </div>
 
@@ -631,6 +960,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         <DayModal
           dateStr={selectedDay}
           items={dateMap.get(selectedDay) ?? []}
+          courses={courseOptions}
           onClose={() => setSelectedDay(null)}
         />
       )}
