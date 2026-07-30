@@ -401,7 +401,7 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
           <label style={{ ...fieldLabelStyle, marginBottom: 0 }}>Class Days &amp; Times (ET)</label>
           {rows.map((r, i) => (
             <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input type="date" value={r.date} onChange={(e) => updateRow(i, { date: e.target.value })} style={{ ...inputStyle, width: 'auto', flex: '1 1 130px' }} />
+              <input type="date" value={r.date} min={todayKey()} onChange={(e) => updateRow(i, { date: e.target.value })} style={{ ...inputStyle, width: 'auto', flex: '1 1 130px' }} />
               <input type="time" value={r.start} onChange={(e) => updateRow(i, { start: e.target.value })} style={{ ...inputStyle, width: 'auto', flex: '1 1 90px' }} />
               <span style={{ color: 'var(--theme-text)', opacity: 0.4, fontSize: '12px' }}>to</span>
               <input type="time" value={r.end} onChange={(e) => updateRow(i, { end: e.target.value })} style={{ ...inputStyle, width: 'auto', flex: '1 1 90px' }} />
