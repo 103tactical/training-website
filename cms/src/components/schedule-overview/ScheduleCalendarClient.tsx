@@ -315,7 +315,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         }
 
         /* Course pill text — dark grey in light mode, soft white in dark mode */
-        .cal-pill-text { color: #374151; }
+        .cal-pill-text { color: #404040; }
         [data-theme="dark"] .cal-pill-text { color: rgba(255,255,255,0.78); }
 
         /* Schedule list — alternating rows, theme-aware, no hover background */
@@ -330,19 +330,19 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           padding: 8px 12px; text-align: left;
           font-size: 11px; font-weight: 600;
           text-transform: uppercase; letter-spacing: .5px; white-space: nowrap;
-          color: #374151;
+          color: #404040;
         }
         [data-theme="dark"] .sch-th { color: rgba(255,255,255,0.4); }
 
         /* Results count text */
-        .sch-meta { font-size: 13px; color: #374151; }
+        .sch-meta { font-size: 13px; color: #404040; }
         [data-theme="dark"] .sch-meta { color: rgba(255,255,255,0.45); }
 
         /* Filter label */
         .sch-filter-label {
           display: block; font-size: 11px; font-weight: 600;
           text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
-          color: #374151;
+          color: #404040;
         }
         [data-theme="dark"] .sch-filter-label { color: rgba(255,255,255,0.4); }
 
@@ -357,10 +357,10 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           padding: 7px 4px; text-align: center;
           font-size: 11px; font-weight: 700;
           text-transform: uppercase; letter-spacing: .5px;
-          background: #4b5058; color: #ffffff;
+          background: #4d4d4d; color: #ffffff;
         }
         [data-theme="dark"] .cal-dow {
-          background: #cfd3d8; color: #23272e;
+          background: #d4d4d4; color: #262626;
         }
       `}</style>
 

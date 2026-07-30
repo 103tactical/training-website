@@ -226,9 +226,11 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
            (an html background is painted over and invisible). Surfaces that
            use elevation-0/explicit white automatically stand raised in both
            themes. --adm-card-shadow kept as a no-op for old references. */
+        /* True-NEUTRAL grays only — Payload's elevation palette is neutral,
+           so any blue-leaning (slate) gray reads as a different material */
         :root { --adm-card-shadow: none; }
-        html[data-theme='light'] { --theme-bg: #f4f5f7; }
-        html[data-theme='dark']  { --theme-bg: #0e0f11; }
+        html[data-theme='light'] { --theme-bg: #f4f4f4; }
+        html[data-theme='dark']  { --theme-bg: #0f0f0f; }
 
         /* List tables (collection lists, roster tables): a solid sheet on
            the recessed page, in both themes */
