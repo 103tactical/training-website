@@ -375,6 +375,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
         } : {}),
       },
       checkoutOptions: {
+        // Discounts are CMS-managed — a Square-side coupon field would bypass
+        // validation, redemption counts, and revenue reporting.
+        enableCoupon: false,
         redirectUrl: `${siteUrl}/booking-confirmation`,
         merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL,
       },
