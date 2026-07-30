@@ -372,7 +372,7 @@ export const CourseSchedules: CollectionConfig = {
   admin: {
     useAsTitle: "adminTitle",
     group: "Course Management",
-    defaultColumns: ["course", "label", "maxSeats", "seatsBooked", "isActive"],
+    defaultColumns: ["adminTitle", "maxSeats", "seatsBooked", "isActive"],
     description:
       "Define available date slots for each course. Each slot can contain one or more session dates (e.g. two non-adjacent Fridays for a 2-day course).",
   },
