@@ -65,11 +65,11 @@ export default function ProcessGroupBookingButton() {
   const isDone   = status === 'completed' || status === 'sent'
 
   const buttonLabel = isManual
-    ? 'Confirm All Attendees (Manual)'
+    ? 'Book All Attendees'
     : 'Send Square Payment Links'
 
   const retryLabel = isManual
-    ? 'Re-confirm Unprocessed Attendees'
+    ? 'Book Remaining Attendees'
     : 'Resend Missing Payment Links'
 
   if (!id) {
