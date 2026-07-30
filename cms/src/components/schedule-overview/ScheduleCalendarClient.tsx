@@ -52,7 +52,7 @@ function HoldBadge({ count }: { count: number }) {
         border: '1px solid rgba(234, 88, 12, 0.35)', verticalAlign: 'middle',
       }}
     >
-      +{count} link{count === 1 ? '' : 's'}
+      +{count} pending
     </span>
   )
 }

@@ -71,7 +71,7 @@ export default function SeatsBookedCell({ cellData, rowData }: DefaultCellCompon
             border: '1px solid rgba(234, 88, 12, 0.35)',
           }}
         >
-          +{held} link{held === 1 ? '' : 's'}
+          +{held} pending
         </span>
       )}
     </span>
