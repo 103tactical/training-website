@@ -20,6 +20,8 @@ export type ScheduleItem = {
   sessions: SessionInfo[]
   maxSeats: number
   seatsBooked: number
+  /** Outstanding admin-sent payment links holding seats (not yet paid) */
+  seatsHeld: number
   isActive: boolean
 }
 
@@ -40,6 +42,33 @@ export default async function ScheduleOverviewPage(props: any) {
     overrideAccess: true,
   })
 
+  // Outstanding admin-sent payment links, grouped per schedule — each one
+  // holds a seat in the website's availability
+  const holdMap: Record<number, number> = {}
+  try {
+    const pend = await payload.find({
+      collection: 'pending-bookings',
+      where: {
+        and: [
+          { status: { equals: 'pending' } },
+          { source: { equals: 'admin-link' } },
+        ],
+      },
+      limit: 0,
+      depth: 0,
+      overrideAccess: true,
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const pb of pend.docs as any[]) {
+      const sid = typeof pb.courseSchedule === 'object' && pb.courseSchedule !== null
+        ? pb.courseSchedule.id
+        : pb.courseSchedule
+      if (sid) holdMap[sid] = (holdMap[sid] ?? 0) + 1
+    }
+  } catch {
+    // Non-fatal — calendar renders without hold badges
+  }
+
   // Serialise to plain objects safe to pass across the server/client boundary
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const schedules: ScheduleItem[] = (docs as any[]).map((s) => {
@@ -57,6 +86,7 @@ export default async function ScheduleOverviewPage(props: any) {
       })),
       maxSeats:   s.maxSeats    ?? 0,
       seatsBooked: s.seatsBooked ?? 0,
+      seatsHeld:  holdMap[s.id as number] ?? 0,
       isActive:   s.isActive    ?? false,
     }
   })

@@ -35,6 +35,28 @@ function fmtTime(iso: string): string {
 
 function toDateKey(iso: string): string { return iso.slice(0, 10) }
 
+// ── Seat-hold badge ───────────────────────────────────────────────────────────
+// Orange "+N links" pill shown next to seat counts when a session has
+// outstanding admin-sent payment links (seats promised but not yet paid).
+// nowrap internally; parent containers flex-wrap so it drops to its own line
+// on narrow screens instead of overflowing.
+function HoldBadge({ count }: { count: number }) {
+  if (count <= 0) return null
+  return (
+    <span
+      title={`${count} outstanding payment link${count === 1 ? '' : 's'} holding seats on the website`}
+      style={{
+        display: 'inline-block', padding: '1px 7px', borderRadius: '999px',
+        fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap',
+        background: 'rgba(234, 88, 12, 0.12)', color: '#ea580c',
+        border: '1px solid rgba(234, 88, 12, 0.35)', verticalAlign: 'middle',
+      }}
+    >
+      +{count} link{count === 1 ? '' : 's'}
+    </span>
+  )
+}
+
 function firstDate(s: ScheduleItem): string {
   return s.sessions.map(x => x.date ?? '').filter(Boolean).sort()[0] ?? ''
 }
@@ -92,7 +114,7 @@ function generatePrintHTML(items: ScheduleItem[], filterLabel: string): string {
       <td>${esc(s.displayLabel ?? '—')}</td>
       <td>${dates.map(esc).join('<br>')}</td>
       <td>${times.map(esc).join('<br>')}</td>
-      <td>${s.seatsBooked} / ${s.maxSeats}</td>
+      <td>${s.seatsBooked} / ${s.maxSeats}${s.seatsHeld > 0 ? ` (+${s.seatsHeld} pending link${s.seatsHeld === 1 ? '' : 's'})` : ''}</td>
       <td>${s.isActive ? 'Active' : 'Inactive'}</td>
     </tr>`
   }).join('')
@@ -194,10 +216,11 @@ function DayModal({ dateStr, items, onClose }: {
                   display:'flex', justifyContent:'space-between', alignItems:'center',
                   marginTop:'12px', gap:'8px', flexWrap:'wrap',
                 }}>
-                  <span style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.6 }}>
-                    {s.seatsBooked} / {s.maxSeats} booked
-                    {seatsLeft <= 0 && <span style={{ marginLeft:'6px', fontWeight:600, opacity:1 }}>· Full</span>}
-                    {!s.isActive && <span style={{ marginLeft:'6px', color:'#f97316', fontWeight:600 }}>· Inactive</span>}
+                  <span style={{ fontSize:'12px', color:'var(--theme-text)', opacity:.6, display:'inline-flex', alignItems:'center', gap:'6px', flexWrap:'wrap' }}>
+                    <span style={{ whiteSpace:'nowrap' }}>{s.seatsBooked} / {s.maxSeats} booked</span>
+                    <HoldBadge count={s.seatsHeld} />
+                    {seatsLeft <= 0 && <span style={{ fontWeight:600, opacity:1 }}>· Full</span>}
+                    {!s.isActive && <span style={{ color:'#f97316', fontWeight:600 }}>· Inactive</span>}
                   </span>
                   <Link
                     href={`/admin/collections/course-schedules/${s.id}`}
@@ -538,8 +561,11 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
                             : times.map((t,i) => <div key={i}>{t}</div>)
                           }
                         </td>
-                        <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px', whiteSpace:'nowrap' }}>
-                          {s.seatsBooked} / {s.maxSeats}
+                        <td style={{ padding:'10px 12px', color:'var(--theme-text)', verticalAlign:'top', fontSize:'13px' }}>
+                          <span style={{ display:'inline-flex', alignItems:'center', gap:'6px', flexWrap:'wrap' }}>
+                            <span style={{ whiteSpace:'nowrap' }}>{s.seatsBooked} / {s.maxSeats}</span>
+                            <HoldBadge count={s.seatsHeld} />
+                          </span>
                         </td>
                         <td style={{ padding:'10px 12px', verticalAlign:'top', fontSize:'13px' }}>
                           <span style={{

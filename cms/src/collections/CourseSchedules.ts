@@ -445,6 +445,11 @@ export const CourseSchedules: CollectionConfig = {
               defaultValue: 0,
               min: 0,
               admin: {
+                components: {
+                  // List view: "10 / 20" + orange "+N links" badge when
+                  // outstanding admin payment links are holding seats
+                  Cell: "./components/SeatsBookedCell",
+                },
                 description: "Auto-managed by booking hooks.",
               },
             },
