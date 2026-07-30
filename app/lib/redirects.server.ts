@@ -37,6 +37,17 @@ const WP_PATH_MAP: Record<string, string> = {
   "contact-us": "/contact",
 };
 
+/**
+ * Vanity domains that land on one specific page (every path) instead of
+ * preserving the path. hr218finder/hr218locator market the LEOSA course.
+ */
+const VANITY_HOST_TARGETS: Record<string, string> = {
+  'hr218finder.com': '/courses/hr218-leosa',
+  'www.hr218finder.com': '/courses/hr218-leosa',
+  'hr218locator.com': '/courses/hr218-leosa',
+  'www.hr218locator.com': '/courses/hr218-leosa',
+};
+
 function isCanonicalHost(host: string): boolean {
   return (
     host === CANONICAL_HOST ||
@@ -72,6 +83,11 @@ export function getHostRedirect(request: Request): string | null {
     return `https://${CANONICAL_HOST}${mapWpPath(url.pathname)}${url.search}`;
   }
 
-  // Any other domain (future parked domains): keep the path as-is.
+  const vanityTarget = VANITY_HOST_TARGETS[host];
+  if (vanityTarget) {
+    return `https://${CANONICAL_HOST}${vanityTarget}${url.search}`;
+  }
+
+  // Any other domain (parked brand domains): keep the path as-is.
   return `https://${CANONICAL_HOST}${url.pathname}${url.search}`;
 }
