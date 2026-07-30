@@ -561,7 +561,7 @@ export const CourseSchedules: CollectionConfig = {
           defaultLimit: 0,
           defaultSort: "adminTitle",
           admin: {
-            defaultColumns: ["adminTitle", "status", "squarePaymentId"],
+            defaultColumns: ["adminTitle", "status", "paymentMethod", "squarePaymentId"],
             description:
               "Bookings for this session. Go to Course Management → Bookings to add or manage registrations.",
           },
