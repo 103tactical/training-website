@@ -59,6 +59,31 @@ const promoteOnSeatIncrease: CollectionAfterChangeHook = async ({ doc, previousD
  * This gives relationship dropdowns (e.g. Attendee → Session) a clear,
  * unambiguous display value without showing raw IDs.
  */
+/**
+ * The Internal Label is ALWAYS derived from the session dates in the house
+ * convention — "Aug 2", "Aug 14/15", or "Dec 30 / Jan 2" across months.
+ * The field is hidden in the admin and set automatically here on every save
+ * (decided 2026-07-30), so labels can never drift from the actual dates.
+ * Runs BEFORE syncAdminTitle, which folds the label into adminTitle.
+ */
+const autoLabelFromDates: CollectionBeforeChangeHook = async ({ data, originalDoc }) => {
+  const sessions = (data.sessions ?? originalDoc?.sessions ?? []) as { date?: string | Date }[]
+  const dates = sessions
+    .map((s) => (s?.date ? new Date(s.date) : null))
+    .filter((d): d is Date => d instanceof Date && !isNaN(d.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime())
+  if (dates.length === 0) return data
+  const parts = dates.map((d) => ({
+    mon: d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }),
+    day: d.getUTCDate(),
+  }))
+  const sameMonth = parts.every((p) => p.mon === parts[0].mon)
+  data.label = sameMonth
+    ? `${parts[0].mon} ${parts.map((p) => p.day).join("/")}`
+    : parts.map((p) => `${p.mon} ${p.day}`).join(" / ")
+  return data
+}
+
 const syncAdminTitle: CollectionBeforeChangeHook = async ({
   data,
   originalDoc,
@@ -356,7 +381,7 @@ export const CourseSchedules: CollectionConfig = {
     read: () => true,
   },
   hooks: {
-    beforeChange: [syncAdminTitle],
+    beforeChange: [autoLabelFromDates, syncAdminTitle],
     afterChange: [promoteOnSeatIncrease],
     beforeDelete: [beforeDeleteHook],
   },
@@ -407,8 +432,9 @@ export const CourseSchedules: CollectionConfig = {
           type: "text",
           label: "Internal Label",
           admin: {
+            hidden: true, // set automatically from the session dates (autoLabelFromDates)
             description:
-              'Admin-only identifier — use dates for clarity, e.g. "Mar 20" or "Jun 5 / Jun 12". This is what appears in dropdowns when adding an attendee.',
+              'Auto-generated from the session dates, e.g. "Aug 2" or "Aug 14/15". Appears in dropdowns when adding an attendee.',
           },
         },
         {

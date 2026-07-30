@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import Link from 'next/link'
-import type { ScheduleItem, CourseOption } from './ScheduleOverviewPage'
+import type { ScheduleItem, CourseOption, InstructorOption } from './ScheduleOverviewPage'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -210,16 +210,17 @@ const fieldLabelStyle: React.CSSProperties = {
   marginBottom: '4px',
 }
 
-function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
+function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: {
   dateStr: string
   courses: CourseOption[]
+  instructors: InstructorOption[]
   onCreated: () => void
   onCancel: () => void
 }) {
   const [courseId, setCourseId]         = useState<string>('')
   const [rows, setRows]                 = useState<SessionRow[]>([])
-  const [label, setLabel]               = useState('')
-  const [labelTouched, setLabelTouched] = useState(false)
+  const [displayLabel, setDisplayLabel] = useState('')
+  const [instructorId, setInstructorId] = useState<string>('')
   const [maxSeats, setMaxSeats]         = useState<string>('20')
   const [saving, setSaving]             = useState(false)
   const [error, setError]               = useState<string | null>(null)
@@ -241,34 +242,23 @@ function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
     }))
     setRows(seeded)
     setMaxSeats(String(c.defaultMaxSeats ?? 20))
-    if (!labelTouched) setLabel(suggestLabel(seeded))
   }
 
   const updateRow = (i: number, patch: Partial<SessionRow>) => {
-    setRows((prev) => {
-      const next = prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r))
-      if (!labelTouched) setLabel(suggestLabel(next))
-      return next
-    })
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
   }
   const addRow = () => {
     setRows((prev) => {
       const last = prev[prev.length - 1]
-      const next = [...prev, {
+      return [...prev, {
         date: last ? addDays(last.date, 1) : dateStr,
         start: last?.start ?? '10:00',
         end: last?.end ?? '18:00',
       }]
-      if (!labelTouched) setLabel(suggestLabel(next))
-      return next
     })
   }
   const removeRow = (i: number) => {
-    setRows((prev) => {
-      const next = prev.filter((_, idx) => idx !== i)
-      if (!labelTouched) setLabel(suggestLabel(next))
-      return next
-    })
+    setRows((prev) => prev.filter((_, idx) => idx !== i))
   }
 
   const save = async () => {
@@ -289,9 +279,11 @@ function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           course: selectedCourse.id,
-          label: label.trim() || suggestLabel(rows),
+          // Internal label is auto-generated from the dates by the collection
           maxSeats: seats,
           isActive: true,
+          ...(displayLabel.trim() ? { displayLabel: displayLabel.trim() } : {}),
+          ...(instructorId ? { instructor: Number(instructorId) } : {}),
           sessions: rows.map((r) => ({
             date: `${r.date}T00:00:00.000Z`,
             startTime: localToISO(r.date, r.start),
@@ -307,7 +299,7 @@ function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
         return
       }
       onCreated()
-      setJustCreated(`${selectedCourse.title} — ${label.trim() || suggestLabel(rows)}`)
+      setJustCreated(`${selectedCourse.title} — ${suggestLabel(rows)}`)
     } catch {
       setError('Network error — please try again.')
     } finally {
@@ -388,22 +380,33 @@ function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
       )}
 
       {rows.length > 0 && (
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <div style={{ flex: '2 1 180px' }}>
-            <label style={fieldLabelStyle}>Session Label</label>
+        <>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '2 1 180px' }}>
+              <label style={fieldLabelStyle}>Instructor</label>
+              <select value={instructorId} onChange={(e) => setInstructorId(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="">None yet</option>
+                {instructors.map((i) => (
+                  <option key={i.id} value={String(i.id)}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ flex: '1 1 90px' }}>
+              <label style={fieldLabelStyle}>Total Seats</label>
+              <input type="number" min={1} value={maxSeats} onChange={(e) => setMaxSeats(e.target.value)} style={inputStyle} />
+            </div>
+          </div>
+          <div>
+            <label style={fieldLabelStyle}>Display Label (optional)</label>
             <input
               type="text"
-              value={label}
-              onChange={(e) => { setLabel(e.target.value); setLabelTouched(true) }}
-              placeholder="e.g. Dec 1/2"
+              value={displayLabel}
+              onChange={(e) => setDisplayLabel(e.target.value)}
+              placeholder="Visitor-facing session name, e.g. Afternoon Session"
               style={inputStyle}
             />
           </div>
-          <div style={{ flex: '1 1 90px' }}>
-            <label style={fieldLabelStyle}>Total Seats</label>
-            <input type="number" min={1} value={maxSeats} onChange={(e) => setMaxSeats(e.target.value)} style={inputStyle} />
-          </div>
-        </div>
+        </>
       )}
 
       {error && (
@@ -424,7 +427,7 @@ function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
         </button>
       </div>
       <p style={{ margin: 0, fontSize: '12px', color: 'var(--theme-text)', opacity: 0.5 }}>
-        The session is created Active (visible on the website). Open it afterward to set an instructor or display label.
+        The session is created Active (visible on the website). Its internal label is set automatically from the dates.
       </p>
     </div>
   )
@@ -432,8 +435,8 @@ function AddSessionForm({ dateStr, courses, onCreated, onCancel }: {
 
 // ── Day modal ─────────────────────────────────────────────────────────────────
 
-function DayModal({ dateStr, items, courses, onClose }: {
-  dateStr: string; items: ScheduleItem[]; courses: CourseOption[]; onClose: () => void
+function DayModal({ dateStr, items, courses, instructors, onClose }: {
+  dateStr: string; items: ScheduleItem[]; courses: CourseOption[]; instructors: InstructorOption[]; onClose: () => void
 }) {
   const [adding, setAdding]     = useState(items.length === 0)
   const [createdAny, setCreatedAny] = useState(false)
@@ -548,6 +551,7 @@ function DayModal({ dateStr, items, courses, onClose }: {
               <AddSessionForm
                 dateStr={dateStr}
                 courses={courses}
+                instructors={instructors}
                 onCreated={() => setCreatedAny(true)}
                 onCancel={close}
               />
@@ -570,7 +574,7 @@ function DayModal({ dateStr, items, courses, onClose }: {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ScheduleCalendarClient({ schedules, courses: courseOptions = [] }: { schedules: ScheduleItem[]; courses?: CourseOption[] }) {
+export default function ScheduleCalendarClient({ schedules, courses: courseOptions = [], instructors: instructorOptions = [] }: { schedules: ScheduleItem[]; courses?: CourseOption[]; instructors?: InstructorOption[] }) {
   const now = new Date()
   const [year,        setYear]        = useState(now.getFullYear())
   const [month,       setMonth]       = useState(now.getMonth())
@@ -961,6 +965,7 @@ export default function ScheduleCalendarClient({ schedules, courses: courseOptio
           dateStr={selectedDay}
           items={dateMap.get(selectedDay) ?? []}
           courses={courseOptions}
+          instructors={instructorOptions}
           onClose={() => setSelectedDay(null)}
         />
       )}

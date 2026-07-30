@@ -36,6 +36,11 @@ export type CourseOption = {
   defaultMaxSeats: number | null
 }
 
+export type InstructorOption = {
+  id: number
+  name: string
+}
+
 // ── Server component ─────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,6 +146,24 @@ export default async function ScheduleOverviewPage(props: any) {
     // Non-fatal — the form falls back to generic defaults
   }
 
+  let instructorOptions: InstructorOption[] = []
+  try {
+    const instructorsRes = await payload.find({
+      collection: 'instructors',
+      limit: 0,
+      depth: 0,
+      sort: 'name',
+      overrideAccess: true,
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    instructorOptions = (instructorsRes.docs as any[]).map((i) => ({
+      id: i.id as number,
+      name: (i.name as string) ?? 'Unnamed',
+    }))
+  } catch {
+    // Non-fatal — the form simply offers no instructor choices
+  }
+
   return (
     <DefaultTemplate
       i18n={initPageResult.req.i18n}
@@ -166,7 +189,7 @@ export default async function ScheduleOverviewPage(props: any) {
         }}>
           Course Calendar
         </h1>
-        <ScheduleCalendarClient schedules={schedules} courses={courseOptions} />
+        <ScheduleCalendarClient schedules={schedules} courses={courseOptions} instructors={instructorOptions} />
       </div>
     </DefaultTemplate>
   )
