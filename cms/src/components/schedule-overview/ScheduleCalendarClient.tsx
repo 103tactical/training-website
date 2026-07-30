@@ -384,14 +384,15 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           ))}
         </div>
 
-        {/* Calendar grid */}
+        {/* Calendar grid — soft shadow instead of an outer border (internal
+            1px cell separation stays; a calendar needs its grid) */}
         <div style={{
           display:'grid', gridTemplateColumns:'repeat(7,1fr)',
           gap:'1px',
           background:'var(--theme-elevation-200)',
-          border:'1px solid var(--theme-elevation-200)',
           borderRadius:'var(--style-radius-m,8px)',
           overflow:'hidden',
+          boxShadow:'var(--adm-card-shadow)',
         }}>
           {grid.map((dateStr, i) => {
             if (!dateStr) {
@@ -518,7 +519,7 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
           <p style={{ fontSize:'14px', color:'var(--theme-text)', opacity:.45 }}>No schedules found.</p>
         ) : (
           <>
-            <div style={{ overflowX:'auto', borderRadius:'var(--style-radius-m,8px)', overflow:'hidden' }}>
+            <div style={{ overflowX:'auto', borderRadius:'var(--style-radius-m,8px)', overflow:'hidden', boxShadow:'var(--adm-card-shadow)', background:'var(--theme-elevation-0)' }}>
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{ background:'var(--theme-elevation-100)' }}>
