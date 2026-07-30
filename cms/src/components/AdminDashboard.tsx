@@ -253,8 +253,8 @@ const SECTIONS: { label: string; links: DashLink[] }[] = [
 export default function AdminDashboard() {
   return (
     <div style={{
-      padding: '0 4.5rem',
-      maxWidth: '960px',
+      padding: '0 var(--gutter-h, 24px)',
+      maxWidth: '1400px',
     }}>
       <h1 style={{
         fontSize: '24px',

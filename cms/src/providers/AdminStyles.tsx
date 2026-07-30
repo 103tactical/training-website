@@ -221,12 +221,27 @@ export default function AdminStyles({ children }: { children: React.ReactNode })
            Containment WITHOUT borders, lines, or shadows: the page sits a
            whisper darker than every card/section/list surface, so surfaces
            read as solid raised panels purely by background contrast.
-           Chrome (header, nav, drawers, popups) keeps Payload's own
-           backgrounds. --adm-card-shadow kept as a no-op so any inline
-           references resolve harmlessly. */
+           Payload paints the page via var(--theme-bg) on .template-default
+           and __wrap, so the correct layer to recess is the VARIABLE itself
+           (an html background is painted over and invisible). Surfaces that
+           use elevation-0/explicit white automatically stand raised in both
+           themes. --adm-card-shadow kept as a no-op for old references. */
         :root { --adm-card-shadow: none; }
-        html[data-theme='light'] { background: #f4f5f7 !important; }
-        html[data-theme='dark']  { background: #0e0f11 !important; }
+        html[data-theme='light'] { --theme-bg: #f4f5f7; }
+        html[data-theme='dark']  { --theme-bg: #0e0f11; }
+
+        /* List tables (collection lists, roster tables): a solid sheet on
+           the recessed page, in both themes */
+        .table table {
+          background: var(--theme-elevation-0);
+          border-radius: var(--style-radius-s, 4px);
+        }
+        html[data-theme='light'] .table table { background: #ffffff; }
+
+        /* Symmetric list gutters: Payload full-bleeds .table for edge
+           scrolling but restores only padding-LEFT — the right gutter is
+           missing (visible on narrow screens). Restore it. */
+        .table { padding-right: var(--gutter-h); }
 
         /* Dashboard link cards + quota widget: solid surface, no border */
         .adash-card, .rq-card {
