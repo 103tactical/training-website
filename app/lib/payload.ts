@@ -203,6 +203,7 @@ export async function createPendingBooking(data: {
   phone?: string;
   discountCode?: string;
   discountCents?: number;
+  source?: "website" | "admin-link";
 }): Promise<PendingBooking> {
   const secret = process.env.CMS_WRITE_SECRET;
   const res = await fetch(`${PAYLOAD_API_URL}/api/pending-bookings`, {
@@ -233,6 +234,24 @@ export async function findActivePendingBooking(
     `/pending-bookings?where[email][equals]=${encodeURIComponent(email)}&where[courseSchedule][equals]=${courseScheduleId}&where[status][equals]=pending&limit=1`
   );
   return res.docs[0] ?? null;
+}
+
+/**
+ * Count outstanding ADMIN-sent payment links for a schedule. Each one holds
+ * a seat in the website's availability math (the person was promised a spot;
+ * they just haven't paid yet). Website-checkout pendings hold nothing.
+ * Fails open (returns 0) — an error here must never block bookings.
+ */
+export async function countAdminLinkHolds(scheduleId: number | string): Promise<number> {
+  try {
+    const res = await fetchPayloadAuth<{ totalDocs: number }>(
+      `/pending-bookings?where[courseSchedule][equals]=${scheduleId}&where[status][equals]=pending&where[source][equals]=admin-link&limit=1&depth=0`
+    );
+    return res.totalDocs ?? 0;
+  } catch (err) {
+    console.warn("[payload] countAdminLinkHolds failed:", err);
+    return 0;
+  }
 }
 
 /** Look up a pending booking by its unique token (used in the webhook). */

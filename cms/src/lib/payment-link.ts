@@ -80,11 +80,30 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
     }).format(new Date())
     if (day < nowDay) throw new Error('This session has already taken place.')
   }
-  const remaining = (schedule.maxSeats ?? 0) - (schedule.seatsBooked ?? 0)
+  // Availability counts outstanding admin links as held seats — Bernie can't
+  // promise more seats than physically exist.
+  const heldResult = await p.find({
+    collection: 'pending-bookings',
+    where: {
+      and: [
+        { courseSchedule: { equals: scheduleId } },
+        { status: { equals: 'pending' } },
+        { source: { equals: 'admin-link' } },
+      ],
+    },
+    limit: 1,
+    depth: 0,
+    req,
+  })
+  const heldSeats: number = heldResult.totalDocs ?? 0
+  const remaining = (schedule.maxSeats ?? 0) - (schedule.seatsBooked ?? 0) - heldSeats
   if (remaining <= 0) {
     throw new Error(
-      `This session is full (${schedule.seatsBooked}/${schedule.maxSeats}). ` +
-      `A link would collect payment with no seat available.`,
+      heldSeats > 0
+        ? `No seats left to promise: ${schedule.seatsBooked}/${schedule.maxSeats} booked plus ${heldSeats} outstanding payment link${heldSeats === 1 ? '' : 's'} already holding the rest. ` +
+          `Wait for a link to be paid, delete an unpaid link (Pending Bookings), or raise Total Seats.`
+        : `This session is full (${schedule.seatsBooked}/${schedule.maxSeats}). ` +
+          `A link would collect payment with no seat available.`,
     )
   }
 
@@ -129,6 +148,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
       lastName,
       phone: phone || undefined,
       status: 'pending',
+      source: 'admin-link',
       ...(appliedCode ? { discountCode: appliedCode, discountCents } : {}),
     },
     req,

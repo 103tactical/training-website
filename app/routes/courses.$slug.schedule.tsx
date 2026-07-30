@@ -1,7 +1,7 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link, useNavigate } from "@remix-run/react";
 import { useEffect } from "react";
-import { getCourseBySlug, getCourseSchedules, resolveMediaUrl } from "~/lib/payload";
+import { getCourseBySlug, getCourseSchedules, resolveMediaUrl, countAdminLinkHolds } from "~/lib/payload";
 import { isScheduleBookable } from "~/lib/schedule.server";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
 import MiniCalendar from "~/components/MiniCalendar";
@@ -67,7 +67,16 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   // Filter out schedules that are no longer bookable — the first session's
   // start time has passed (or its whole day, if no start time is set).
-  const schedules = allSchedules.filter(isScheduleBookable);
+  const bookable = allSchedules.filter(isScheduleBookable);
+
+  // Outstanding admin-sent payment links hold seats — fold them into the
+  // seat counts so "X seats remaining" reflects promised seats too.
+  const schedules = await Promise.all(
+    bookable.map(async (s) => ({
+      ...s,
+      seatsHeld: await countAdminLinkHolds(s.id),
+    })),
+  );
 
   return json({ course, schedules, canonicalUrl: new URL(request.url).toString() });
 }
@@ -139,7 +148,10 @@ export default function CourseSchedulePage() {
               {activeSchedules.map((slot) => {
                 const sessions = slot.sessions ?? [];
                 const multiDay = sessions.length > 1;
-                const { label: seatLabel, full } = seatsStatus(slot.maxSeats, slot.seatsBooked);
+                const { label: seatLabel, full } = seatsStatus(
+                  slot.maxSeats,
+                  (slot.seatsBooked ?? 0) + (slot.seatsHeld ?? 0),
+                );
 
                 return (
                   <div key={slot.id} className={`schedule-slot${full ? " schedule-slot--full" : ""}`}>

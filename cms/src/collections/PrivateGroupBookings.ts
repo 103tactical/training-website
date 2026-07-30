@@ -600,6 +600,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
             lastName: attendee.lastName,
             phone: attendee.phone || undefined,
             status: 'pending',
+            source: 'admin-link',
           },
           req,
         })

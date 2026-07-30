@@ -20,6 +20,7 @@ import {
   updatePendingBooking,
   getECommerceSettings,
   validateDiscountCode,
+  countAdminLinkHolds,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
@@ -100,7 +101,9 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
   const course = schedule.course as Course;
   const instructor = schedule.instructor as Instructor | undefined;
-  const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0);
+  // Outstanding admin-sent payment links hold seats — they're promised
+  const heldSeats = await countAdminLinkHolds(scheduleId);
+  const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0) - heldSeats;
 
   const formattedSessions = (schedule.sessions ?? []).map((s: any) => ({
     id: s.id,
@@ -232,7 +235,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     if (!isScheduleBookable(schedule)) {
       return json<BookActionData>({ errors: {}, formError: "This session has already taken place and can no longer be booked." }, { status: 410 });
     }
-    const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0);
+    const heldSeats = await countAdminLinkHolds(scheduleId);
+    const remaining = schedule.maxSeats - (schedule.seatsBooked ?? 0) - heldSeats;
     if (remaining <= 0) {
       return json<BookActionData>({ errors: {}, formError: "Sorry, this session just filled up." }, { status: 409 });
     }
@@ -295,6 +299,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         firstName,
         lastName,
         phone: sanitizedPhone || undefined,
+        source: "website",
         ...(appliedCode ? { discountCode: appliedCode, discountCents } : {}),
       });
     }

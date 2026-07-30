@@ -53,6 +53,7 @@ import * as migration_20260723_pgb_manual_payment_method from './20260723_pgb_ma
 import * as migration_20260729_discount_codes from './20260729_discount_codes';
 import * as migration_20260729_pending_bookings_discount from './20260729_pending_bookings_discount';
 import * as migration_20260729_bookings_discount from './20260729_bookings_discount';
+import * as migration_20260730_pending_bookings_source from './20260730_pending_bookings_source';
 
 export const migrations = [
   {
@@ -329,5 +330,10 @@ export const migrations = [
     up: migration_20260729_bookings_discount.up,
     down: migration_20260729_bookings_discount.down,
     name: '20260729_bookings_discount'
+  },
+  {
+    up: migration_20260730_pending_bookings_source.up,
+    down: migration_20260730_pending_bookings_source.down,
+    name: '20260730_pending_bookings_source'
   },
 ];

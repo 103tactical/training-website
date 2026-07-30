@@ -305,6 +305,21 @@ export const PendingBookings: CollectionConfig = {
       validate: optionalPhoneValidate,
       hooks: { beforeValidate: [phoneBeforeValidate] },
     },
+    {
+      name: 'source',
+      type: 'select',
+      label: 'Source',
+      options: [
+        { label: 'Website checkout', value: 'website' },
+        { label: 'Admin payment link', value: 'admin-link' },
+      ],
+      admin: {
+        readOnly: true,
+        description:
+          'Admin payment links HOLD a seat on the website while unpaid — deleting this record releases the seat. ' +
+          'Website checkouts hold nothing.',
+      },
+    },
 
     // ── Discount (set when a code was applied at checkout) ──────────────────
     {
