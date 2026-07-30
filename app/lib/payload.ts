@@ -237,6 +237,29 @@ export async function findActivePendingBooking(
 }
 
 /**
+ * Update fields on an existing attendee (used by the webhook to backfill
+ * EMPTY fields from the pending-booking snapshot — never to overwrite).
+ */
+export async function updateAttendee(
+  id: number,
+  data: Partial<Pick<Attendee, "firstName" | "lastName" | "phone">>,
+): Promise<void> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api/attendees/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`updateAttendee failed: ${res.status} ${body}`);
+  }
+}
+
+/**
  * Count outstanding ADMIN-sent payment links for a schedule. Each one holds
  * a seat in the website's availability math (the person was promised a spot;
  * they just haven't paid yet). Website-checkout pendings hold nothing.

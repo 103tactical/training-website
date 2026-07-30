@@ -30,6 +30,7 @@ import {
   updateBookingStatus,
   findAttendeeByEmail,
   createAttendee,
+  updateAttendee,
   findPendingBookingByToken,
   updatePendingBooking,
   markPrivateGroupAttendeePaid,
@@ -257,6 +258,20 @@ async function handlePaymentUpdated(event: Record<string, any>) {
         email: buyerEmail,
         phone: pending.phone ?? undefined,
       });
+    } else {
+      // Backfill EMPTY attendee fields from the checkout snapshot — fill
+      // blanks only, never overwrite curated data. Non-fatal.
+      const backfill: { phone?: string; lastName?: string } = {};
+      if (pending.phone && !attendee.phone) backfill.phone = pending.phone;
+      if (lastName && !attendee.lastName) backfill.lastName = lastName;
+      if (Object.keys(backfill).length > 0) {
+        try {
+          await updateAttendee(attendee.id, backfill);
+          console.log(`[webhook] Backfilled attendee ${attendee.id}: ${Object.keys(backfill).join(", ")}`);
+        } catch (err) {
+          console.error("[webhook] Attendee backfill failed (non-fatal):", err);
+        }
+      }
     }
 
     // ── Create Booking ──────────────────────────────────────────────────────
