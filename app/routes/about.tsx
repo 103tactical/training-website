@@ -2,8 +2,8 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getHomePage, getUtility, resolveMediaUrl } from "~/lib/payload";
-import type { HomePage, CourseGroup, TestimonialItem } from "~/lib/payload";
+import { getHomePage, getUtility, getFeaturedDiscounts, courseDisplayDiscount, resolveMediaUrl } from "~/lib/payload";
+import type { HomePage, CourseGroup, TestimonialItem, FeaturedDiscount } from "~/lib/payload";
 import { BulletIcon, cmsIcons } from "~/components/Icons";
 import type { CmsIconKey } from "~/components/Icons";
 import FeaturedCarousel from "~/components/FeaturedCarousel";
@@ -25,22 +25,24 @@ export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
-    const [homePage, utility] = await Promise.allSettled([
+    const [homePage, utility, featuredDiscounts] = await Promise.allSettled([
       getHomePage(),
       getUtility(),
+      getFeaturedDiscounts(),
     ]);
     return json({
       homePage: homePage.status === "fulfilled" ? homePage.value : null,
+      featuredDiscounts: featuredDiscounts.status === "fulfilled" ? featuredDiscounts.value : [],
       carouselDelay: utility.status === "fulfilled" ? (utility.value.carouselDelay ?? "6") : "6",
       canonicalUrl: new URL(request.url).toString(),
     });
   } catch {
-    return json({ homePage: null, carouselDelay: "6" as const, canonicalUrl: "" });
+    return json({ homePage: null, featuredDiscounts: [], carouselDelay: "6" as const, canonicalUrl: "" });
   }
 }
 
 export default function Index() {
-  const { homePage, carouselDelay } = useLoaderData<typeof loader>();
+  const { homePage, featuredDiscounts, carouselDelay } = useLoaderData<typeof loader>();
   const courseGroup = homePage?.featuredCoursesSection?.courseGroup;
   const populatedGroup = courseGroup && typeof courseGroup === "object" ? courseGroup as CourseGroup : null;
 
@@ -57,7 +59,7 @@ export default function Index() {
         <FeaturedCarousel slides={homePage.featured} delay={carouselDelay} />
       )}
       {populatedGroup && populatedGroup.courses && populatedGroup.courses.length > 0 && (
-        <CoursesSection courseGroup={populatedGroup} />
+        <CoursesSection courseGroup={populatedGroup} featuredDiscounts={featuredDiscounts} />
       )}
       {homePage?.highlightCallouts?.items && homePage.highlightCallouts.items.length > 0 && (
         <HighlightCallouts
@@ -78,7 +80,7 @@ export default function Index() {
   );
 }
 
-function CoursesSection({ courseGroup }: { courseGroup: CourseGroup }) {
+function CoursesSection({ courseGroup, featuredDiscounts }: { courseGroup: CourseGroup; featuredDiscounts: FeaturedDiscount[] }) {
   const activeCourses = (courseGroup.courses ?? []).filter((c) => c.course?.isActive);
   if (activeCourses.length === 0) return null;
 
@@ -90,7 +92,7 @@ function CoursesSection({ courseGroup }: { courseGroup: CourseGroup }) {
       <div className="container">
         <div className="courses-section__grid">
           {activeCourses.map(({ id, course }) => (
-            <CourseCard key={id} course={course} />
+            <CourseCard key={id} course={course} discount={courseDisplayDiscount(featuredDiscounts, course)} />
           ))}
         </div>
       </div>

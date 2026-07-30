@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
-import { validateDiscountCode, redeemDiscountCode } from '../lib/discount'
+import { validateDiscountCode, redeemDiscountCode, todayET } from '../lib/discount'
 
 // ── Access control (same pattern as Attendees / Bookings / PendingBookings) ───
 
@@ -104,6 +104,59 @@ async function redeemHandler(req: PayloadRequest): Promise<Response> {
   }
 }
 
+// ── Featured (publicly advertised) codes endpoint ─────────────────────────────
+// GET /api/discount-codes/featured — deliberately PUBLIC (no auth): returns
+// only codes explicitly marked "Show on Website", exposing just the fields the
+// site needs to advertise them. Window checks (active/expiry/cap) mirror
+// validateDiscountCode so the site can never display a discount that would be
+// refused at checkout.
+
+async function featuredHandler(req: PayloadRequest): Promise<Response> {
+  try {
+    const result = await req.payload.find({
+      collection: 'discount-codes',
+      where: {
+        and: [{ showOnSite: { equals: true } }, { active: { equals: true } }],
+      },
+      limit: 50,
+      depth: 0,
+      req,
+    })
+    const today = todayET()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const codes = (result.docs as any[])
+      .filter((d) => {
+        if (d.expiresAt && String(d.expiresAt).slice(0, 10) < today) return false
+        if (
+          typeof d.maxRedemptions === 'number' &&
+          d.maxRedemptions > 0 &&
+          (typeof d.timesRedeemed === 'number' ? d.timesRedeemed : 0) >= d.maxRedemptions
+        ) {
+          return false
+        }
+        return true
+      })
+      .map((d) => ({
+        code: d.code,
+        discountType: d.discountType,
+        percentOff: d.discountType === 'fixed' ? null : (d.percentOff ?? null),
+        amountOffCents: d.discountType === 'fixed' ? (d.amountOffCents ?? null) : null,
+        appliesTo: d.appliesTo,
+        courseIds:
+          d.appliesTo === 'specific'
+            ? (Array.isArray(d.courses) ? d.courses : [])
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map((c: any) => (typeof c === 'object' && c !== null ? Number(c.id) : Number(c)))
+                .filter((n: number) => !isNaN(n))
+            : [],
+      }))
+    return Response.json({ codes })
+  } catch (err) {
+    console.error('[discount-codes] featured error:', err)
+    return Response.json({ codes: [] }, { status: 500 })
+  }
+}
+
 // ── Collection ────────────────────────────────────────────────────────────────
 
 export const DiscountCodes: CollectionConfig = {
@@ -132,6 +185,7 @@ export const DiscountCodes: CollectionConfig = {
   endpoints: [
     { path: '/validate', method: 'post', handler: validateHandler },
     { path: '/redeem', method: 'post', handler: redeemHandler },
+    { path: '/featured', method: 'get', handler: featuredHandler },
   ],
   hooks: {
     beforeValidate: [
@@ -175,6 +229,16 @@ export const DiscountCodes: CollectionConfig = {
       defaultValue: true,
       admin: {
         description: 'Uncheck to turn the code off immediately without deleting it.',
+      },
+    },
+    {
+      name: 'showOnSite',
+      type: 'checkbox',
+      label: 'Show on Website',
+      defaultValue: false,
+      admin: {
+        description:
+          'Advertise this discount publicly. Eligible courses display their price crossed out with the discounted price and this code next to it, and the booking page applies the code automatically. Leave OFF (the default) for private codes — they still work at checkout but never appear on the site. Best used with "Specific courses only": with "All courses" every course price on the site will show the discount.',
       },
     },
     {

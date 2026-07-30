@@ -451,6 +451,73 @@ export type DiscountCheck =
  * Validate a discount code against the CMS (the single source of truth for
  * discount rules). Fails closed: any error → code treated as invalid.
  */
+/**
+ * Publicly advertised discount codes ("Show on Website" in the CMS).
+ * Used to display crossed-out course prices and to auto-apply the code on
+ * the booking page. Fails quiet (empty list) — advertising is optional,
+ * checkout always re-validates authoritatively.
+ */
+export interface FeaturedDiscount {
+  code: string;
+  discountType: "percent" | "fixed";
+  percentOff: number | null;
+  amountOffCents: number | null;
+  appliesTo: "all" | "specific";
+  courseIds: number[];
+}
+
+let featuredDiscountsCache: { at: number; codes: FeaturedDiscount[] } | null = null;
+const FEATURED_CACHE_MS = 5 * 60 * 1000;
+
+export async function getFeaturedDiscounts(): Promise<FeaturedDiscount[]> {
+  if (featuredDiscountsCache && Date.now() - featuredDiscountsCache.at < FEATURED_CACHE_MS) {
+    return featuredDiscountsCache.codes;
+  }
+  try {
+    const res = await fetchPayload<{ codes: FeaturedDiscount[] }>("/discount-codes/featured");
+    featuredDiscountsCache = { at: Date.now(), codes: Array.isArray(res.codes) ? res.codes : [] };
+    return featuredDiscountsCache.codes;
+  } catch {
+    return featuredDiscountsCache?.codes ?? [];
+  }
+}
+
+export interface CourseDisplayDiscount {
+  code: string;
+  /** Price after discount, in dollars */
+  discountedPrice: number;
+}
+
+/**
+ * The advertised discount to display for a course, or null. Mirrors the
+ * server's discount math (fixed amounts clamp to the price; totals below
+ * Square's $1 minimum are never advertised because checkout would refuse
+ * them). First applicable featured code wins.
+ */
+export function courseDisplayDiscount(
+  discounts: FeaturedDiscount[],
+  course: { id: string | number; price?: number },
+): CourseDisplayDiscount | null {
+  const price = course.price;
+  if (price == null || price <= 0) return null;
+  const priceCents = Math.round(price * 100);
+  for (const d of discounts) {
+    if (d.appliesTo === "specific" && !d.courseIds.includes(Number(course.id))) continue;
+    let offCents = 0;
+    if (d.discountType === "fixed") {
+      offCents = Math.min(Math.round(d.amountOffCents ?? 0), priceCents);
+    } else {
+      const pct = d.percentOff ?? 0;
+      if (pct > 0 && pct <= 100) offCents = Math.round((priceCents * pct) / 100);
+    }
+    if (offCents <= 0) continue;
+    const discountedCents = priceCents - offCents;
+    if (discountedCents < 100) continue;
+    return { code: d.code, discountedPrice: discountedCents / 100 };
+  }
+  return null;
+}
+
 export async function validateDiscountCode(
   code: string,
   courseId: number,

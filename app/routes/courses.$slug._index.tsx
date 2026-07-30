@@ -1,9 +1,10 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useEffect } from "react";
-import { getCourseBySlug, resolveMediaUrl } from "~/lib/payload";
+import { getCourseBySlug, getFeaturedDiscounts, courseDisplayDiscount, resolveMediaUrl } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
 import RichText from "~/components/RichText";
+import CoursePrice from "~/components/CoursePrice";
 import { BulletIcon } from "~/components/Icons";
 import { buildMeta, courseDescription, getRootSeoDefaults, forceHttps } from "~/lib/meta";
 import { trackCourseView, trackScheduleNowClick } from "~/lib/analytics";
@@ -57,14 +58,17 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     throw new Response("Course not found", { status: 404 });
   }
 
+  const course = result.docs[0] as Course;
+  const featuredDiscounts = await getFeaturedDiscounts();
   return json({
-    course: result.docs[0] as Course,
+    course,
+    displayDiscount: courseDisplayDiscount(featuredDiscounts, course),
     canonicalUrl: new URL(request.url).toString(),
   });
 }
 
 export default function CourseDetailRoute() {
-  const { course } = useLoaderData<typeof loader>();
+  const { course, displayDiscount } = useLoaderData<typeof loader>();
   const imageUrl = resolveMediaUrl(course.thumbnail?.url);
 
   useEffect(() => {
@@ -126,7 +130,7 @@ export default function CourseDetailRoute() {
           )}
 
           {course.price != null && (
-            <p className="course-detail__price">${course.price.toLocaleString()}</p>
+            <CoursePrice price={course.price} discount={displayDiscount} className="course-detail__price" />
           )}
 
           <div className="course-detail__actions">

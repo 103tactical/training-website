@@ -1775,6 +1775,25 @@ body.layout-overlay .navbar-desktop__logo-link .nav-logo--wide {
   }
 }
 
+/* ── Advertised discount price (strikethrough original + code) ── */
+.course-price__original {
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-weight: 400;
+  font-size: 0.78em;
+  margin-right: 0.15em;
+}
+
+.course-price__code {
+  display: block;
+  font-size: 0.5em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-top: 0.2em;
+}
+
 /* ── Rich-text description ── */
 .course-detail__description-box {
   background-color: transparent;

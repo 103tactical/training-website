@@ -46,7 +46,7 @@ export function normalizeCode(raw: string): string {
 }
 
 /** Today's calendar day in Eastern Time, as YYYY-MM-DD */
-function todayET(): string {
+export function todayET(): string {
   return new Intl.DateTimeFormat('en-CA', {
     year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'America/New_York',
   }).format(new Date())

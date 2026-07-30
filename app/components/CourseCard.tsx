@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { Link } from "@remix-run/react";
-import type { Course } from "~/lib/payload";
+import type { Course, CourseDisplayDiscount } from "~/lib/payload";
 import { resolveMediaUrl } from "~/lib/payload";
+import CoursePrice from "~/components/CoursePrice";
 import { BulletIcon, FlipIcon } from "~/components/Icons";
 import { trackScheduleNowClick } from "~/lib/analytics";
 
 interface CourseCardProps {
   course: Course;
+  /** Publicly advertised discount for this course (strikethrough display) */
+  discount?: CourseDisplayDiscount | null;
 }
 
-export default function CourseCard({ course }: CourseCardProps) {
+export default function CourseCard({ course, discount }: CourseCardProps) {
   const [flipped, setFlipped] = useState(false);
   const imageUrl = resolveMediaUrl(course.thumbnail?.url);
   const hasSummary = course.summary && course.summary.length > 0;
@@ -85,7 +88,7 @@ export default function CourseCard({ course }: CourseCardProps) {
         )}
 
         {course.price != null && (
-          <p className="course-card__price">${course.price.toLocaleString()}</p>
+          <CoursePrice price={course.price} discount={discount} className="course-card__price" />
         )}
 
         <div className="course-card__card-actions">

@@ -1,7 +1,7 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link, useNavigate } from "@remix-run/react";
 import { useEffect } from "react";
-import { getCourseBySlug, getCourseSchedules, resolveMediaUrl, countAdminLinkHolds } from "~/lib/payload";
+import { getCourseBySlug, getCourseSchedules, getFeaturedDiscounts, courseDisplayDiscount, resolveMediaUrl, countAdminLinkHolds } from "~/lib/payload";
 import { isScheduleBookable } from "~/lib/schedule.server";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
 import MiniCalendar from "~/components/MiniCalendar";
@@ -81,13 +81,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     })),
   );
 
-  return json({ course, schedules, canonicalUrl: new URL(request.url).toString() });
+  const displayDiscount = courseDisplayDiscount(await getFeaturedDiscounts(), course);
+  return json({ course, schedules, displayDiscount, canonicalUrl: new URL(request.url).toString() });
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CourseSchedulePage() {
-  const { course, schedules } = useLoaderData<typeof loader>();
+  const { course, schedules, displayDiscount } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const imageUrl = resolveMediaUrl(course.thumbnail?.url);
   const activeSchedules = schedules;
@@ -125,7 +126,15 @@ export default function CourseSchedulePage() {
                   )}
                   {course.price != null && (
                     <span className="schedule-page__meta-price">
-                      ${course.price.toLocaleString()}
+                      {displayDiscount ? (
+                        <>
+                          <s className="course-price__original">${course.price.toLocaleString()}</s>{" "}
+                          ${displayDiscount.discountedPrice.toLocaleString()}
+                          <span className="course-price__code">with code {displayDiscount.code}</span>
+                        </>
+                      ) : (
+                        <>${course.price.toLocaleString()}</>
+                      )}
                     </span>
                   )}
                 </div>

@@ -20,6 +20,8 @@ import {
   updatePendingBooking,
   getECommerceSettings,
   validateDiscountCode,
+  getFeaturedDiscounts,
+  courseDisplayDiscount,
   countAdminLinkHolds,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
@@ -125,6 +127,32 @@ export async function loader({ params }: LoaderFunctionArgs) {
     : 0;
   const totalPrice = basePrice + surchargeAmount;
 
+  // Auto-apply a publicly advertised ("Show on Website") code for this course.
+  // Validated authoritatively so the advertised price is exactly what gets
+  // charged; failures are silent — advertising never blocks the booking page.
+  let autoDiscount: { code: string; label: string; discountAmount: number; surchargeAmount: number; totalPrice: number } | null = null;
+  try {
+    const advertised = courseDisplayDiscount(await getFeaturedDiscounts(), course);
+    if (advertised) {
+      const check = await validateDiscountCode(advertised.code, Number(course?.id), Math.round(basePrice * 100));
+      if (check.valid) {
+        const fixedFeeCents = ecommerceSettings.payments?.creditCardFixedFeeCents ?? 0;
+        const autoSurchargeCents = surchargePercent > 0
+          ? Math.round((check.discountedPriceCents + fixedFeeCents) / (1 - surchargePercent / 100)) - check.discountedPriceCents
+          : 0;
+        autoDiscount = {
+          code: check.code,
+          label: check.label,
+          discountAmount: check.discountCents / 100,
+          surchargeAmount: autoSurchargeCents / 100,
+          totalPrice: (check.discountedPriceCents + autoSurchargeCents) / 100,
+        };
+      }
+    }
+  } catch {
+    // ignore — the customer can still enter the code manually
+  }
+
   return json({
     scheduleId,
     courseName: course?.title ?? "Course",
@@ -143,6 +171,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     remaining,
     full: remaining <= 0,
     squareConfigured: SQUARE_CONFIGURED,
+    autoDiscount,
   });
 }
 
@@ -413,7 +442,7 @@ export default function BookSessionPage() {
   const {
     courseName, courseSlug, price, surchargePercent, surchargeAmount, totalPrice,
     durationHours, durationDays, sessions, instructorName, displayLabel,
-    remaining, full, squareConfigured,
+    remaining, full, squareConfigured, autoDiscount,
   } = data;
 
   const errors = actionData?.errors ?? {};
@@ -421,8 +450,8 @@ export default function BookSessionPage() {
 
   // ── Discount code (fetcher preview; server re-validates on final submit) ──
   const codeFetcher = useFetcher<ApplyCodeData>();
-  const [codeInput, setCodeInput] = useState("");
-  const [applied, setApplied] = useState<NonNullable<ApplyCodeData["discount"]> | null>(null);
+  const [codeInput, setCodeInput] = useState(autoDiscount?.code ?? "");
+  const [applied, setApplied] = useState<NonNullable<ApplyCodeData["discount"]> | null>(autoDiscount ?? null);
   const applying = codeFetcher.state !== "idle";
   const discountError = !applied && codeFetcher.state === "idle" ? codeFetcher.data?.discountError : undefined;
 

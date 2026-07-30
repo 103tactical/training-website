@@ -1,6 +1,6 @@
 import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
-import { getCoursesPage, getAllCourses, resolveMediaUrl } from "~/lib/payload";
+import { getCoursesPage, getAllCourses, getFeaturedDiscounts, courseDisplayDiscount, resolveMediaUrl } from "~/lib/payload";
 import type { CoursesPage, Course, CourseGroup } from "~/lib/payload";
 import CourseCard from "~/components/CourseCard";
 import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
@@ -18,19 +18,21 @@ export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const [coursesPage, allCourses] = await Promise.allSettled([
+  const [coursesPage, allCourses, featuredDiscounts] = await Promise.allSettled([
     getCoursesPage(),
     getAllCourses(),
+    getFeaturedDiscounts(),
   ]);
   return json({
     coursesPage: coursesPage.status === "fulfilled" ? coursesPage.value : null,
     allCourses: allCourses.status === "fulfilled" ? allCourses.value.docs : [],
+    featuredDiscounts: featuredDiscounts.status === "fulfilled" ? featuredDiscounts.value : [],
     canonicalUrl: new URL(request.url).toString(),
   });
 }
 
 export default function CoursesRoute() {
-  const { coursesPage, allCourses } = useLoaderData<typeof loader>();
+  const { coursesPage, allCourses, featuredDiscounts } = useLoaderData<typeof loader>();
   const heroImageUrl = resolveMediaUrl(coursesPage?.heroImage?.url);
 
   // Featured course — resolve its button link based on linkType
@@ -161,7 +163,7 @@ export default function CoursesRoute() {
             <div className="container">
               <div className="courses-section__grid">
                 {activeCourses.map(({ id, course }) => (
-                  <CourseCard key={id} course={course} />
+                  <CourseCard key={id} course={course} discount={courseDisplayDiscount(featuredDiscounts, course)} />
                 ))}
               </div>
             </div>
@@ -178,7 +180,7 @@ export default function CoursesRoute() {
           <div className="container">
             <div className="courses-section__grid">
               {remainingCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard key={course.id} course={course} discount={courseDisplayDiscount(featuredDiscounts, course)} />
               ))}
             </div>
           </div>
