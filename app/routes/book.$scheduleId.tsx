@@ -24,6 +24,7 @@ import {
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
 import { isScheduleBookable } from "~/lib/schedule.server";
+import { normalizeUSPhone, PHONE_ERROR } from "~/lib/phone";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -204,13 +205,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     errors.email = "Please enter a valid email address.";
 
-  // Sanitize and convert phone to E.164 for Square pre-population
-  const phoneDigits = phone.replace(/\D/g, "");
-  const sanitizedPhone = phone.replace(/[^0-9\s().+\-x]/gi, "").slice(0, 30);
-  const e164Phone =
-    phoneDigits.length === 10 ? `+1${phoneDigits}` :
-    phoneDigits.length === 11 && phoneDigits.startsWith("1") ? `+${phoneDigits}` :
-    undefined;
+  // Phone is optional, but if provided it must be a valid US number
+  // (10 digits, with or without the +1 country code). Stored as bare digits;
+  // converted to E.164 for Square pre-population.
+  const sanitizedPhone = phone ? normalizeUSPhone(phone) ?? "" : "";
+  if (phone && !sanitizedPhone) errors.phone = PHONE_ERROR;
+  const e164Phone = sanitizedPhone ? `+1${sanitizedPhone}` : undefined;
 
   if (Object.keys(errors).length > 0) {
     return json<BookActionData>({ errors, formError: null }, { status: 422 });
@@ -634,11 +634,18 @@ export default function BookSessionPage() {
                   type="tel"
                   maxLength={30}
                   autoComplete="tel"
-                  className="booking-form__input"
+                  className={inputClass("phone")}
+                  aria-describedby={errors.phone ? "phone-error" : undefined}
                 />
-                <span className="booking-form__field-hint">
-                  Used only for urgent session updates.
-                </span>
+                {errors.phone ? (
+                  <span id="phone-error" className="booking-form__field-error">
+                    {errors.phone}
+                  </span>
+                ) : (
+                  <span className="booking-form__field-hint">
+                    Used only for urgent session updates.
+                  </span>
+                )}
               </div>
 
               {/* ── Discount code ── */}

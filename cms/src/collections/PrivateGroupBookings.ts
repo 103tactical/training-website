@@ -3,6 +3,7 @@ import type { CollectionConfig, PayloadRequest } from 'payload'
 import { Resend } from 'resend'
 import { SquareClient, SquareEnvironment } from 'square'
 import { sendEmail, questionsLine, type EmailAttachment } from '../lib/email'
+import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
 
 function getResendClient(): Resend {
   const key = process.env.RESEND_API_KEY
@@ -933,7 +934,13 @@ export const PrivateGroupBookings: CollectionConfig = {
               type: 'row',
               fields: [
                 { name: 'email', type: 'email', required: true, label: 'Email' },
-                { name: 'phone', type: 'text',  label: 'Phone (optional)' },
+                {
+                  name: 'phone',
+                  type: 'text',
+                  label: 'Phone (optional)',
+                  validate: optionalPhoneValidate,
+                  hooks: { beforeValidate: [phoneBeforeValidate] },
+                },
               ],
             },
             {

@@ -14,6 +14,7 @@ import { default as default_450a3164491ee8fe5d1c3c57d12dd376 } from '../../../co
 import { default as default_175f6af1742db38737ebb79587176c49 } from '../../../components/RosterActionsBar'
 import { default as default_7422917546197b1d1046645adfa2aef0 } from '../../../components/EmailCell'
 import { default as default_82d74ca7730c3acbf7ae747e34fb94e8 } from '../../../components/TransferWarning'
+import { default as default_80486acefebeb40b51013ffcf7a5f8a2 } from '../../../components/SquarePaymentIdCell'
 import { default as default_58932617f9dce308010f306634da9d86 } from '../../../components/PaymentMethodCell'
 import { default as default_258b4e4bae21a1095aba89615b4b3700 } from '../../../components/DollarsField'
 import { default as default_7baec65108cb02d8e0cf632f679d131d } from '../../../components/StatusBadge'
@@ -54,6 +55,7 @@ export const importMap = {
   "./components/RosterActionsBar#default": default_175f6af1742db38737ebb79587176c49,
   "./components/EmailCell#default": default_7422917546197b1d1046645adfa2aef0,
   "./components/TransferWarning#default": default_82d74ca7730c3acbf7ae747e34fb94e8,
+  "./components/SquarePaymentIdCell#default": default_80486acefebeb40b51013ffcf7a5f8a2,
   "./components/PaymentMethodCell#default": default_58932617f9dce308010f306634da9d86,
   "./components/DollarsField#default": default_258b4e4bae21a1095aba89615b4b3700,
   "./components/StatusBadge#default": default_7baec65108cb02d8e0cf632f679d131d,

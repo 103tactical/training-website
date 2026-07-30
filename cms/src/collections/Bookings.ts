@@ -619,7 +619,10 @@ export const Bookings: CollectionConfig = {
       label: 'Square Payment ID',
       admin: {
         readOnly: true,
-        description: 'Full payment ID from Square (e.g. RWF1bO7TF…). The first 4 characters match the receipt number shown in Square Dashboard. Required to issue refunds.',
+        description: 'Full payment ID from Square (e.g. RWF1bO7TF…). The first 4 characters match the receipt number shown in Square Dashboard. Required to issue refunds. Empty for manual bookings (cash, check, etc.) — that is normal.',
+        components: {
+          Cell: './components/SquarePaymentIdCell',
+        },
       },
     },
     {

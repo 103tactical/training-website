@@ -264,7 +264,7 @@ async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
   const firstName = body.firstName?.trim() ?? ''
   const lastName = body.lastName?.trim() ?? ''
   const email = body.email?.trim() ?? ''
-  const phone = body.phone?.trim() || undefined
+  const rawPhone = body.phone?.trim() || undefined
   const discountCode = body.discountCode?.trim() || undefined
 
   if (!firstName || !lastName) {
@@ -272,6 +272,18 @@ async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: 'A valid email address is required.' }, { status: 400 })
+  }
+  let phone: string | undefined
+  if (rawPhone) {
+    const { normalizeUSPhone } = await import('../lib/phone')
+    const normalized = normalizeUSPhone(rawPhone)
+    if (!normalized) {
+      return Response.json(
+        { error: 'Enter a valid 10-digit phone number (with or without the +1 country code), or leave it empty.' },
+        { status: 400 },
+      )
+    }
+    phone = normalized
   }
 
   try {

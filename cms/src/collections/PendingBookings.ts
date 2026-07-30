@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
 import { sendBulkEmail } from '../lib/email'
+import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
 
 // ── Access control (same pattern as Attendees / Bookings) ─────────────────────
 
@@ -301,6 +302,8 @@ export const PendingBookings: CollectionConfig = {
       name: 'phone',
       type: 'text',
       label: 'Phone Number',
+      validate: optionalPhoneValidate,
+      hooks: { beforeValidate: [phoneBeforeValidate] },
     },
 
     // ── Discount (set when a code was applied at checkout) ──────────────────

@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'crypto'
 import { APIError } from 'payload'
 import type { CollectionConfig, CollectionBeforeDeleteHook } from 'payload'
+import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
 
 /**
  * Constant-time comparison of two strings to prevent timing attacks.
@@ -122,6 +123,11 @@ export const Attendees: CollectionConfig = {
           name: 'phone',
           type: 'text',
           label: 'Phone Number',
+          validate: optionalPhoneValidate,
+          hooks: { beforeValidate: [phoneBeforeValidate] },
+          admin: {
+            description: '10 digits, with or without the +1 country code. Stored as digits only.',
+          },
         },
       ],
     },

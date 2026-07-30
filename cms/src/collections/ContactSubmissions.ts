@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { optionalPhoneValidate, phoneBeforeValidate } from "../lib/phone";
 
 export const ContactSubmissions: CollectionConfig = {
   slug: "contact-submissions",
@@ -55,6 +56,8 @@ export const ContactSubmissions: CollectionConfig = {
       name: "phone",
       type: "text",
       label: "Phone",
+      validate: optionalPhoneValidate,
+      hooks: { beforeValidate: [phoneBeforeValidate] },
     },
     {
       name: "topic",

@@ -7,6 +7,7 @@ import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 import { trackContactFormSubmit } from "~/lib/analytics";
 import { sendAdminContactFormEmail } from "~/lib/email.server";
+import { normalizeUSPhone, PHONE_ERROR } from "~/lib/phone";
 
 export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
   const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
@@ -60,12 +61,14 @@ export async function action({ request }: ActionFunctionArgs) {
   const topic   = (formData.get("topic")   as string | null)?.trim() ?? "";
   const message = (formData.get("message") as string | null)?.trim() ?? "";
 
+  const normalizedPhone = phone ? normalizeUSPhone(phone) : null;
+
   const errors: ContactActionData["errors"] = {};
   if (!name)                                          errors.name  = "Name is required.";
   if (!email)                                         errors.email = "Email is required.";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Please enter a valid email address.";
   if (!phone)                                         errors.phone = "Phone number is required.";
-  else if (phone.replace(/\D/g, "").length !== 10)    errors.phone = "Please enter a valid 10-digit phone number.";
+  else if (!normalizedPhone)                          errors.phone = PHONE_ERROR;
   if (!topic)                                         errors.topic = "Please select a topic.";
 
   if (Object.keys(errors).length > 0) {
@@ -76,7 +79,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const res = await fetch(`${PAYLOAD_API_URL}/api/contact-submissions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, phone, topic, message }),
+      body: JSON.stringify({ name, email, phone: normalizedPhone, topic, message }),
     });
     if (!res.ok) throw new Error(`Payload responded with ${res.status}`);
 
