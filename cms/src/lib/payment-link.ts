@@ -230,22 +230,58 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   const checkoutUrl = response.paymentLink?.url
   if (!checkoutUrl) throw new Error('Square did not return a checkout URL.')
 
-  // Store the link on the pending record so it can be re-copied later
-  // (session page outstanding-links list). Non-fatal if it fails.
+  const totalCents = discountedPriceCents + surchargeCents
+
+  // Store link + send metadata on the pending record: the URL for re-copying,
+  // the send time shown in the awaiting-payment list, and the link's REAL
+  // total so resent emails quote the amount the link actually charges even
+  // if the course price changes later. Non-fatal.
   try {
     await p.update({
       collection: 'pending-bookings',
       id: pendingDoc.id,
-      data: { checkoutUrl },
+      data: { checkoutUrl, linkSentAt: new Date().toISOString(), linkTotalCents: totalCents },
       req,
     })
   } catch (err) {
-    console.error('[payment-link] could not store checkoutUrl:', err)
+    console.error('[payment-link] could not store link metadata:', err)
   }
 
-  const totalCents = discountedPriceCents + surchargeCents
+  const { emailSent, emailError } = await sendLinkEmail(p, {
+    to: email,
+    firstName,
+    courseTitle: course.title ?? 'your course',
+    sessionDateStr,
+    totalCents,
+    discountCents,
+    discountCode: appliedCode,
+    checkoutUrl,
+  })
 
-  // ── Branded email with the payment button ────────────────────────────────
+  return { checkoutUrl, totalCents, surchargeCents, discountCents, discountCode: appliedCode, emailSent, emailError }
+}
+
+// ── Shared branded payment-link email ─────────────────────────────────────────
+// Used by the initial send above AND by resends — one template, one place.
+
+interface LinkEmailArgs {
+  to: string
+  firstName: string
+  courseTitle: string
+  sessionDateStr: string
+  totalCents: number
+  discountCents?: number
+  discountCode?: string
+  checkoutUrl: string
+}
+
+export async function sendLinkEmail(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  p: any,
+  args: LinkEmailArgs,
+): Promise<{ emailSent: boolean; emailError?: string }> {
+  const { to, firstName, courseTitle, sessionDateStr, totalCents, discountCents = 0, discountCode, checkoutUrl } = args
+
   const brandName = process.env.FROM_NAME || '103 Tactical Training'
   const questions = await questionsLine(p)
   const escapedUrl = checkoutUrl.replace(/&/g, '&amp;')
@@ -263,8 +299,8 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
         </td></tr>
         <tr><td style="padding:32px 32px 20px;font-size:15px;line-height:1.6;color:#333333;">
           <p style="margin:0 0 12px;">Hi ${firstName},</p>
-          <p style="margin:0 0 12px;">You have been registered for <strong>${course.title}</strong>${sessionDateStr ? ` on <strong>${sessionDateStr}</strong>` : ''}.</p>${appliedCode ? `
-          <p style="margin:0 0 12px;">A discount of <strong>$${(discountCents / 100).toFixed(2)}</strong> (code ${appliedCode}) has been applied to your registration.</p>` : ''}
+          <p style="margin:0 0 12px;">You have been registered for <strong>${courseTitle}</strong>${sessionDateStr ? ` on <strong>${sessionDateStr}</strong>` : ''}.</p>${discountCode ? `
+          <p style="margin:0 0 12px;">A discount of <strong>$${(discountCents / 100).toFixed(2)}</strong> (code ${discountCode}) has been applied to your registration.</p>` : ''}
           <p style="margin:0;">To secure your seat, please complete your payment of <strong>${totalStr}</strong> using the button below:</p>
         </td></tr>
         <tr><td align="center" style="padding:8px 32px 28px;">
@@ -284,8 +320,8 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   const text = [
     `Hi ${firstName},`,
     ``,
-    `You have been registered for ${course.title}${sessionDateStr ? ` on ${sessionDateStr}` : ''}.`,
-    ...(appliedCode ? [``, `A discount of $${(discountCents / 100).toFixed(2)} (code ${appliedCode}) has been applied to your registration.`] : []),
+    `You have been registered for ${courseTitle}${sessionDateStr ? ` on ${sessionDateStr}` : ''}.`,
+    ...(discountCode ? [``, `A discount of $${(discountCents / 100).toFixed(2)} (code ${discountCode}) has been applied to your registration.`] : []),
     ``,
     `To secure your seat, please complete your payment of ${totalStr} here:`,
     checkoutUrl,
@@ -298,7 +334,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   let emailError: string | undefined
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    emailError = 'RESEND_API_KEY is not set — link created but email not sent.'
+    emailError = 'RESEND_API_KEY is not set — email not sent.'
   } else {
     try {
       const res = await fetch('https://api.resend.com/emails', {
@@ -306,13 +342,12 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: getFromAddress(),
-          to: email,
-          subject: `${course.title} — Complete Your Registration`,
+          to,
+          subject: `${courseTitle} — Complete Your Registration`,
           html,
           text,
         }),
       })
-      // Persist quota headers like lib/email.ts does
       const daily = res.headers.get('x-resend-daily-quota')
       const monthly = res.headers.get('x-resend-monthly-quota')
       if (daily !== null || monthly !== null) {
@@ -334,5 +369,82 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
     }
   }
 
-  return { checkoutUrl, totalCents, surchargeCents, discountCents, discountCode: appliedCode, emailSent, emailError }
+  return { emailSent, emailError }
+}
+
+// ── Resend an EXISTING payment link (never creates a new one) ─────────────────
+
+export async function resendPaymentLink(args: {
+  req: PayloadRequest
+  pendingId: number | string
+}): Promise<{ emailSent: boolean; emailError?: string; to: string }> {
+  const { req, pendingId } = args
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+
+  const pending = await p.findByID({ collection: 'pending-bookings', id: pendingId, depth: 0, req })
+  if (!pending) throw new Error('Pending booking not found.')
+  if (pending.status !== 'pending') {
+    throw new Error(`Cannot resend — this record is "${pending.status}", not awaiting payment.`)
+  }
+  if (pending.source !== 'admin-link') {
+    throw new Error('Only admin-sent payment links can be resent.')
+  }
+  if (!pending.checkoutUrl) {
+    throw new Error('No payment link is stored on this record (sent before link storage existed). Send a new link instead.')
+  }
+
+  const scheduleId =
+    typeof pending.courseSchedule === 'object' && pending.courseSchedule !== null
+      ? pending.courseSchedule.id
+      : pending.courseSchedule
+  const schedule = await p.findByID({ collection: 'course-schedules', id: scheduleId, depth: 1, req })
+  const course = typeof schedule?.course === 'object' && schedule.course !== null ? schedule.course : null
+  if (!course) throw new Error('Linked course not found.')
+
+  const sessionDateStr = ((schedule.sessions ?? []) as { date?: string }[])
+    .filter((s) => s.date)
+    .map((s) => {
+      try {
+        return new Date(s.date!).toLocaleDateString('en-US', {
+          weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+        })
+      } catch { return s.date! }
+    })
+    .join(', ')
+
+  // Prefer the total captured at link creation (the amount the link actually
+  // charges). Legacy records without it fall back to recomputing.
+  let totalCents: number
+  if (typeof pending.linkTotalCents === 'number' && pending.linkTotalCents > 0) {
+    totalCents = Math.round(pending.linkTotalCents)
+  } else {
+    const priceInCents = Math.round((course.price ?? 0) * 100)
+    const discount = typeof pending.discountCents === 'number' ? pending.discountCents : 0
+    const discounted = priceInCents - discount
+    const ecom = await p.findGlobal({ slug: 'e-commerce' })
+    const pct: number = ecom?.payments?.creditCardSurchargePercent ?? 0
+    const fixed: number = ecom?.payments?.creditCardFixedFeeCents ?? 0
+    const surcharge = pct > 0 ? Math.round((discounted + fixed) / (1 - pct / 100)) - discounted : 0
+    totalCents = discounted + surcharge
+  }
+
+  const result = await sendLinkEmail(p, {
+    to: pending.email,
+    firstName: pending.firstName ?? 'there',
+    courseTitle: course.title ?? 'your course',
+    sessionDateStr,
+    totalCents,
+    discountCents: typeof pending.discountCents === 'number' ? pending.discountCents : 0,
+    discountCode: pending.discountCode ?? undefined,
+    checkoutUrl: pending.checkoutUrl,
+  })
+
+  if (result.emailSent) {
+    await p
+      .update({ collection: 'pending-bookings', id: pending.id, data: { linkSentAt: new Date().toISOString() }, req })
+      .catch(() => {})
+  }
+
+  return { ...result, to: pending.email }
 }

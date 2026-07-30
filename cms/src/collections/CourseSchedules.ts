@@ -333,7 +333,8 @@ async function outstandingLinksHandler(req: PayloadRequest): Promise<Response> {
     id: d.id,
     name: [d.firstName, d.lastName].filter(Boolean).join(' ') || null,
     email: d.email,
-    sentAt: d.createdAt,
+    // Most recent send (initial or resend); legacy rows fall back to creation
+    sentAt: d.linkSentAt ?? d.createdAt,
     url: d.checkoutUrl ?? null,
   }))
   return Response.json({ pending })

@@ -208,6 +208,28 @@ async function retryHandler(req: PayloadRequest): Promise<Response> {
   }
 }
 
+// ── Resend payment link endpoint ──────────────────────────────────────────────
+// Re-emails the EXISTING Square link (never creates a new link, record, or
+// seat hold) and stamps linkSentAt so lists show the latest send.
+
+async function resendLinkHandler(req: PayloadRequest): Promise<Response> {
+  if (!req.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const id = req.routeParams?.id
+  if (!id) {
+    return Response.json({ error: 'Missing id' }, { status: 400 })
+  }
+  try {
+    const { resendPaymentLink } = await import('../lib/payment-link')
+    const result = await resendPaymentLink({ req, pendingId: id as string })
+    return Response.json(result)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return Response.json({ error: msg }, { status: 400 })
+  }
+}
+
 // ── Collection definition ─────────────────────────────────────────────────────
 
 export const PendingBookings: CollectionConfig = {
@@ -248,6 +270,11 @@ export const PendingBookings: CollectionConfig = {
       path: '/:id/retry',
       method: 'post',
       handler: retryHandler,
+    },
+    {
+      path: '/:id/resend-link',
+      method: 'post',
+      handler: resendLinkHandler,
     },
   ],
   fields: [
@@ -328,6 +355,33 @@ export const PendingBookings: CollectionConfig = {
         readOnly: true,
         description: 'The Square checkout link that was sent. Copy it to resend to the customer.',
         condition: (data) => Boolean(data?.checkoutUrl),
+      },
+    },
+    {
+      name: 'linkSentAt',
+      type: 'date',
+      label: 'Link Last Sent',
+      admin: {
+        readOnly: true,
+        description: 'When the payment-link email was last sent (initial send or resend).',
+        condition: (data) => Boolean(data?.linkSentAt),
+        date: {
+          pickerAppearance: 'dayAndTime',
+          displayFormat: 'MMM d, yyyy  h:mm aa',
+        },
+      },
+    },
+    {
+      name: 'linkTotalCents',
+      type: 'number',
+      label: 'Link Total',
+      admin: {
+        readOnly: true,
+        description: 'The total the Square link charges — captured when the link was created.',
+        condition: (data) => Boolean(data?.linkTotalCents),
+        components: {
+          Field: './components/DollarsField',
+        },
       },
     },
 

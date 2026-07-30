@@ -662,11 +662,16 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
           throw new Error('Square did not return a checkout URL.')
         }
 
-        // Store the link on the pending record so it can be re-copied later
+        // Store link + send metadata so the link can be re-copied/resent later
         try {
-          await p.update({ collection: 'pending-bookings', id: pgbPending.id, data: { checkoutUrl }, req })
+          await p.update({
+            collection: 'pending-bookings',
+            id: pgbPending.id,
+            data: { checkoutUrl, linkSentAt: new Date().toISOString(), linkTotalCents: priceInCents },
+            req,
+          })
         } catch (err) {
-          console.error('[PrivateGroupBookings] could not store checkoutUrl:', err)
+          console.error('[PrivateGroupBookings] could not store link metadata:', err)
         }
 
         // Send email with payment link button (custom HTML template)

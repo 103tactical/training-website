@@ -55,6 +55,7 @@ import * as migration_20260729_pending_bookings_discount from './20260729_pendin
 import * as migration_20260729_bookings_discount from './20260729_bookings_discount';
 import * as migration_20260730_pending_bookings_source from './20260730_pending_bookings_source';
 import * as migration_20260730_pending_bookings_checkout_url from './20260730_pending_bookings_checkout_url';
+import * as migration_20260730_pending_bookings_resend from './20260730_pending_bookings_resend';
 
 export const migrations = [
   {
@@ -341,5 +342,10 @@ export const migrations = [
     up: migration_20260730_pending_bookings_checkout_url.up,
     down: migration_20260730_pending_bookings_checkout_url.down,
     name: '20260730_pending_bookings_checkout_url'
+  },
+  {
+    up: migration_20260730_pending_bookings_resend.up,
+    down: migration_20260730_pending_bookings_resend.down,
+    name: '20260730_pending_bookings_resend'
   },
 ];

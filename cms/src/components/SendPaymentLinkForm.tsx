@@ -32,6 +32,9 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   const [outstanding, setOutstanding] = useState<PendingLink[]>([])
   const [copied, setCopied] = useState(false)
   const [copiedRowId, setCopiedRowId] = useState<number | null>(null)
+  const [resendingRowId, setResendingRowId] = useState<number | null>(null)
+  const [resentRowId, setResentRowId] = useState<number | null>(null)
+  const [resendError, setResendError] = useState('')
 
   const copyRowLink = async (row: PendingLink) => {
     if (!row.url) return
@@ -40,6 +43,30 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
       setCopiedRowId(row.id)
       setTimeout(() => setCopiedRowId((cur) => (cur === row.id ? null : cur)), 2000)
     } catch { /* clipboard unavailable */ }
+  }
+
+  const resendRowLink = async (row: PendingLink) => {
+    if (resendingRowId !== null) return
+    setResendingRowId(row.id)
+    setResendError('')
+    try {
+      const res = await fetch(`/api/pending-bookings/${row.id}/resend-link`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const json = await res.json() as { emailSent?: boolean; emailError?: string; error?: string }
+      if (res.ok && json.emailSent) {
+        setResentRowId(row.id)
+        setTimeout(() => setResentRowId((cur) => (cur === row.id ? null : cur)), 2500)
+        loadOutstanding() // refresh "sent" dates
+      } else {
+        setResendError(json.error ?? json.emailError ?? 'Could not resend the email.')
+      }
+    } catch {
+      setResendError('Network error — please try again.')
+    } finally {
+      setResendingRowId(null)
+    }
   }
 
   const loadOutstanding = React.useCallback(async () => {
@@ -140,7 +167,7 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
             </span>
-            Add via Payment Link
+            Add Attendee via Payment Link
           </button>
           {outstanding.length > 0 && (
             // Outer div owns the flex line-break (basis 100%, no max-width —
@@ -158,8 +185,14 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               maxWidth: '560px',
             }}>
               <strong style={{ color: 'var(--theme-text)' }}>
-                {outstanding.length} payment link{outstanding.length === 1 ? '' : 's'} awaiting payment
+                {outstanding.length} {outstanding.length === 1 ? 'person' : 'people'} awaiting payment
               </strong>
+              <span style={{ marginLeft: '6px', color: 'var(--theme-elevation-500)' }}>
+                — each is holding a seat
+              </span>
+              {resendError && (
+                <p style={{ margin: '4px 0 0', color: '#991b1b' }}>{resendError}</p>
+              )}
               <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
                 {outstanding.map((o) => (
                   <li key={o.id} style={{ marginBottom: '2px' }}>
@@ -184,6 +217,27 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
                           }}
                         >
                           {copiedRowId === o.id ? 'Copied ✓' : 'Copy Payment Link'}
+                        </button>
+                      )}
+                      {o.url && (
+                        <button
+                          type="button"
+                          onClick={() => resendRowLink(o)}
+                          disabled={resendingRowId !== null}
+                          style={{
+                            padding: '1px 8px',
+                            borderRadius: 'var(--style-radius-s, 4px)',
+                            border: '1px solid var(--theme-elevation-250)',
+                            background: 'transparent',
+                            color: resentRowId === o.id ? '#065f46' : 'var(--theme-text)',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: resendingRowId !== null ? 'wait' : 'pointer',
+                            whiteSpace: 'nowrap',
+                            opacity: resendingRowId !== null && resendingRowId !== o.id ? 0.5 : 1,
+                          }}
+                        >
+                          {resendingRowId === o.id ? 'Sending…' : resentRowId === o.id ? 'Sent ✓' : 'Resend Email'}
                         </button>
                       )}
                     </span>
