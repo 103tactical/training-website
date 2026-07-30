@@ -17,6 +17,7 @@ import { default as default_82d74ca7730c3acbf7ae747e34fb94e8 } from '../../../co
 import { default as default_58932617f9dce308010f306634da9d86 } from '../../../components/PaymentMethodCell'
 import { default as default_258b4e4bae21a1095aba89615b4b3700 } from '../../../components/DollarsField'
 import { default as default_7baec65108cb02d8e0cf632f679d131d } from '../../../components/StatusBadge'
+import { default as default_adde1bf222f3685bf97f64c72a7a6842 } from '../../../components/BookingStatusPanel'
 import { default as default_b719d8f218e5540f8556d426b5f44971 } from '../../../components/TransferRowLabel'
 import { default as default_7e3846181524ab75490cb0d9df5959c7 } from '../../../components/PrintRosterListAction'
 import { default as default_cc4c59d6ad86f4c68273019d6b0f1f79 } from '../../../components/RetryBookingButton'
@@ -56,6 +57,7 @@ export const importMap = {
   "./components/PaymentMethodCell#default": default_58932617f9dce308010f306634da9d86,
   "./components/DollarsField#default": default_258b4e4bae21a1095aba89615b4b3700,
   "./components/StatusBadge#default": default_7baec65108cb02d8e0cf632f679d131d,
+  "./components/BookingStatusPanel#default": default_adde1bf222f3685bf97f64c72a7a6842,
   "./components/TransferRowLabel#default": default_b719d8f218e5540f8556d426b5f44971,
   "./components/PrintRosterListAction#default": default_7e3846181524ab75490cb0d9df5959c7,
   "./components/RetryBookingButton#default": default_cc4c59d6ad86f4c68273019d6b0f1f79,

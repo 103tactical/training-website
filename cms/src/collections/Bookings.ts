@@ -707,10 +707,12 @@ export const Bookings: CollectionConfig = {
         { label: 'Cancelled',  value: 'cancelled' },
       ],
       admin: {
-        description:
-          'Confirmed and Waitlisted count against available seats. Cancelled frees the seat, automatically refunds the customer (if paid online), and promotes the next Waitlisted person. To move someone to a different session, change the Session field above.',
         components: {
           Cell: './components/StatusBadge',
+          // Guided panel: current status + explicit action buttons. Cancelling
+          // asks how to handle the refund in the moment (drives skipRefund),
+          // and every change shows a what-Save-will-do summary with Undo.
+          Field: './components/BookingStatusPanel',
         },
       },
     },
@@ -720,10 +722,8 @@ export const Bookings: CollectionConfig = {
       label: 'Cancel without issuing a refund',
       defaultValue: false,
       admin: {
-        description:
-          'Check this box BEFORE setting status to Cancelled if you do NOT want to issue a Square refund. ' +
-          'Leave unchecked (default) to automatically refund the customer when cancelling.',
-        condition: (data) => data.status !== 'cancelled',
+        // Not rendered — set by the Booking Status panel's cancel flow.
+        hidden: true,
       },
     },
     {
