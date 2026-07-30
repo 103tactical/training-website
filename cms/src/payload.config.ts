@@ -32,6 +32,20 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   serverURL: process.env.PAYLOAD_SERVER_URL || 'https://training-cms.onrender.com',
+  i18n: {
+    translations: {
+      en: {
+        general: {
+          // Empty list-view cells render this instead of "<No Field Label>",
+          // which read like an error (e.g. "<No Square Payment ID>" looked
+          // like a payment problem on cash bookings). A quiet dash is the
+          // standard for "nothing applies here" — applies to every collection
+          // automatically, including future ones.
+          noLabel: '—',
+        },
+      },
+    },
+  },
   bodyParser: {
     limits: {
       fileSize: 500 * 1024 * 1024, // 500MB (busboy multipart parser)
