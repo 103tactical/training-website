@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
-import { sendBulkEmail } from '../lib/email'
+import { sendBulkEmail, sendEmail, questionsLine, type EmailAttachment } from '../lib/email'
 import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
 
 // ── Access control (same pattern as Attendees / Bookings) ─────────────────────
@@ -188,7 +188,92 @@ async function retryHandler(req: PayloadRequest): Promise<Response> {
       req,
     })
 
-    return Response.json({ success: true })
+    // ── 5. Send the attendee the same emails the webhook would have ─────────
+    // Non-fatal: the booking and money trail are already correct above; a
+    // failed email must not make the retry look failed.
+    const emails: Record<string, string> = {}
+    try {
+      const course = await p.findByID({ collection: 'courses', id: courseId, depth: 1, req })
+      const firstName = (pending.firstName as string | undefined) ?? 'there'
+      const q = await questionsLine(p)
+
+      const sessionDates = ((schedule.sessions ?? []) as { date?: string }[])
+        .map((s) =>
+          s.date
+            ? new Date(s.date).toLocaleDateString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+                timeZone: 'America/New_York',
+              })
+            : null,
+        )
+        .filter(Boolean)
+        .join(' & ')
+
+      const amountCents = pending.amountPaidCents as number | undefined
+      const amountLine =
+        typeof amountCents === 'number' ? `\nAmount Paid: $${(amountCents / 100).toFixed(2)}` : ''
+
+      try {
+        await sendEmail({
+          to: email,
+          subject: `Booking Confirmed — ${course.title}`,
+          message:
+            `Hi ${firstName},\n\n` +
+            `Your booking is confirmed!\n\n` +
+            `Course: ${course.title}` +
+            (sessionDates ? `\nDate(s): ${sessionDates}` : '') +
+            amountLine +
+            `\nOrder ID: ${squareOrderId}\n\n` +
+            `We look forward to seeing you. ${q}`,
+        })
+        emails.confirmation = 'sent'
+      } catch (e) {
+        emails.confirmation = `failed: ${e instanceof Error ? e.message : String(e)}`
+      }
+
+      // Enrollment email — same gate as the webhook: message OR document.
+      if (course?.enrollmentMessage || course?.enrollmentFile) {
+        try {
+          const attachments: EmailAttachment[] = []
+          const fileDoc = course.enrollmentFile as
+            | { url?: string; filename?: string }
+            | undefined
+          if (fileDoc?.url) {
+            const base = process.env.NEXT_PUBLIC_SERVER_URL ?? ''
+            const fileUrl = fileDoc.url.startsWith('http') ? fileDoc.url : `${base}${fileDoc.url}`
+            const fileRes = await fetch(fileUrl)
+            if (!fileRes.ok) throw new Error(`Could not fetch enrollment file (${fileRes.status})`)
+            attachments.push({
+              filename:
+                fileDoc.filename ?? `${String(course.title).replace(/[^a-z0-9]/gi, '-')}-Enrollment-Form`,
+              content: Buffer.from(await fileRes.arrayBuffer()),
+            })
+          }
+          await sendEmail({
+            to: email,
+            subject: `Your Enrollment Forms — ${course.title}`,
+            message:
+              `Hi ${firstName},\n\n` +
+              `Thank you for enrolling in ${course.title}. Please review the following information before your course date.\n\n` +
+              `${(course.enrollmentMessage as string | undefined) ?? ''}` +
+              (attachments.length > 0
+                ? `\n\nAn enrollment document is attached. Please review it before your first day of class. If it includes a form, please complete it and bring it with you.`
+                : '') +
+              `\n\n${q}`,
+            attachments,
+          })
+          emails.enrollment = 'sent'
+        } catch (e) {
+          emails.enrollment = `failed: ${e instanceof Error ? e.message : String(e)}`
+        }
+      } else {
+        emails.enrollment = 'skipped — course has no enrollment message or document'
+      }
+    } catch (e) {
+      emails.error = e instanceof Error ? e.message : String(e)
+    }
+
+    return Response.json({ success: true, emails })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
 

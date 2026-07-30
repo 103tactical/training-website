@@ -27,7 +27,14 @@ export default function RetryBookingButton() {
       })
       const json = await res.json()
       if (res.ok) {
-        setResult({ ok: true, message: 'Booking created successfully. Refresh to see updated status.' })
+        const emails = json.emails as Record<string, string> | undefined
+        const emailNote = emails
+          ? ` Confirmation email: ${emails.confirmation ?? 'not attempted'}. Enrollment email: ${emails.enrollment ?? 'not attempted'}.`
+          : ''
+        setResult({
+          ok: true,
+          message: `Booking created successfully.${emailNote} Refresh to see updated status.`,
+        })
       } else {
         setResult({ ok: false, message: json.error ?? 'Retry failed. Check server logs.' })
       }
