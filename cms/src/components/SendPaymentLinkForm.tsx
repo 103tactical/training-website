@@ -182,7 +182,10 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               borderRadius: 'var(--style-radius-s, 4px)',
               fontSize: '12px',
               color: 'var(--theme-elevation-600)',
-              maxWidth: '560px',
+              // Grow to the widest row (name + both buttons inline), never
+              // beyond the available width
+              width: 'fit-content',
+              maxWidth: '100%',
             }}>
               <strong style={{ color: 'var(--theme-text)' }}>
                 Awaiting payment from {outstanding.length} {outstanding.length === 1 ? 'person' : 'people'}
