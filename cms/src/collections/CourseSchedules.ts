@@ -377,10 +377,13 @@ export const CourseSchedules: CollectionConfig = {
     },
   ],
   fields: [
-    // Auto-managed — hidden from UI, used as the document title in dropdowns
+    // Auto-managed — hidden from UI, used as the document title in dropdowns.
+    // Labeled "Session" so it never surfaces as "Admin Title" in column
+    // pickers or list views (value is "Course: Label").
     {
       name: "adminTitle",
       type: "text",
+      label: "Session",
       admin: { hidden: true },
     },
     // ── 1. Course Info (collapsible) ─────────────────────────────────────────

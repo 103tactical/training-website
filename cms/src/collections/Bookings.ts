@@ -546,10 +546,13 @@ export const Bookings: CollectionConfig = {
     beforeDelete: [beforeDeleteHook],
   },
   fields: [
-    // Auto-managed — used as the document title in the CMS
+    // Auto-managed — used as the document title in the CMS. Labeled
+    // "Attendee" because it appears as the name column in the Bookings
+    // list and session rosters (the value is the attendee's name).
     {
       name: 'adminTitle',
       type: 'text',
+      label: 'Attendee',
       admin: { hidden: true },
     },
     {
