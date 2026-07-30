@@ -77,7 +77,7 @@ export const ECommerce: GlobalConfig = {
           label: "Surcharge Notice — Text",
           admin: {
             description:
-              'The notice text under the heading. Write {percent} wherever the current surcharge percentage should appear — it is filled in automatically, so this text always matches the fee set above. Leave empty to use the default: "A {percent}% processing fee applies to card payments. This fee does not exceed our cost of acceptance."',
+              'The notice text under the heading. Leave empty to use the default: "The credit card processing fee does not exceed our cost of acceptance." Optional: write {percent} anywhere in your text to insert the current surcharge percentage automatically.',
           },
         },
       ],

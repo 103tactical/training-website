@@ -133,7 +133,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     ecommerceSettings.payments?.surchargeNoticeHeading?.trim() || "Card processing fee";
   const surchargeNoticeBody = (
     ecommerceSettings.payments?.surchargeNoticeBody?.trim() ||
-    "A {percent}% processing fee applies to card payments. This fee does not exceed our cost of acceptance."
+    "The credit card processing fee does not exceed our cost of acceptance."
   ).replaceAll("{percent}", String(surchargePercent));
 
   // Auto-apply a publicly advertised ("Show on Website") code for this course.
