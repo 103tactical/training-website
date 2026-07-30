@@ -318,11 +318,12 @@ export default function ScheduleCalendarClient({ schedules }: { schedules: Sched
         .cal-pill-text { color: #404040; }
         [data-theme="dark"] .cal-pill-text { color: rgba(255,255,255,0.78); }
 
-        /* Schedule list — alternating rows, theme-aware, no hover background.
-           elevation-50 = the same subtle stripe step Payload's own list
-           tables use; elevation-100 read too dark against white rows. */
-        .sch-row:nth-child(odd)  { background: var(--theme-elevation-0); }
-        .sch-row:nth-child(even) { background: var(--theme-elevation-50); }
+        /* Schedule list — alternating rows matching Payload's collection
+           lists EXACTLY: odd rows tinted one elevation step (elevation-50),
+           even rows on the table surface. Same recipe, same phase, both
+           themes — striping is identical on every list in the admin. */
+        .sch-row:nth-child(odd)  { background: var(--theme-elevation-50); }
+        .sch-row:nth-child(even) { background: var(--theme-elevation-0); }
 
         /* Course title link — underlined to signal it's clickable */
         .sch-title-link { text-decoration: underline !important; }
