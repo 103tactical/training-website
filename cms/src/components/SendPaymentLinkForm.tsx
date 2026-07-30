@@ -143,8 +143,11 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
             Send Payment Link
           </button>
           {outstanding.length > 0 && (
+            // Outer div owns the flex line-break (basis 100%, no max-width —
+            // a max-width here would clamp the basis and let the box sit
+            // inline beside the buttons on wide screens)
+            <div style={{ flexBasis: '100%', minWidth: '100%' }}>
             <div style={{
-              flexBasis: '100%',
               marginTop: '2px',
               padding: '8px 12px',
               background: 'var(--theme-elevation-50)',
@@ -188,12 +191,14 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
                 ))}
               </ul>
             </div>
+            </div>
           )}
         </>
       )}
 
       {(phase === 'composing' || phase === 'sending' || phase === 'error') && (
-        <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '560px' }}>
+        <div style={{ flexBasis: '100%', minWidth: '100%', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '560px' }}>
           <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--theme-text)' }}>
             Send Payment Link
           </p>
@@ -257,10 +262,12 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
             </button>
           </div>
         </div>
+        </div>
       )}
 
       {phase === 'done' && (
-        <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '560px' }}>
+        <div style={{ flexBasis: '100%', minWidth: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '560px' }}>
           <span style={{ fontSize: '13px', color: '#065f46', fontWeight: 500 }}>✓ {feedback}</span>
           {resultTotal && (
             <span style={{ fontSize: '12px', color: 'var(--theme-elevation-600)' }}>
@@ -276,6 +283,7 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
           <div>
             <button type="button" onClick={close} style={ghostBtn}>Done</button>
           </div>
+        </div>
         </div>
       )}
 
