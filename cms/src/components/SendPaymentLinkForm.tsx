@@ -185,7 +185,7 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               maxWidth: '560px',
             }}>
               <strong style={{ color: 'var(--theme-text)' }}>
-                {outstanding.length} {outstanding.length === 1 ? 'person' : 'people'} awaiting payment
+                Awaiting payment from {outstanding.length} {outstanding.length === 1 ? 'person' : 'people'}
               </strong>
               <span style={{ marginLeft: '6px', color: 'var(--theme-elevation-500)' }}>
                 — each is holding a seat
