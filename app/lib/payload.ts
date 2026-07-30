@@ -611,6 +611,7 @@ export interface Course {
   slug: string;
   thumbnail?: { url: string; alt: string };
   socialShareImage?: { url: string; alt?: string };
+  seoDescription?: string;
   summary?: { item: string }[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   description?: any; // Lexical rich-text JSON

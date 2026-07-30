@@ -11,13 +11,37 @@ import { normalizeUSPhone, PHONE_ERROR } from "~/lib/phone";
 
 export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
   const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
-  return buildMeta({
+  const tags = buildMeta({
     pageTitle: data?.seoTitle ?? "Contact",
     siteName: defaultSiteName ?? "103 Tactical",
     description: data?.seoDescription ?? "Get in touch with 103 Tactical. We're located on Staten Island, NY. Ask about courses, licensing, and firearm services.",
     ogImage: data?.seoOgImage ? resolveMediaUrl(data.seoOgImage) : defaultOgImage,
     canonicalUrl: data?.canonicalUrl,
   });
+
+  // LocalBusiness structured data — feeds Google's local results / knowledge
+  // panel. Contact details come live from Site Settings.
+  tags.push({
+    "script:ld+json": {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: defaultSiteName ?? "103 Tactical",
+      url: "https://103tactical.com/",
+      ...(data?.phone && { telephone: data.phone }),
+      ...(data?.email && { email: data.email }),
+      ...(data?.address && {
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: data.address,
+          ...(data?.city && { addressLocality: data.city }),
+          addressRegion: "NY",
+          addressCountry: "US",
+        },
+      }),
+    },
+  });
+
+  return tags;
 };
 
 /* ── Loader — fetch topics from CMS ─────────────────────────────────────── */

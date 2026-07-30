@@ -51,6 +51,22 @@ export function forceHttps(url: string | undefined): string | undefined {
   return url.replace(/^http:\/\//, "https://");
 }
 
+/**
+ * Meta description for a course page: the admin-written SEO Description when
+ * set, otherwise one assembled from the course's card bullet points.
+ */
+export function courseDescription(course: {
+  title: string;
+  seoDescription?: string;
+  summary?: { item: string }[];
+}): string | undefined {
+  const written = course.seoDescription?.trim();
+  if (written) return written;
+  const bullets = (course.summary ?? []).map((s) => s.item?.trim()).filter(Boolean);
+  if (bullets.length === 0) return undefined;
+  return `${course.title} at 103 Tactical on Staten Island, NY — ${bullets.join(", ")}.`;
+}
+
 export function buildMeta({
   pageTitle,
   siteName = "103 Tactical",

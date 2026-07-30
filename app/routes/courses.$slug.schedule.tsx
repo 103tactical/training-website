@@ -5,7 +5,7 @@ import { getCourseBySlug, getCourseSchedules, resolveMediaUrl, countAdminLinkHol
 import { isScheduleBookable } from "~/lib/schedule.server";
 import type { Course, CourseSchedule, Instructor } from "~/lib/payload";
 import MiniCalendar from "~/components/MiniCalendar";
-import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
+import { buildMeta, courseDescription, getRootSeoDefaults } from "~/lib/meta";
 import { trackScheduleView, trackScheduleNowClick } from "~/lib/analytics";
 
 export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
@@ -19,6 +19,9 @@ export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
   return buildMeta({
     pageTitle: `${course.title} — Available Sessions`,
     siteName: defaultSiteName ?? "103 Tactical",
+    description:
+      courseDescription(course) ??
+      `Upcoming session dates for ${course.title} at 103 Tactical on Staten Island, NY. Check availability and book online.`,
     ogImage: ogImageUrl,
     canonicalUrl: data?.canonicalUrl,
   });

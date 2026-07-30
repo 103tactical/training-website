@@ -103,6 +103,16 @@ export const Courses: CollectionConfig = {
       },
     },
     {
+      name: "seoDescription",
+      type: "textarea",
+      label: "SEO Description",
+      maxLength: 300,
+      admin: {
+        description:
+          "Shown as this course's snippet in Google search results and link previews (aim for 150–160 characters). If left empty, the website builds one from the bullet points below.",
+      },
+    },
+    {
       name: "summary",
       type: "array",
       label: "Bullet Point Summary",
