@@ -246,8 +246,10 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
   const [displayLabel, setDisplayLabel] = useState('')
   const [instructorId, setInstructorId] = useState<string>('')
   const [maxSeats, setMaxSeats]         = useState<string>('20')
+  const [isActive, setIsActive]         = useState(true)
   const [saving, setSaving]             = useState(false)
   const [error, setError]               = useState<string | null>(null)
+  const [sessionExpired, setSessionExpired] = useState(false)
   const [justCreated, setJustCreated]   = useState<string | null>(null)
 
   const selectedCourse = courses.find((c) => String(c.id) === courseId) ?? null
@@ -300,6 +302,7 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
 
   const save = async () => {
     setError(null)
+    setSessionExpired(false)
     if (!selectedCourse) { setError('Choose a course first.'); return }
     if (rows.length === 0) { setError('Add at least one day.'); return }
     const today = todayKey()
@@ -323,7 +326,7 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
           course: selectedCourse.id,
           // Internal label is auto-generated from the dates by the collection
           maxSeats: seats,
-          isActive: true,
+          isActive,
           ...(displayLabel.trim() ? { displayLabel: displayLabel.trim() } : {}),
           ...(instructorId ? { instructor: Number(instructorId) } : {}),
           sessions: rows.map((r) => ({
@@ -334,6 +337,12 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
         }),
       })
       if (!res.ok) {
+        // 401/403 = the admin's login is no longer valid (expired or logged out
+        // elsewhere) — Payload's raw "not allowed" message just confuses here.
+        if (res.status === 401 || res.status === 403) {
+          setSessionExpired(true)
+          return
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const j: any = await res.json().catch(() => ({}))
         const msg = j?.errors?.[0]?.message ?? `Save failed (${res.status}). Please try again.`
@@ -448,7 +457,32 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
               style={inputStyle}
             />
           </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--theme-text)' }}>
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+              style={{ cursor: 'pointer', width: '15px', height: '15px', margin: 0 }}
+            />
+            Show on website (visitors can see and book this session)
+          </label>
         </>
+      )}
+
+      {sessionExpired && (
+        <div style={{
+          background: 'rgba(220,38,38,0.1)', color: '#dc2626',
+          borderRadius: 'var(--style-radius-s,4px)', padding: '10px 12px', fontSize: '13px',
+        }}>
+          Your login session has expired — please{' '}
+          <a
+            href={`/admin/login?redirect=${encodeURIComponent('/admin/schedule-dashboard')}`}
+            style={{ color: '#dc2626', fontWeight: 600, textDecoration: 'underline' }}
+          >
+            log in again
+          </a>
+          . Your entries here will be lost, so note them down first.
+        </div>
       )}
 
       {error && (
@@ -469,7 +503,7 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
         </button>
       </div>
       <p style={{ margin: 0, fontSize: '12px', color: 'var(--theme-text)', opacity: 0.5 }}>
-        The session is created Active (visible on the website). Its internal label is set automatically from the dates.
+        The session&apos;s internal label is set automatically from the dates.
       </p>
     </div>
   )
