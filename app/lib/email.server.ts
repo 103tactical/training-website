@@ -543,19 +543,17 @@ export async function sendAdminContactFormEmail(args: {
   message: string;
 }): Promise<void> {
   const { name, email, phone, topic, message } = args;
-  const safeMessage = message
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br>");
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const safeMessage = esc(message).replace(/\n/g, "<br>");
 
   await sendAdminEmail(
     `New Contact Form — ${topic}`,
     [
-      `<strong>Name:</strong> ${name}`,
-      `<strong>Email:</strong> <a href="mailto:${email}" style="color:#ea580c;">${email}</a>`,
-      `<strong>Phone:</strong> ${phone}`,
-      `<strong>Topic:</strong> ${topic}`,
+      `<strong>Name:</strong> ${esc(name)}`,
+      `<strong>Email:</strong> <a href="mailto:${esc(email)}" style="color:#ea580c;">${esc(email)}</a>`,
+      `<strong>Phone:</strong> ${esc(phone)}`,
+      `<strong>Topic:</strong> ${esc(topic)}`,
       `<strong>Message:</strong><br>${safeMessage || "<em style='color:#888;'>No message provided.</em>"}`,
     ],
     [

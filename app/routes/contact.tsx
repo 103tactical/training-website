@@ -89,11 +89,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const errors: ContactActionData["errors"] = {};
   if (!name)                                          errors.name  = "Name is required.";
+  else if (name.length > 200)                         errors.name  = "Name is too long.";
   if (!email)                                         errors.email = "Email is required.";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Please enter a valid email address.";
+  else if (email.length > 254)                        errors.email = "Email is too long.";
   if (!phone)                                         errors.phone = "Phone number is required.";
   else if (!normalizedPhone)                          errors.phone = PHONE_ERROR;
-  if (!topic)                                         errors.topic = "Please select a topic.";
+  if (!topic || topic.length > 100)                   errors.topic = "Please select a topic.";
+  if (message.length > 5000)                          errors.form  = "Message is too long — please keep it under 5,000 characters.";
 
   if (Object.keys(errors).length > 0) {
     return json<ContactActionData>({ success: false, errors }, { status: 400 });
@@ -102,7 +105,10 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     const res = await fetch(`${PAYLOAD_API_URL}/api/contact-submissions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.CMS_WRITE_SECRET}`,
+      },
       body: JSON.stringify({ name, email, phone: normalizedPhone, topic, message }),
     });
     if (!res.ok) throw new Error(`Payload responded with ${res.status}`);
@@ -258,6 +264,7 @@ export default function Contact() {
                     id="cf-name"
                     name="name"
                     type="text"
+                    maxLength={200}
                     autoComplete="name"
                     className={`contact-form__input${serverErrors.name ? " is-error" : ""}`}
                   />
@@ -297,6 +304,7 @@ export default function Contact() {
                   id="cf-email"
                   name="email"
                   type="email"
+                  maxLength={254}
                   autoComplete="email"
                   className={`contact-form__input${serverErrors.email ? " is-error" : ""}`}
                 />
@@ -334,6 +342,7 @@ export default function Contact() {
                   name="message"
                   className="contact-form__textarea"
                   rows={5}
+                  maxLength={5000}
                 />
               </div>
 
