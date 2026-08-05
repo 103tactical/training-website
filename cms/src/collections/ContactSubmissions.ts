@@ -47,6 +47,18 @@ export const ContactSubmissions: CollectionConfig = {
     delete: ({ req }) => !!req.user,
   },
   hooks: {
+    beforeDelete: [
+      // Payload's delete runs afterRead hooks on the doc INSIDE the delete
+      // transaction, after the row is already deleted. The mark-as-read
+      // update must not fire there: without `req` it deadlocks against the
+      // delete's row lock (froze the CMS 2026-08-05); with `req` its
+      // not-found error kills the shared transaction and silently rolls the
+      // delete back. beforeDelete shares req.context with those afterRead
+      // hooks, so flag them off for the whole delete operation.
+      async ({ context }) => {
+        context.skipStatusUpdate = true;
+      },
+    ],
     afterRead: [
       async ({ doc, req, context, findMany }) => {
         // Only auto-mark as read for authenticated admin requests
