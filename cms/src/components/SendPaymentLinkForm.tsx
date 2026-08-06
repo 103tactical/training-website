@@ -197,9 +197,11 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               borderRadius: 'var(--style-radius-s, 4px)',
               fontSize: '12px',
               color: 'var(--theme-elevation-600)',
-              // Fill the roster bar's full width so the per-row buttons can
-              // align flush right instead of trailing the text
+              // Wide enough that the flush-right buttons form a clean column,
+              // capped so they don't drift a full monitor-width away from the
+              // names they belong to
               width: '100%',
+              maxWidth: '720px',
               boxSizing: 'border-box',
             }}>
               <strong style={{ color: 'var(--theme-text)' }}>
