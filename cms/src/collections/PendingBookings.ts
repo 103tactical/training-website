@@ -403,11 +403,13 @@ export const PendingBookings: CollectionConfig = {
     {
       name: 'firstName',
       type: 'text',
+      maxLength: 100,
       label: 'First Name',
     },
     {
       name: 'lastName',
       type: 'text',
+      maxLength: 100,
       label: 'Last Name',
     },
     {

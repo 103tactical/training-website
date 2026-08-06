@@ -86,6 +86,19 @@ function getAdminEmail(): string | null {
   return process.env.ADMIN_EMAIL?.trim() || null;
 }
 
+/**
+ * Escape a user-supplied string for interpolation into HTML email bodies.
+ * Attendee names, emails, and topics come off public forms — never trust
+ * them in an HTML context (the admin's inbox renders these).
+ */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // ── Contact phone (from CMS Site Settings, cached 5 min) ─────────────────────
 
 let _phoneCache: { value: string | null; at: number } | null = null;
@@ -147,7 +160,7 @@ function brandedHtml(title: string, bodyHtml: string): string {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${title}</title>
+<title>${escapeHtml(title)}</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
@@ -204,11 +217,7 @@ export async function sendEnrollmentEmail(args: {
   const q = await questionsLine();
   const subject = `Your Enrollment Forms — ${courseTitle}`;
 
-  const bodyHtml = message
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br>");
+  const bodyHtml = escapeHtml(message).replace(/\n/g, "<br>");
 
   const attachmentNote = attachmentUrl
     ? `<p style="margin:16px 0 0;padding:14px 16px;background:#fff8f0;
@@ -219,8 +228,8 @@ export async function sendEnrollmentEmail(args: {
     : "";
 
   const html = brandedHtml(subject, `
-    <p style="margin:0 0 16px;">Hi ${firstName},</p>
-    <p style="margin:0 0 16px;">Thank you for enrolling in <strong>${courseTitle}</strong>.
+    <p style="margin:0 0 16px;">Hi ${escapeHtml(firstName)},</p>
+    <p style="margin:0 0 16px;">Thank you for enrolling in <strong>${escapeHtml(courseTitle)}</strong>.
       Please review the following information before your course date.</p>
     <div style="margin:0 0 16px;">${bodyHtml}</div>
     ${attachmentNote}
@@ -261,14 +270,14 @@ export async function sendBookingConfirmationEmail(args: {
   const subject = `Booking Confirmed — ${courseTitle}`;
 
   const rows = [
-    detailRow("Course", `<strong>${courseTitle}</strong>`, true),
+    detailRow("Course", `<strong>${escapeHtml(courseTitle)}</strong>`, true),
     ...(sessionDates ? [detailRow("Date(s)", sessionDates)] : []),
     detailRow("Amount Paid", amountDollars),
     detailRow("Order", `<code style="font-size:12px;color:#555;">${orderId}</code>`),
   ].join("");
 
   const html = brandedHtml(subject, `
-    <p style="margin:0 0 16px;">Hi ${firstName},</p>
+    <p style="margin:0 0 16px;">Hi ${escapeHtml(firstName)},</p>
     <p style="margin:0 0 24px;">Your booking is confirmed. We look forward to seeing you!</p>
     <table width="100%" cellpadding="0" cellspacing="0"
       style="border:1px solid #e8e8e8;border-radius:4px;overflow:hidden;margin-bottom:24px;
@@ -320,9 +329,9 @@ export async function sendWaitlistedPaymentEmail(args: {
   const subject = `Payment Received — You're on the Waitlist for ${courseTitle}`;
 
   const html = brandedHtml(subject, `
-    <p style="margin:0 0 16px;">Hi ${firstName},</p>
+    <p style="margin:0 0 16px;">Hi ${escapeHtml(firstName)},</p>
     <p style="margin:0 0 16px;">We received your payment of <strong>${amountDollars}</strong> for
-      <strong>${courseTitle}</strong>${sessionDates ? ` (${sessionDates})` : ""} — but the last seat
+      <strong>${escapeHtml(courseTitle)}</strong>${sessionDates ? ` (${sessionDates})` : ""} — but the last seat
       was taken just before your payment completed.</p>
     <p style="margin:0 0 16px;"><strong>Your payment holds your place on the waitlist.</strong> If a seat
       opens up, you'll be enrolled automatically (in the order payments were received) and emailed right away.</p>
@@ -367,8 +376,8 @@ export async function sendCancellationEmail(args: {
   const subject = `Booking Cancelled — ${courseTitle}`;
 
   const html = brandedHtml(subject, `
-    <p style="margin:0 0 16px;">Hi ${firstName},</p>
-    <p style="margin:0 0 16px;">Your booking for <strong>${courseTitle}</strong> has been cancelled
+    <p style="margin:0 0 16px;">Hi ${escapeHtml(firstName)},</p>
+    <p style="margin:0 0 16px;">Your booking for <strong>${escapeHtml(courseTitle)}</strong> has been cancelled
       and a refund of <strong>${amountDollars}</strong> has been submitted through Square.</p>
     <p style="margin:0 0 16px;">Refunds typically appear on your statement within 5–10 business days.</p>
     <p style="margin:0;font-size:14px;color:#666;">${q}</p>
@@ -450,12 +459,12 @@ export async function sendAdminBookingNotification(args: {
         ? [`<strong style="color:#b45309;">This person PAID but the session was full — they were placed on the waitlist.</strong>`,
            `They were told a seat is not yet guaranteed. Free a seat (cancellation or raise Total Seats) to auto-promote them, move them to another session, or refund them from Square.`]
         : [`<strong>New booking received.</strong>`]),
-      `<strong>Name:</strong> ${firstName} ${lastName}`,
-      `<strong>Email:</strong> ${email}`,
-      `<strong>Course:</strong> ${courseTitle}`,
+      `<strong>Name:</strong> ${escapeHtml(firstName)} ${escapeHtml(lastName)}`,
+      `<strong>Email:</strong> ${escapeHtml(email)}`,
+      `<strong>Course:</strong> ${escapeHtml(courseTitle)}`,
       ...(sessionDates ? [`<strong>Date(s):</strong> ${sessionDates}`] : []),
       `<strong>Amount:</strong> ${amountDollars}`,
-      ...(discountCode ? [`<strong>Discount:</strong> ${discountCode}${discountDollars ? ` (−${discountDollars})` : ""}`] : []),
+      ...(discountCode ? [`<strong>Discount:</strong> ${escapeHtml(discountCode)}${discountDollars ? ` (−${discountDollars})` : ""}`] : []),
       `<strong>Order ID:</strong> <code style="font-size:12px;">${orderId}</code>`,
     ],
     [
@@ -487,9 +496,9 @@ export async function sendAdminBookingFailureAlert(args: {
     `⚠️ Booking Creation Failed — ${email}`,
     [
       `<strong style="color:#c00;">A booking failed to create after payment was received.</strong>`,
-      `<strong>Customer email:</strong> ${email}`,
+      `<strong>Customer email:</strong> ${escapeHtml(email)}`,
       `<strong>Pending Booking ID:</strong> ${pendingId}`,
-      `<strong>Reason:</strong> ${reason}`,
+      `<strong>Reason:</strong> ${escapeHtml(reason)}`,
       `<a href="${cmsLink}" style="color:#ea580c;">Review in CMS → Pending Bookings</a>`,
     ],
     [
@@ -517,8 +526,8 @@ export async function sendAdminCancellationAlert(args: {
     `Booking Cancelled via Refund — ${attendeeName}`,
     [
       `A booking has been cancelled following a completed Square refund.`,
-      `<strong>Attendee:</strong> ${attendeeName}`,
-      `<strong>Course:</strong> ${courseTitle}`,
+      `<strong>Attendee:</strong> ${escapeHtml(attendeeName)}`,
+      `<strong>Course:</strong> ${escapeHtml(courseTitle)}`,
       `<strong>Booking ID:</strong> ${bookingId}`,
       `<strong>Square Order ID:</strong> <code style="font-size:12px;">${orderId}</code>`,
     ],
@@ -543,17 +552,15 @@ export async function sendAdminContactFormEmail(args: {
   message: string;
 }): Promise<void> {
   const { name, email, phone, topic, message } = args;
-  const esc = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  const safeMessage = esc(message).replace(/\n/g, "<br>");
+  const safeMessage = escapeHtml(message).replace(/\n/g, "<br>");
 
   await sendAdminEmail(
     `New Contact Form — ${topic}`,
     [
-      `<strong>Name:</strong> ${esc(name)}`,
-      `<strong>Email:</strong> <a href="mailto:${esc(email)}" style="color:#ea580c;">${esc(email)}</a>`,
-      `<strong>Phone:</strong> ${esc(phone)}`,
-      `<strong>Topic:</strong> ${esc(topic)}`,
+      `<strong>Name:</strong> ${escapeHtml(name)}`,
+      `<strong>Email:</strong> <a href="mailto:${escapeHtml(email)}" style="color:#ea580c;">${escapeHtml(email)}</a>`,
+      `<strong>Phone:</strong> ${escapeHtml(phone)}`,
+      `<strong>Topic:</strong> ${escapeHtml(topic)}`,
       `<strong>Message:</strong><br>${safeMessage || "<em style='color:#888;'>No message provided.</em>"}`,
     ],
     [

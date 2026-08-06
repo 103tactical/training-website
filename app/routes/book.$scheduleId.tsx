@@ -59,6 +59,35 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// ── Discount-code attempt throttle ────────────────────────────────────────────
+// Discount validation is reachable by anonymous visitors (the Apply button and
+// the final submit), so without a throttle a bot could enumerate codes.
+// In-memory is sufficient: the site runs as a single Render instance, and a
+// restart resetting the counters is harmless.
+const codeAttempts = new Map<string, { count: number; windowStart: number }>();
+const CODE_WINDOW_MS = 10 * 60 * 1000;
+const CODE_MAX_ATTEMPTS = 15;
+
+function codeAttemptAllowed(request: Request): boolean {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const now = Date.now();
+  const entry = codeAttempts.get(ip);
+  if (!entry || now - entry.windowStart > CODE_WINDOW_MS) {
+    // Opportunistic cleanup keeps the map from growing unbounded
+    if (codeAttempts.size > 5000) {
+      for (const [k, v] of codeAttempts) {
+        if (now - v.windowStart > CODE_WINDOW_MS) codeAttempts.delete(k);
+      }
+    }
+    codeAttempts.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  entry.count += 1;
+  return entry.count <= CODE_MAX_ATTEMPTS;
+}
+
+const CODE_THROTTLE_MESSAGE = "Too many discount code attempts — please wait a few minutes and try again.";
+
 function formatDate(iso?: string): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("en-US", {
@@ -84,7 +113,8 @@ function formatTime(iso?: string): string {
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { scheduleId } = params;
-  if (!scheduleId) throw new Response("Not found", { status: 404 });
+  // Numeric IDs only — the param is interpolated into the CMS REST path
+  if (!scheduleId || !/^\d+$/.test(scheduleId)) throw new Response("Not found", { status: 404 });
 
   let schedule: CourseSchedule;
   try {
@@ -190,7 +220,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const { scheduleId } = params;
-  if (!scheduleId) throw new Response("Not found", { status: 404 });
+  if (!scheduleId || !/^\d+$/.test(scheduleId)) throw new Response("Not found", { status: 404 });
 
   const formData = await request.formData();
 
@@ -199,6 +229,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const rawCode = (formData.get("discountCode") as string | null)?.trim().slice(0, 32) ?? "";
     if (!rawCode) {
       return json<ApplyCodeData>({ discountError: "Enter a discount code first." });
+    }
+    if (!codeAttemptAllowed(request)) {
+      return json<ApplyCodeData>({ discountError: CODE_THROTTLE_MESSAGE }, { status: 429 });
     }
     try {
       const schedule = await getCourseScheduleById(scheduleId);
@@ -290,6 +323,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
     let discountCents = 0;
     let appliedCode: string | undefined;
     if (discountCodeInput) {
+      if (!codeAttemptAllowed(request)) {
+        return json<BookActionData>({ errors: {}, formError: CODE_THROTTLE_MESSAGE }, { status: 429 });
+      }
       const check = await validateDiscountCode(discountCodeInput, Number(course?.id), priceInCents);
       if (!check.valid) {
         return json<BookActionData>(
