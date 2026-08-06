@@ -87,8 +87,8 @@ export function getSessionLabel(b: RawBooking): string {
 }
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  'online':        'Online',
-  'square-manual': 'Square',
+  'online':        'Website / Payment Link',
+  'square-manual': 'Square POS',
   'cash':          'Cash',
   'check':         'Check',
   'other':         'Other',

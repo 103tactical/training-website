@@ -623,7 +623,7 @@ export const Bookings: CollectionConfig = {
       label: 'Square Payment ID',
       admin: {
         readOnly: true,
-        description: 'Full payment ID from Square (e.g. RWF1bO7TF…). The first 4 characters match the receipt number shown in Square Dashboard. Required to issue refunds. Empty for manual bookings (cash, check, etc.) — that is normal.',
+        description: 'Captured automatically when someone pays a website checkout or emailed payment link (e.g. RWF1bO7TF…; the first 4 characters match the receipt number in Square Dashboard). Required to issue refunds from the CMS. Empty for Square POS, cash, and check bookings — those were charged outside this system, so a POS transaction is found in the Square Dashboard instead.',
         components: {
           Cell: './components/SquarePaymentIdCell',
         },
@@ -643,15 +643,20 @@ export const Bookings: CollectionConfig = {
       type: 'select',
       label: 'Payment Method',
       options: [
-        { label: 'Online (website booking)', value: 'online' },
-        { label: 'Square (POS / payment link)', value: 'square-manual' },
+        // Value 'online' covers BOTH website checkouts and CMS-emailed payment
+        // links — the webhook stamps it for either, capturing Square IDs.
+        // 'square-manual' = rung up on the shop's own Square POS and recorded
+        // here by hand, so the transaction (and its ID) lives only in the
+        // Square Dashboard. Values are frozen (enum + reports); labels only.
+        { label: 'Website / Payment Link (automatic)', value: 'online' },
+        { label: 'Square POS (charged on the register)', value: 'square-manual' },
         { label: 'Cash', value: 'cash' },
         { label: 'Check', value: 'check' },
         { label: 'Other', value: 'other' },
       ],
       admin: {
         description:
-          'Set automatically to "Online" for website bookings. For manually entered bookings, select how the attendee paid.',
+          'Set automatically to "Website / Payment Link" when someone pays a website checkout or an emailed payment link. For manually entered bookings, select how the attendee paid.',
         components: {
           Cell: './components/PaymentMethodCell',
         },

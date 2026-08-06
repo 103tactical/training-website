@@ -2,8 +2,8 @@
 import React from 'react'
 
 const STYLES: Record<string, { label: string; bg: string; color: string }> = {
-  'online':        { label: 'Online',      bg: 'rgba(37, 99, 235, 0.12)',  color: '#2563eb' },
-  'square-manual': { label: 'Square',      bg: 'rgba(249, 115, 22, 0.12)', color: '#f97316' },
+  'online':        { label: 'Website / Link', bg: 'rgba(37, 99, 235, 0.12)',  color: '#2563eb' },
+  'square-manual': { label: 'Square POS',     bg: 'rgba(249, 115, 22, 0.12)', color: '#f97316' },
   'cash':          { label: 'Cash',        bg: 'rgba(22, 163, 74, 0.12)',  color: '#16a34a' },
   'check':         { label: 'Check',       bg: 'rgba(13, 148, 136, 0.12)', color: '#0d9488' },
   'other':         { label: 'Other',       bg: 'rgba(128, 128, 128, 0.15)', color: 'var(--theme-text)' },
