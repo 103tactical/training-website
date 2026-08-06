@@ -47,6 +47,18 @@ export const ContactSubmissions: CollectionConfig = {
     delete: ({ req }) => !!req.user,
   },
   hooks: {
+    beforeChange: [
+      // Payload's update (and create) pipes the saved doc back through the
+      // collection afterRead hooks in the SAME request — without this flag,
+      // saving a submission back to "New" is instantly reverted to "Read" by
+      // the mark-as-read hook below (an admin couldn't mark a message unread).
+      // Reads in a save's request are not "opens"; only a genuine document
+      // open (findByID render) should auto-mark as read.
+      async ({ context, data }) => {
+        context.skipStatusUpdate = true;
+        return data;
+      },
+    ],
     beforeDelete: [
       // Payload's delete runs afterRead hooks on the doc INSIDE the delete
       // transaction, after the row is already deleted. The mark-as-read
