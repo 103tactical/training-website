@@ -15,8 +15,10 @@ interface PendingLink {
   id: number
   name: string | null
   email: string
+  phone: string | null
   sentAt: string
   url: string | null
+  totalCents: number | null
 }
 
 export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number | string }) {
@@ -32,33 +34,48 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   const [outstanding, setOutstanding] = useState<PendingLink[]>([])
   const [copied, setCopied] = useState(false)
   const [copiedRowId, setCopiedRowId] = useState<number | null>(null)
-  const [confirmingRowId, setConfirmingRowId] = useState<number | null>(null)
+  const [modalRow, setModalRow] = useState<PendingLink | null>(null)
+  const [modalCopied, setModalCopied] = useState(false)
   const [resendingRowId, setResendingRowId] = useState<number | null>(null)
   const [resentRowId, setResentRowId] = useState<number | null>(null)
   const [resendError, setResendError] = useState('')
 
-  /** "Jane D." from "Jane Doe" — the confirm step names whose link it is */
-  const rowShortName = (row: PendingLink): string => {
-    if (!row.name) return row.email
-    const parts = row.name.trim().split(/\s+/)
-    return parts.length > 1
-      ? `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`
-      : parts[0]
-  }
+  /** First name for the modal copy ("Jane"); falls back to "this person" */
+  const rowFirstName = (row: PendingLink): string =>
+    row.name ? row.name.trim().split(/\s+/)[0] : 'this person'
 
-  // Copying is a deliberate two-step: these links are identity-bound (paying
-  // one books THAT person, not the payer), so a mis-copied link sent to the
-  // wrong customer books the wrong attendee. The confirm names the person
-  // before anything lands on the clipboard.
-  const copyRowLink = async (row: PendingLink) => {
+  const formatRowPhone = (digits: string): string =>
+    digits.length === 10
+      ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+      : digits
+
+  // Copying goes through a modal that previews WHOSE link it is: these links
+  // are identity-bound (paying one books THAT person, not the payer), so a
+  // link copied off the wrong row and texted to the wrong customer books the
+  // wrong attendee. Nothing lands on the clipboard until the modal confirm.
+  const confirmCopyLink = async (row: PendingLink) => {
     if (!row.url) return
     try {
       await navigator.clipboard.writeText(row.url)
-      setConfirmingRowId(null)
+      setModalCopied(true)
       setCopiedRowId(row.id)
-      setTimeout(() => setCopiedRowId((cur) => (cur === row.id ? null : cur)), 2000)
+      setTimeout(() => setCopiedRowId((cur) => (cur === row.id ? null : cur)), 2500)
+      setTimeout(() => { setModalRow(null); setModalCopied(false) }, 1100)
     } catch { /* clipboard unavailable */ }
   }
+
+  const closeModal = React.useCallback(() => {
+    setModalRow(null)
+    setModalCopied(false)
+  }, [])
+
+  // Esc closes the copy modal
+  useEffect(() => {
+    if (!modalRow) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [modalRow, closeModal])
 
   const resendRowLink = async (row: PendingLink) => {
     if (resendingRowId !== null) return
@@ -223,69 +240,25 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
                           narrow screen wraps them to their own line they stay
                           right-aligned */}
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
-                      {o.url && (copiedRowId === o.id ? (
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#065f46', whiteSpace: 'nowrap', padding: '2px 0' }}>
-                          Copied ✓
-                        </span>
-                      ) : confirmingRowId === o.id ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--theme-text)' }}>
-                            Copy <strong>{rowShortName(o)}</strong>&rsquo;s link?
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyRowLink(o)}
-                            style={{
-                              padding: '1px 8px',
-                              borderRadius: 'var(--style-radius-s, 4px)',
-                              border: '1px solid var(--theme-elevation-250)',
-                              background: 'transparent',
-                              color: '#065f46',
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            ✓ Copy
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setConfirmingRowId(null)}
-                            aria-label="Cancel copy"
-                            style={{
-                              padding: '1px 8px',
-                              borderRadius: 'var(--style-radius-s, 4px)',
-                              border: '1px solid var(--theme-elevation-250)',
-                              background: 'transparent',
-                              color: 'var(--theme-elevation-600)',
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      ) : (
+                      {o.url && (
                         <button
                           type="button"
-                          onClick={() => setConfirmingRowId(o.id)}
+                          onClick={() => setModalRow(o)}
                           style={{
                             padding: '1px 8px',
                             borderRadius: 'var(--style-radius-s, 4px)',
                             border: '1px solid var(--theme-elevation-250)',
                             background: 'transparent',
-                            color: 'var(--theme-text)',
+                            color: copiedRowId === o.id ? '#065f46' : 'var(--theme-text)',
                             fontSize: '11px',
                             fontWeight: 600,
                             cursor: 'pointer',
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          Copy Link…
+                          {copiedRowId === o.id ? 'Copied ✓' : 'Copy Payment Link'}
                         </button>
-                      ))}
+                      )}
                       {o.url && (
                         <button
                           type="button"
@@ -405,6 +378,89 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
             <button type="button" onClick={close} style={ghostBtn}>Done</button>
           </div>
         </div>
+        </div>
+      )}
+
+      {/* ── Copy Payment Link modal ──────────────────────────────────────────
+          Links are identity-bound: whoever pays one enrolls the person it was
+          created for, NOT the payer. The modal previews exactly whose link is
+          about to be copied so it can't be texted to the wrong customer. */}
+      {modalRow && (
+        <div
+          onClick={closeModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Copy payment link"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--theme-bg)',
+              borderRadius: 'var(--style-radius-m, 8px)',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '440px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: '0 0 14px', fontSize: '16px', fontWeight: 700, color: 'var(--theme-text)' }}>
+              Copy Payment Link
+            </p>
+
+            {/* Whose link this is */}
+            <div style={{
+              background: 'var(--theme-elevation-50)',
+              borderRadius: 'var(--style-radius-s, 4px)',
+              padding: '14px 16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--theme-text)' }}>
+                {modalRow.name ?? modalRow.email}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--theme-elevation-600)' }}>
+                {modalRow.email}
+                {modalRow.phone ? ` · ${formatRowPhone(modalRow.phone)}` : ''}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--theme-elevation-600)' }}>
+                {modalRow.totalCents != null ? `Link total: $${(modalRow.totalCents / 100).toFixed(2)} · ` : ''}
+                Link emailed {new Date(modalRow.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </p>
+            </div>
+
+            <p style={{ margin: '0 0 10px', fontSize: '13px', lineHeight: 1.6, color: 'var(--theme-text)' }}>
+              This copies <strong>{rowFirstName(modalRow)}&rsquo;s</strong> personal payment link so you
+              can send it another way — like a text message — if the email isn&rsquo;t reaching them.
+            </p>
+            <p style={{ margin: '0 0 22px', fontSize: '13px', lineHeight: 1.6, color: 'var(--theme-text)' }}>
+              <strong>Only send this link to {rowFirstName(modalRow)}.</strong> Whoever pays it enrolls{' '}
+              {rowFirstName(modalRow)} — not the person paying.
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button type="button" onClick={closeModal} style={ghostBtn}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => confirmCopyLink(modalRow)}
+                disabled={modalCopied}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', padding: '9px 18px',
+                  borderRadius: 'var(--style-radius-s)', fontSize: '13px', fontWeight: 600,
+                  cursor: modalCopied ? 'default' : 'pointer', border: 'none',
+                  background: modalCopied ? '#065f46' : '#ea580c', color: '#ffffff',
+                }}
+              >
+                {modalCopied ? 'Copied ✓' : `Copy ${rowFirstName(modalRow) === 'this person' ? 'the' : `${rowFirstName(modalRow)}’s`} Link`}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

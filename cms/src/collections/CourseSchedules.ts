@@ -358,9 +358,12 @@ async function outstandingLinksHandler(req: PayloadRequest): Promise<Response> {
     id: d.id,
     name: [d.firstName, d.lastName].filter(Boolean).join(' ') || null,
     email: d.email,
+    phone: d.phone ?? null,
     // Most recent send (initial or resend); legacy rows fall back to creation
     sentAt: d.linkSentAt ?? d.createdAt,
     url: d.checkoutUrl ?? null,
+    // What the link actually charges (captured at creation); null on legacy rows
+    totalCents: d.linkTotalCents ?? null,
   }))
   return Response.json({ pending })
 }
