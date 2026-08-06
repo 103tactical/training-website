@@ -176,16 +176,16 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
             <div style={{ flexBasis: '100%', minWidth: '100%' }}>
             <div style={{
               marginTop: '2px',
-              padding: '8px 12px',
+              padding: '10px 14px',
               background: 'var(--theme-elevation-50)',
               border: '1px solid var(--theme-elevation-150)',
               borderRadius: 'var(--style-radius-s, 4px)',
               fontSize: '12px',
               color: 'var(--theme-elevation-600)',
-              // Grow to the widest row (name + both buttons inline), never
-              // beyond the available width
-              width: 'fit-content',
-              maxWidth: '100%',
+              // Fill the roster bar's full width so the per-row buttons can
+              // align flush right instead of trailing the text
+              width: '100%',
+              boxSizing: 'border-box',
             }}>
               <strong style={{ color: 'var(--theme-text)' }}>
                 Awaiting payment from {outstanding.length} {outstanding.length === 1 ? 'person' : 'people'}
@@ -196,13 +196,16 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               {resendError && (
                 <p style={{ margin: '4px 0 0', color: '#991b1b' }}>{resendError}</p>
               )}
-              <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
+              <ul style={{ margin: '6px 0 0', padding: 0, listStyle: 'none' }}>
                 {outstanding.map((o) => (
-                  <li key={o.id} style={{ marginBottom: '2px' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <li key={o.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
                       <span>
                         {o.name ?? o.email}{o.name ? ` — ${o.email}` : ''} · sent {new Date(o.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
+                      {/* marginLeft:auto keeps the pair flush right, and when a
+                          narrow screen wraps them to their own line they stay
+                          right-aligned */}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
                       {o.url && (
                         <button
                           type="button"
