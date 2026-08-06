@@ -32,14 +32,29 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   const [outstanding, setOutstanding] = useState<PendingLink[]>([])
   const [copied, setCopied] = useState(false)
   const [copiedRowId, setCopiedRowId] = useState<number | null>(null)
+  const [confirmingRowId, setConfirmingRowId] = useState<number | null>(null)
   const [resendingRowId, setResendingRowId] = useState<number | null>(null)
   const [resentRowId, setResentRowId] = useState<number | null>(null)
   const [resendError, setResendError] = useState('')
 
+  /** "Jane D." from "Jane Doe" — the confirm step names whose link it is */
+  const rowShortName = (row: PendingLink): string => {
+    if (!row.name) return row.email
+    const parts = row.name.trim().split(/\s+/)
+    return parts.length > 1
+      ? `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`
+      : parts[0]
+  }
+
+  // Copying is a deliberate two-step: these links are identity-bound (paying
+  // one books THAT person, not the payer), so a mis-copied link sent to the
+  // wrong customer books the wrong attendee. The confirm names the person
+  // before anything lands on the clipboard.
   const copyRowLink = async (row: PendingLink) => {
     if (!row.url) return
     try {
       await navigator.clipboard.writeText(row.url)
+      setConfirmingRowId(null)
       setCopiedRowId(row.id)
       setTimeout(() => setCopiedRowId((cur) => (cur === row.id ? null : cur)), 2000)
     } catch { /* clipboard unavailable */ }
@@ -206,25 +221,69 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
                           narrow screen wraps them to their own line they stay
                           right-aligned */}
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
-                      {o.url && (
+                      {o.url && (copiedRowId === o.id ? (
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#065f46', whiteSpace: 'nowrap', padding: '2px 0' }}>
+                          Copied ✓
+                        </span>
+                      ) : confirmingRowId === o.id ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text)' }}>
+                            Copy <strong>{rowShortName(o)}</strong>&rsquo;s link?
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyRowLink(o)}
+                            style={{
+                              padding: '1px 8px',
+                              borderRadius: 'var(--style-radius-s, 4px)',
+                              border: '1px solid var(--theme-elevation-250)',
+                              background: 'transparent',
+                              color: '#065f46',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            ✓ Copy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingRowId(null)}
+                            aria-label="Cancel copy"
+                            style={{
+                              padding: '1px 8px',
+                              borderRadius: 'var(--style-radius-s, 4px)',
+                              border: '1px solid var(--theme-elevation-250)',
+                              background: 'transparent',
+                              color: 'var(--theme-elevation-600)',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ) : (
                         <button
                           type="button"
-                          onClick={() => copyRowLink(o)}
+                          onClick={() => setConfirmingRowId(o.id)}
                           style={{
                             padding: '1px 8px',
                             borderRadius: 'var(--style-radius-s, 4px)',
                             border: '1px solid var(--theme-elevation-250)',
                             background: 'transparent',
-                            color: copiedRowId === o.id ? '#065f46' : 'var(--theme-text)',
+                            color: 'var(--theme-text)',
                             fontSize: '11px',
                             fontWeight: 600,
                             cursor: 'pointer',
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {copiedRowId === o.id ? 'Copied ✓' : 'Copy Payment Link'}
+                          Copy Link…
                         </button>
-                      )}
+                      ))}
                       {o.url && (
                         <button
                           type="button"
