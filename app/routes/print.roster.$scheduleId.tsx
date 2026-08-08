@@ -74,6 +74,7 @@ interface Booking {
   };
   status: string;
   paymentReference?: string;
+  discountCode?: string | null;
   notes?: string;
 }
 
@@ -165,9 +166,10 @@ function AttendeeTable({ title, attendees }: { title: string; attendees: Booking
           <tr>
             <th style={{ width: "32px" }}>#</th>
             <th style={{ width: "20%" }}>Name</th>
-            <th style={{ width: "26%" }}>Email</th>
-            <th style={{ width: "16%" }}>Phone</th>
-            <th style={{ width: "14%" }}>Ref #</th>
+            <th style={{ width: "24%" }}>Email</th>
+            <th style={{ width: "15%" }}>Phone</th>
+            <th style={{ width: "12%" }}>Discount</th>
+            <th style={{ width: "13%" }}>Ref #</th>
           </tr>
         </thead>
         <tbody>
@@ -178,12 +180,13 @@ function AttendeeTable({ title, attendees }: { title: string; attendees: Booking
                 <td>{a.attendee.firstName} {a.attendee.lastName}</td>
                 <td>{a.attendee.email}</td>
                 <td>{a.attendee.phone ?? "—"}</td>
+                <td>{a.discountCode ? <strong>{a.discountCode}</strong> : "—"}</td>
                 <td>{a.paymentReference ?? "—"}</td>
               </tr>
               {a.notes && (
                 <tr key={`${a.id}-notes`} className="print-table__notes-row">
                   <td />
-                  <td colSpan={4} className="print-table__notes-cell">
+                  <td colSpan={5} className="print-table__notes-cell">
                     <span className="print-table__notes-label">Note:</span> {a.notes}
                   </td>
                 </tr>
