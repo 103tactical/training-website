@@ -86,6 +86,19 @@ function getAdminEmail(): string | null {
   return process.env.ADMIN_EMAIL?.trim() || null;
 }
 
+/** Extra recipient for problem/failure notifications only (developer inbox). */
+function getAlertEmail(): string | null {
+  return process.env.ALERT_EMAIL?.trim() || null;
+}
+
+/** From address for non-booking email (contact form). Falls back to FROM_EMAIL. */
+function getContactFromAddress(): string {
+  const email = process.env.CONTACT_FROM_EMAIL?.trim();
+  if (!email) return getFromAddress();
+  const name = process.env.FROM_NAME || "103 Tactical Training";
+  return `${name} <${email}>`;
+}
+
 /**
  * Escape a user-supplied string for interpolation into HTML email bodies.
  * Attendee names, emails, and topics come off public forms — never trust
@@ -408,10 +421,25 @@ export async function sendCancellationEmail(args: {
 /**
  * Internal helper — send a plain admin notification to ADMIN_EMAIL.
  * Silently skips if ADMIN_EMAIL is not configured.
+ *
+ * opts.issue: problem/failure notifications also go to ALERT_EMAIL.
+ * Recipients are sent to individually (never one multi-recipient call) so
+ * the dashboard's Resend quota widget count matches Resend's own accounting.
  */
-async function sendAdminEmail(subject: string, rows: string[], textLines: string[]): Promise<void> {
+async function sendAdminEmail(
+  subject: string,
+  rows: string[],
+  textLines: string[],
+  opts?: { issue?: boolean; from?: string },
+): Promise<void> {
+  const recipients = new Set<string>();
   const adminEmail = getAdminEmail();
-  if (!adminEmail) return;
+  if (adminEmail) recipients.add(adminEmail.toLowerCase());
+  if (opts?.issue) {
+    const alertEmail = getAlertEmail();
+    if (alertEmail) recipients.add(alertEmail.toLowerCase());
+  }
+  if (recipients.size === 0) return;
 
   const rowsHtml = rows
     .map((r) => `<p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:#333;">${r}</p>`)
@@ -421,17 +449,19 @@ async function sendAdminEmail(subject: string, rows: string[], textLines: string
   const text = textLines.join("\n");
 
   // Non-fatal — never throw on admin notifications
-  try {
-    const { error } = await sendViaResend({
-      from: getFromAddress(),
-      to: adminEmail,
-      subject,
-      html,
-      text,
-    });
-    if (error) console.error("[email] Admin notification failed:", error.message);
-  } catch (err) {
-    console.error("[email] Admin notification failed:", err);
+  for (const to of recipients) {
+    try {
+      const { error } = await sendViaResend({
+        from: opts?.from ?? getFromAddress(),
+        to,
+        subject,
+        html,
+        text,
+      });
+      if (error) console.error(`[email] Admin notification to ${to} failed:`, error.message);
+    } catch (err) {
+      console.error(`[email] Admin notification to ${to} failed:`, err);
+    }
   }
 }
 
@@ -478,6 +508,8 @@ export async function sendAdminBookingNotification(args: {
       ...(discountCode ? [`Discount: ${discountCode}${discountDollars ? ` (−${discountDollars})` : ""}`] : []),
       `Order ID: ${orderId}`,
     ],
+    // A paid-but-waitlisted booking denotes a problem — alert the developer too
+    { issue: waitlisted },
   );
 }
 
@@ -510,6 +542,7 @@ export async function sendAdminBookingFailureAlert(args: {
       ``,
       `Review: ${cmsLink}`,
     ],
+    { issue: true },
   );
 }
 
@@ -572,5 +605,7 @@ export async function sendAdminContactFormEmail(args: {
       `Topic: ${topic}`,
       `Message: ${message || "(none)"}`,
     ],
+    // Contact form is not booking-related — send from the info@ address
+    { from: getContactFromAddress() },
   );
 }
