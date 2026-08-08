@@ -38,6 +38,7 @@ import { default as default_34f0b25b009bb1451837532633e1094d } from '../../../co
 import { default as default_81baf64f5ba670b0a0cdaa42c1eae600 } from '../../../components/reporting/RevenueReport'
 import { default as default_bc54f04b5d51b943de2acaf992db5f2f } from '../../../components/reporting/BookingsReport'
 import { default as default_8471c9aee38151b8ccd25cdaef9eb78e } from '../../../components/reporting/RefundsReport'
+import { default as default_a3781b3715673a304f3a358a6928f5e1 } from '../../../components/notifications/NotificationsPage'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 export const importMap = {
@@ -81,5 +82,6 @@ export const importMap = {
   "./components/reporting/RevenueReport#default": default_81baf64f5ba670b0a0cdaa42c1eae600,
   "./components/reporting/BookingsReport#default": default_bc54f04b5d51b943de2acaf992db5f2f,
   "./components/reporting/RefundsReport#default": default_8471c9aee38151b8ccd25cdaef9eb78e,
+  "./components/notifications/NotificationsPage#default": default_a3781b3715673a304f3a358a6928f5e1,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

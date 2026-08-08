@@ -7,6 +7,7 @@ import { PhoneIcon, EmailIcon, LocationIcon } from "~/components/Icons";
 import { buildMeta, getRootSeoDefaults } from "~/lib/meta";
 import { trackContactFormSubmit } from "~/lib/analytics";
 import { sendAdminContactFormEmail } from "~/lib/email.server";
+import { createCmsNotification } from "~/lib/cms-notify.server";
 import { normalizeUSPhone, PHONE_ERROR } from "~/lib/phone";
 
 export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
@@ -120,6 +121,13 @@ export async function action({ request }: ActionFunctionArgs) {
     sendAdminContactFormEmail({ name, email, phone, topic, message, submissionId }).catch((err) => {
       console.error("Admin contact form notification failed:", err);
     });
+
+    // Dashboard notification — a reminder in case the email gets missed
+    const inbox = process.env.ADMIN_EMAIL?.trim() || "info@103tactical.com";
+    createCmsNotification({
+      whatHappened: `${name} (${email}) sent a message through the website's contact form.`,
+      whatToDo: `Read and reply to it from the ${inbox} inbox. Already saw it there? Just dismiss.`,
+    }).catch(() => {});
 
     return json<ContactActionData>({ success: true, errors: {} });
   } catch (err) {

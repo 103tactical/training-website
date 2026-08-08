@@ -64,6 +64,7 @@ export default function CustomNav() {
           </NavGroup>
 
           <NavGroup label="Data">
+            <NavLink href="/admin/notifications"                   label="Notifications" />
             <NavLink href="/admin/collections/contact-submissions" label="Contact Submissions" />
           </NavGroup>
 

@@ -37,8 +37,9 @@ export const ContactSubmissions: CollectionConfig = {
   admin: {
     group: "Data",
     useAsTitle: "name",
-    defaultColumns: ["name", "email", "topic", "status", "createdAt"],
-    description: "Submissions from the Contact Us form.",
+    defaultColumns: ["name", "email", "topic", "createdAt"],
+    description:
+      "A permanent record of every message sent through the website contact form. Each message also arrives in the info@ inbox — reply from there.",
   },
   access: {
     create: allowAccess,
@@ -46,67 +47,12 @@ export const ContactSubmissions: CollectionConfig = {
     update: ({ req }) => !!req.user,
     delete: ({ req }) => !!req.user,
   },
-  hooks: {
-    beforeChange: [
-      // Payload's update (and create) pipes the saved doc back through the
-      // collection afterRead hooks in the SAME request — without this flag,
-      // saving a submission back to "New" is instantly reverted to "Read" by
-      // the mark-as-read hook below (an admin couldn't mark a message unread).
-      // Reads in a save's request are not "opens"; only a genuine document
-      // open (findByID render) should auto-mark as read.
-      async ({ context, data }) => {
-        context.skipStatusUpdate = true;
-        return data;
-      },
-    ],
-    beforeDelete: [
-      // Payload's delete runs afterRead hooks on the doc INSIDE the delete
-      // transaction, after the row is already deleted. The mark-as-read
-      // update must not fire there: without `req` it deadlocks against the
-      // delete's row lock (froze the CMS 2026-08-05); with `req` its
-      // not-found error kills the shared transaction and silently rolls the
-      // delete back. beforeDelete shares req.context with those afterRead
-      // hooks, so flag them off for the whole delete operation.
-      async ({ context }) => {
-        context.skipStatusUpdate = true;
-      },
-    ],
-    afterRead: [
-      async ({ doc, req, context, findMany }) => {
-        // Only auto-mark as read for authenticated admin requests
-        if (!req.user) return doc;
-        // Don't mark as read from the list view — only when opened individually
-        if (findMany) return doc;
-        // Break the infinite loop — if we triggered this read ourselves, skip
-        if (context.skipStatusUpdate) return doc;
-        // Only act when the current status is 'new'
-        if (doc.status !== "new") return doc;
-
-        // `req` MUST be passed so this update joins the parent operation's
-        // transaction. Payload's delete runs afterRead hooks INSIDE its own
-        // transaction with the row already locked — an update issued without
-        // `req` takes a second connection and deadlocks against it forever
-        // (silent hang, leaked connections, no log output). Deleting a "new"
-        // submission froze the CMS this way on 2026-08-05.
-        try {
-          await req.payload.update({
-            collection: "contact-submissions",
-            id: doc.id,
-            data: { status: "read" },
-            depth: 0,
-            overrideAccess: true,
-            req,
-            context: { skipStatusUpdate: true },
-          });
-        } catch {
-          // Non-fatal — e.g. the row is being deleted in this very
-          // transaction. Never block the read/delete over a status stamp.
-        }
-
-        return { ...doc, status: "read" };
-      },
-    ],
-  },
+  // NOTE (2026-08-08): the new/read status field and its three coordinated
+  // hooks were removed when dashboard Notifications took over the
+  // "needs attention" role — this collection is now a plain archive. The
+  // old `status` DB column is intentionally LEFT in place so a deploy
+  // rollback (old code querying status) can never break; drop it in a
+  // future migration once this has been stable for a while.
   fields: [
     {
       name: "name",
@@ -139,19 +85,6 @@ export const ContactSubmissions: CollectionConfig = {
       type: "textarea",
       maxLength: 5000,
       label: "Message",
-    },
-    {
-      name: "status",
-      type: "select",
-      label: "Status",
-      defaultValue: "new",
-      admin: {
-        position: "sidebar",
-      },
-      options: [
-        { label: "🔵 New",      value: "new"  },
-        { label: "✓ Read",      value: "read" },
-      ],
     },
   ],
   timestamps: true,

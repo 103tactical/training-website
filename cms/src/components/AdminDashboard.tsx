@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import ResendQuotaWidget from './ResendQuotaWidget'
+import NotificationsBanner from './NotificationsBanner'
 
 /**
  * Landing dashboard — curated link cards mirroring CustomNav's groups.
@@ -144,11 +145,20 @@ const SECTIONS: { label: string; links: DashLink[] }[] = [
     label: 'Data',
     links: [
       {
+        href: '/admin/notifications',
+        label: 'Notifications',
+        bullets: [
+          'Reminders about things that may need your attention',
+          'Dismiss one once you’ve handled it — nothing is deleted',
+          'A banner appears at the top of this dashboard when any are waiting',
+        ],
+      },
+      {
         href: '/admin/collections/contact-submissions',
         label: 'Contact Submissions',
         bullets: [
-          'Messages sent through the website contact form',
-          'Status flips from New to Read when you open one',
+          'A permanent record of every message sent through the website contact form',
+          'Each message also arrives in the info@ email inbox — reply from there',
         ],
       },
     ],
@@ -256,6 +266,8 @@ export default function AdminDashboard() {
       }}>
         Dashboard
       </h1>
+
+      <NotificationsBanner />
 
       <ResendQuotaWidget />
 

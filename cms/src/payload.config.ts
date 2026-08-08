@@ -18,6 +18,7 @@ import { Instructors } from './collections/Instructors'
 import { PendingBookings } from './collections/PendingBookings'
 import { PrivateGroupBookings } from './collections/PrivateGroupBookings'
 import { DiscountCodes } from './collections/DiscountCodes'
+import { Notifications } from './collections/Notifications'
 import { SiteSettings } from './globals/SiteSettings'
 import { ECommerce } from './globals/ECommerce'
 import { HomePage } from './globals/HomePage'
@@ -86,10 +87,14 @@ export default buildConfig({
           Component: './components/reporting/RefundsReport',
           path: '/reporting/refunds',
         },
+        notificationsPage: {
+          Component: './components/notifications/NotificationsPage',
+          path: '/notifications',
+        },
       },
     },
   },
-  collections: [Users, Media, Courses, Badges, ContactSubmissions, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors, PendingBookings, PrivateGroupBookings, DiscountCodes],
+  collections: [Users, Media, Courses, Badges, ContactSubmissions, CourseGroups, CourseSchedules, Attendees, Bookings, Instructors, PendingBookings, PrivateGroupBookings, DiscountCodes, Notifications],
   globals: [HomePage, CoursesPage, ApplicationsPage, StorePage, SiteSettings, ContactSettings, Utility, ECommerce],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

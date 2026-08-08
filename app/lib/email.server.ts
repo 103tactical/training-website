@@ -604,7 +604,7 @@ export async function sendAdminContactFormEmail(args: {
       `<strong>Topic:</strong> ${escapeHtml(topic)}`,
       `<strong>Message:</strong><br>${safeMessage || "<em style='color:#888;'>No message provided.</em>"}`,
       ...(cmsLink
-        ? [`<a href="${cmsLink}" style="color:#ea580c;">Open in the admin (marks it as read)</a>`]
+        ? [`<a href="${cmsLink}" style="color:#ea580c;">View in the admin</a>`]
         : []),
     ],
     [
@@ -615,7 +615,7 @@ export async function sendAdminContactFormEmail(args: {
       `Phone: ${phone}`,
       `Topic: ${topic}`,
       `Message: ${message || "(none)"}`,
-      ...(cmsLink ? [``, `Open in the admin (marks it as read): ${cmsLink}`] : []),
+      ...(cmsLink ? [``, `View in the admin: ${cmsLink}`] : []),
     ],
     // Not booking-related — send from info@; Reply goes straight to the visitor
     { from: getContactFromAddress(), replyTo: email },

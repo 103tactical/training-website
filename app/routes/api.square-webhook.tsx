@@ -49,6 +49,7 @@ import {
   sendAdminBookingFailureAlert,
   sendAdminCancellationAlert,
 } from "~/lib/email.server";
+import { createCmsNotification } from "~/lib/cms-notify.server";
 
 export async function action({ request }: ActionFunctionArgs) {
   const rawBody = await request.text();
@@ -285,7 +286,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     const bookingStatus: "confirmed" | "waitlisted" =
       seatsRemaining > 0 ? "confirmed" : "waitlisted";
 
-    await createBookingRecord({
+    const createdBooking = await createBookingRecord({
       attendee: attendee.id,
       course: courseId,      // numeric ID resolved from schedule.course above
       courseSchedule: scheduleId, // numeric ID, not pending.courseSchedule
@@ -397,6 +398,17 @@ async function handlePaymentUpdated(event: Record<string, any>) {
         : {}),
     });
 
+    // Dashboard notification — only for the problem case (paid but no seat).
+    // Normal bookings deliberately do NOT create notifications.
+    if (bookingStatus === "waitlisted") {
+      await createCmsNotification({
+        whatHappened: `${firstName} ${lastName} paid for ${course.title}${sessionDates ? ` — ${sessionDates}` : ""}, but the class was already full. They're on the waitlist and have been told their seat isn't guaranteed.`,
+        whatToDo: `Free up a seat and they're enrolled automatically — or move them to another date, or refund them.`,
+        link: `/admin/collections/bookings/${createdBooking.id}`,
+        linkLabel: "Open their booking",
+      });
+    }
+
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
     console.error(`[webhook] Booking creation failed for pending ${pending.id}:`, reason);
@@ -413,6 +425,13 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       email: pending.email ?? "unknown",
       pendingId: pending.id,
       reason,
+    });
+
+    await createCmsNotification({
+      whatHappened: `A payment was received from ${pending.email ?? "a customer"} but the booking couldn't be created automatically.`,
+      whatToDo: `Open Pending Bookings and press Retry on the failed record. (The developer has been alerted too.)`,
+      link: `/admin/collections/pending-bookings`,
+      linkLabel: "Open Pending Bookings",
     });
   }
 }
