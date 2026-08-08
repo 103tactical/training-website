@@ -49,8 +49,10 @@ export default function NotificationsBanner() {
           textDecoration: 'none',
           ...(active
             ? {
+                // Bright yellow with a very subtle diagonal texture — two
+                // close shades, thin lines (per Mike 2026-08-08)
                 background:
-                  'repeating-linear-gradient(-45deg, #fbbf24 0px, #fbbf24 14px, #f59e0b 14px, #f59e0b 28px)',
+                  'repeating-linear-gradient(-45deg, #fde047 0px, #fde047 7px, #facc15 7px, #facc15 14px)',
               }
             : {
                 background: 'var(--theme-elevation-100)',
