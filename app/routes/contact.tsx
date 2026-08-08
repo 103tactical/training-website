@@ -112,9 +112,12 @@ export async function action({ request }: ActionFunctionArgs) {
       body: JSON.stringify({ name, email, phone: normalizedPhone, topic, message }),
     });
     if (!res.ok) throw new Error(`Payload responded with ${res.status}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const created: any = await res.json().catch(() => null);
+    const submissionId = created?.doc?.id ?? undefined;
 
     // Notify admin — non-fatal, never block the success response
-    sendAdminContactFormEmail({ name, email, phone, topic, message }).catch((err) => {
+    sendAdminContactFormEmail({ name, email, phone, topic, message, submissionId }).catch((err) => {
       console.error("Admin contact form notification failed:", err);
     });
 

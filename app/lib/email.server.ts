@@ -14,6 +14,7 @@ interface SendParams {
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
   attachments?: { filename: string; path: string }[];
 }
 
@@ -59,6 +60,7 @@ async function sendViaResend(params: SendParams): Promise<{ error: { message: st
       subject: params.subject,
       html: params.html,
       text: params.text,
+      ...(params.replyTo ? { reply_to: params.replyTo } : {}),
       ...(params.attachments?.length ? { attachments: params.attachments } : {}),
     }),
   });
@@ -430,7 +432,7 @@ async function sendAdminEmail(
   subject: string,
   rows: string[],
   textLines: string[],
-  opts?: { issue?: boolean; from?: string },
+  opts?: { issue?: boolean; from?: string; replyTo?: string },
 ): Promise<void> {
   const recipients = new Set<string>();
   const adminEmail = getAdminEmail();
@@ -457,6 +459,7 @@ async function sendAdminEmail(
         subject,
         html,
         text,
+        replyTo: opts?.replyTo,
       });
       if (error) console.error(`[email] Admin notification to ${to} failed:`, error.message);
     } catch (err) {
@@ -583,9 +586,14 @@ export async function sendAdminContactFormEmail(args: {
   phone: string;
   topic: string;
   message: string;
+  submissionId?: number | string;
 }): Promise<void> {
-  const { name, email, phone, topic, message } = args;
+  const { name, email, phone, topic, message, submissionId } = args;
   const safeMessage = escapeHtml(message).replace(/\n/g, "<br>");
+  const cmsBase = process.env.PAYLOAD_API_URL ?? "https://training-cms.onrender.com";
+  const cmsLink = submissionId
+    ? `${cmsBase}/admin/collections/contact-submissions/${submissionId}`
+    : null;
 
   await sendAdminEmail(
     `New Contact Form — ${topic}`,
@@ -595,6 +603,9 @@ export async function sendAdminContactFormEmail(args: {
       `<strong>Phone:</strong> ${escapeHtml(phone)}`,
       `<strong>Topic:</strong> ${escapeHtml(topic)}`,
       `<strong>Message:</strong><br>${safeMessage || "<em style='color:#888;'>No message provided.</em>"}`,
+      ...(cmsLink
+        ? [`<a href="${cmsLink}" style="color:#ea580c;">Open in the admin (marks it as read)</a>`]
+        : []),
     ],
     [
       `New Contact Form — ${topic}`,
@@ -604,8 +615,9 @@ export async function sendAdminContactFormEmail(args: {
       `Phone: ${phone}`,
       `Topic: ${topic}`,
       `Message: ${message || "(none)"}`,
+      ...(cmsLink ? [``, `Open in the admin (marks it as read): ${cmsLink}`] : []),
     ],
-    // Contact form is not booking-related — send from the info@ address
-    { from: getContactFromAddress() },
+    // Not booking-related — send from info@; Reply goes straight to the visitor
+    { from: getContactFromAddress(), replyTo: email },
   );
 }
