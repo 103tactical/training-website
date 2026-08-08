@@ -49,10 +49,10 @@ export default function NotificationsBanner() {
           textDecoration: 'none',
           ...(active
             ? {
-                // Bright yellow with a very subtle diagonal texture — two
-                // close shades, thin lines (per Mike 2026-08-08)
+                // Bright yellow with a very subtle diagonal texture — the
+                // stripe is only ~3-4% darker than the base (per Mike)
                 background:
-                  'repeating-linear-gradient(-45deg, #fde047 0px, #fde047 7px, #facc15 7px, #facc15 14px)',
+                  'repeating-linear-gradient(-45deg, #fde047 0px, #fde047 7px, #f5d940 7px, #f5d940 14px)',
               }
             : {
                 background: 'var(--theme-elevation-100)',
