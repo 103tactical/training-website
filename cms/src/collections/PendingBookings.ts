@@ -202,7 +202,9 @@ async function retryHandler(req: PayloadRequest): Promise<Response> {
           s.date
             ? new Date(s.date).toLocaleDateString('en-US', {
                 weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-                timeZone: 'America/New_York',
+                // session dates are day-only values pinned to noon UTC —
+                // format in UTC so the day can never shift
+                timeZone: 'UTC',
               })
             : null,
         )

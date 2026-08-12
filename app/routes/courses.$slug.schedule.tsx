@@ -31,21 +31,39 @@ export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
 
 function formatDate(iso?: string): string {
   if (!iso) return "";
+  // Session dates are day-only values stored in UTC — format in UTC so the
+  // rendered day never shifts with the server's or visitor's timezone.
   return new Date(iso).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
 function formatTime(iso?: string): string {
   if (!iso) return "";
+  // Classes are in-person on Staten Island — always show the venue's local
+  // time (Eastern), never the viewer's, so the schedule reads the same
+  // everywhere.
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: "America/New_York",
   });
+}
+
+/** "EDT" or "EST" for the given instant — DST-aware. */
+function tzLabel(iso?: string): string {
+  if (!iso) return "";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    timeZoneName: "short",
+    hour: "numeric",
+  }).formatToParts(new Date(iso));
+  return parts.find((p) => p.type === "timeZoneName")?.value ?? "";
 }
 
 function seatsStatus(maxSeats: number, seatsBooked = 0): { label: string; full: boolean } {
@@ -193,6 +211,8 @@ export default function CourseSchedulePage() {
                               {session.startTime && formatTime(session.startTime)}
                               {session.startTime && session.endTime && " – "}
                               {session.endTime && formatTime(session.endTime)}
+                              {" "}
+                              {tzLabel(session.endTime ?? session.startTime)}
                             </span>
                           )}
                         </div>

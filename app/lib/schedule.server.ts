@@ -10,8 +10,9 @@ import type { CourseSchedule } from "~/lib/payload";
  * All comparisons are done as wall-clock time in America/New_York — the same
  * timezone the times are displayed in on the site and entered in the CMS.
  *
- * Implementation note: session.date is stored at midnight UTC of the calendar
- * day, so its UTC Y-M-D IS the calendar day. startTime is a timestamp whose
+ * Implementation note: session.date is a day-only value stored at NOON UTC of
+ * the calendar day (normalized by the CMS's normalizeSessionDates hook since
+ * 2026-08-12), so its UTC Y-M-D IS the calendar day. startTime is a timestamp whose
  * meaningful part is its Eastern-time clock reading (that's how the CMS
  * displays and the site renders it). We therefore compare Y-M-D + HH:mm
  * strings, avoiding UTC-offset math entirely.
@@ -19,7 +20,7 @@ import type { CourseSchedule } from "~/lib/payload";
 
 const ET = "America/New_York";
 
-/** Y-M-D of the session's calendar day (stored midnight-UTC). */
+/** Y-M-D of the session's calendar day (stored noon-UTC). */
 function sessionDay(dateIso: string): string {
   return dateIso.slice(0, 10);
 }

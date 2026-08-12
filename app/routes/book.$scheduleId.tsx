@@ -109,6 +109,17 @@ function formatTime(iso?: string): string {
   });
 }
 
+/** "EDT" or "EST" for the given instant — DST-aware. */
+function tzLabel(iso?: string): string {
+  if (!iso) return "";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    timeZoneName: "short",
+    hour: "numeric",
+  }).formatToParts(new Date(iso));
+  return parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+}
+
 // ── Loader ────────────────────────────────────────────────────────────────────
 
 export async function loader({ params }: LoaderFunctionArgs) {
@@ -142,6 +153,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     dateText: formatDate(s.date),
     startTimeText: formatTime(s.startTime),
     endTimeText: formatTime(s.endTime),
+    tzText: tzLabel(s.endTime ?? s.startTime),
     hasTime: !!(s.startTime || s.endTime),
   }));
 
@@ -578,6 +590,7 @@ export default function BookSessionPage() {
                           {s.startTimeText}
                           {s.startTimeText && s.endTimeText && " – "}
                           {s.endTimeText}
+                          {s.tzText && ` ${s.tzText}`}
                         </span>
                       )}
                     </div>

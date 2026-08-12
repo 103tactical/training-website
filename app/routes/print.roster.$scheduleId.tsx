@@ -57,6 +57,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
       month: "short",
       day: "numeric",
       year: "numeric",
+      timeZone: "UTC", // day-only value — never shift with server timezone
     })
   );
 

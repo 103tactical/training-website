@@ -66,6 +66,31 @@ const promoteOnSeatIncrease: CollectionAfterChangeHook = async ({ doc, previousD
  * (decided 2026-07-30), so labels can never drift from the actual dates.
  * Runs BEFORE syncAdminTitle, which folds the label into adminTitle.
  */
+/**
+ * Session dates are DAY-ONLY values. Different write paths historically stored
+ * different times-of-day (the admin date picker saves noon UTC; the Course
+ * Calendar add-session flow saved 00:00 UTC — which is 8 PM the PREVIOUS day
+ * in Eastern time, and made the website show the wrong written date for any
+ * viewer formatting in a non-UTC timezone; bug found 2026-08-12).
+ * This hook normalizes every session date to NOON UTC on every save, no
+ * matter which path wrote it: noon UTC is the same calendar day in UTC and
+ * in every US timezone, so the day can never shift. Runs FIRST so
+ * autoLabelFromDates always derives labels from normalized values.
+ */
+const normalizeSessionDates: CollectionBeforeChangeHook = async ({ data }) => {
+  if (!Array.isArray(data.sessions)) return data
+  data.sessions = data.sessions.map((s: { date?: string | Date } & Record<string, unknown>) => {
+    if (!s?.date) return s
+    const d = new Date(s.date)
+    if (isNaN(d.getTime())) return s
+    // Take the UTC calendar day of the incoming value (both known write
+    // paths agree on it) and pin the time to 12:00 UTC.
+    const day = d.toISOString().slice(0, 10)
+    return { ...s, date: `${day}T12:00:00.000Z` }
+  })
+  return data
+}
+
 const autoLabelFromDates: CollectionBeforeChangeHook = async ({ data, originalDoc }) => {
   const sessions = (data.sessions ?? originalDoc?.sessions ?? []) as { date?: string | Date }[]
   const dates = sessions
@@ -384,7 +409,7 @@ export const CourseSchedules: CollectionConfig = {
     read: () => true,
   },
   hooks: {
-    beforeChange: [autoLabelFromDates, syncAdminTitle],
+    beforeChange: [normalizeSessionDates, autoLabelFromDates, syncAdminTitle],
     afterChange: [promoteOnSeatIncrease],
     beforeDelete: [beforeDeleteHook],
   },

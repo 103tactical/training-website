@@ -330,7 +330,10 @@ function AddSessionForm({ dateStr, courses, instructors, onCreated, onCancel }: 
           ...(displayLabel.trim() ? { displayLabel: displayLabel.trim() } : {}),
           ...(instructorId ? { instructor: Number(instructorId) } : {}),
           sessions: rows.map((r) => ({
-            date: `${r.date}T00:00:00.000Z`,
+            // Noon UTC = the same calendar day in UTC and every US timezone
+            // (00:00Z is 8 PM the previous day in ET and shifted the written
+            // date on the website — matches the normalizeSessionDates hook)
+            date: `${r.date}T12:00:00.000Z`,
             startTime: localToISO(r.date, r.start),
             endTime: localToISO(r.date, r.end),
           })),
