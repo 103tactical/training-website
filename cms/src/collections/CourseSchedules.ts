@@ -372,6 +372,11 @@ async function outstandingLinksHandler(req: PayloadRequest): Promise<Response> {
       and: [
         { courseSchedule: { equals: Number(scheduleId) } },
         { status: { equals: 'pending' } },
+        // Admin-sent links ONLY — they hold seats, and every row action here
+        // (copy/resend/cancel) is about the emailed link. Abandoned website
+        // checkouts are also status "pending" but hold nothing and would make
+        // the "each is holding a seat" banner a lie.
+        { source: { equals: 'admin-link' } },
       ],
     },
     limit: 100,
@@ -389,6 +394,9 @@ async function outstandingLinksHandler(req: PayloadRequest): Promise<Response> {
     url: d.checkoutUrl ?? null,
     // What the link actually charges (captured at creation); null on legacy rows
     totalCents: d.linkTotalCents ?? null,
+    // Whether cancel can disable the link AT SQUARE (ID stored at creation
+    // or backfilled); false only on legacy rows that missed the backfill
+    canDisable: Boolean(d.squarePaymentLinkId),
   }))
   return Response.json({ pending })
 }

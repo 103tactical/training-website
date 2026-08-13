@@ -17,7 +17,7 @@ import type { PayloadRequest } from 'payload'
 import { questionsLine } from './email'
 import { validateDiscountCode } from './discount'
 
-function getSquareClient(): SquareClient | null {
+export function getSquareClient(): SquareClient | null {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
   if (!accessToken) return null
   return new SquareClient({
@@ -236,14 +236,20 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   const totalCents = discountedPriceCents + surchargeCents
 
   // Store link + send metadata on the pending record: the URL for re-copying,
-  // the send time shown in the awaiting-payment list, and the link's REAL
-  // total so resent emails quote the amount the link actually charges even
-  // if the course price changes later. Non-fatal.
+  // the send time shown in the awaiting-payment list, the link's REAL total
+  // so resent emails quote the amount the link actually charges even if the
+  // course price changes later, and Square's payment-link ID so the
+  // cancel-link endpoint can disable the link at Square. Non-fatal.
   try {
     await p.update({
       collection: 'pending-bookings',
       id: pendingDoc.id,
-      data: { checkoutUrl, linkSentAt: new Date().toISOString(), linkTotalCents: totalCents },
+      data: {
+        checkoutUrl,
+        linkSentAt: new Date().toISOString(),
+        linkTotalCents: totalCents,
+        squarePaymentLinkId: response.paymentLink?.id ?? null,
+      },
       req,
     })
   } catch (err) {

@@ -317,6 +317,77 @@ async function resendLinkHandler(req: PayloadRequest): Promise<Response> {
   }
 }
 
+// ── Cancel payment link endpoint ──────────────────────────────────────────────
+// One-click "Cancel & Release Seat" for an outstanding admin-sent link:
+//   1. disables the payment link AT SQUARE (when we have its ID) so the
+//      emailed URL stops working — nobody can pay a cancelled link;
+//   2. deletes the pending record, which releases the held seat instantly.
+// Sends no email to the customer. Deleting the record is safe even if the
+// Square call fails: a payment on a recordless link lands as a flagged
+// "failed record" with an admin alert, never lost money.
+
+async function cancelLinkHandler(req: PayloadRequest): Promise<Response> {
+  if (!req.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const id = req.routeParams?.id
+  if (!id) {
+    return Response.json({ error: 'Missing id' }, { status: 400 })
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = req.payload as any
+  const pending = await p.findByID({ collection: 'pending-bookings', id, req }).catch(() => null)
+  if (!pending) {
+    return Response.json({ error: 'Record not found — it may already be cancelled.' }, { status: 404 })
+  }
+  if (pending.status !== 'pending') {
+    return Response.json(
+      { error: `This record is ${pending.status}, not awaiting payment — nothing to cancel.` },
+      { status: 400 },
+    )
+  }
+
+  const linkId = pending.squarePaymentLinkId as string | undefined
+  let linkDisabled = false
+  let linkDisableError: string | null = null
+  if (linkId) {
+    try {
+      const { getSquareClient } = await import('../lib/payment-link')
+      const square = getSquareClient()
+      if (square) {
+        await square.checkout.paymentLinks.delete({ id: linkId })
+        linkDisabled = true
+      } else {
+        linkDisableError = 'Square is not configured on the CMS.'
+      }
+    } catch (err) {
+      // A 404 from Square means the link is already gone — that's the goal.
+      const msg = err instanceof Error ? err.message : String(err)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((err as any)?.statusCode === 404 || msg.includes('404')) {
+        linkDisabled = true
+      } else {
+        console.error('[cancel-link] Square delete failed:', err)
+        linkDisableError = msg
+      }
+    }
+  }
+
+  try {
+    await p.delete({ collection: 'pending-bookings', id, req })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    // The link may already be dead at Square but the seat is still held —
+    // surface that clearly rather than pretending the whole cancel worked.
+    return Response.json(
+      { error: `Could not remove the record (seat still held): ${msg}`, linkDisabled },
+      { status: 500 },
+    )
+  }
+
+  return Response.json({ ok: true, linkDisabled, hadLinkId: Boolean(linkId), linkDisableError })
+}
+
 // ── Collection definition ─────────────────────────────────────────────────────
 
 export const PendingBookings: CollectionConfig = {
@@ -362,6 +433,11 @@ export const PendingBookings: CollectionConfig = {
       path: '/:id/resend-link',
       method: 'post',
       handler: resendLinkHandler,
+    },
+    {
+      path: '/:id/cancel-link',
+      method: 'post',
+      handler: cancelLinkHandler,
     },
   ],
   fields: [
@@ -444,6 +520,17 @@ export const PendingBookings: CollectionConfig = {
         readOnly: true,
         description: 'The Square checkout link that was sent. Copy it to resend to the customer.',
         condition: (data) => Boolean(data?.checkoutUrl),
+      },
+    },
+    {
+      name: 'squarePaymentLinkId',
+      type: 'text',
+      label: 'Square Payment Link ID',
+      admin: {
+        readOnly: true,
+        description:
+          'Square’s internal ID for the payment link — lets "Cancel & Release Seat" disable the link at Square so it can no longer be paid.',
+        condition: (data) => Boolean(data?.squarePaymentLinkId),
       },
     },
     {

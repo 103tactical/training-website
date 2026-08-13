@@ -19,6 +19,8 @@ interface PendingLink {
   sentAt: string
   url: string | null
   totalCents: number | null
+  /** true when we hold Square's link ID, so cancelling also disables the link at Square */
+  canDisable: boolean
 }
 
 export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number | string }) {
@@ -39,6 +41,10 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   const [resendingRowId, setResendingRowId] = useState<number | null>(null)
   const [resentRowId, setResentRowId] = useState<number | null>(null)
   const [resendError, setResendError] = useState('')
+  // "Cancel & Release Seat" modal state
+  const [cancelRow, setCancelRow] = useState<PendingLink | null>(null)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelNotice, setCancelNotice] = useState('')
 
   /** First name for the modal copy ("Jane"); falls back to "this person" */
   const rowFirstName = (row: PendingLink): string =>
@@ -69,13 +75,58 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
     setModalCopied(false)
   }, [])
 
-  // Esc closes the copy modal
+  const closeCancelModal = React.useCallback(() => {
+    if (cancelling) return // never close mid-request — the result matters
+    setCancelRow(null)
+  }, [cancelling])
+
+  // Esc closes whichever modal is open
   useEffect(() => {
-    if (!modalRow) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal() }
+    if (!modalRow && !cancelRow) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeModal(); closeCancelModal() }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [modalRow, closeModal])
+  }, [modalRow, cancelRow, closeModal, closeCancelModal])
+
+  const confirmCancelLink = async (row: PendingLink) => {
+    if (cancelling) return
+    setCancelling(true)
+    setCancelNotice('')
+    setResendError('')
+    try {
+      const res = await fetch(`/api/pending-bookings/${row.id}/cancel-link`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (res.status === 401 || res.status === 403) {
+        setCancelRow(null)
+        setResendError('Your login session has expired — please log in again, then retry the cancel.')
+        return
+      }
+      const json = await res.json() as {
+        ok?: boolean; linkDisabled?: boolean; hadLinkId?: boolean; error?: string
+      }
+      if (res.ok && json.ok) {
+        setCancelRow(null)
+        setCancelNotice(
+          json.linkDisabled
+            ? `Cancelled — ${rowFirstName(row)}’s payment link no longer works and the seat is back on sale.`
+            : `Cancelled — the seat is back on sale. Heads up: Square didn’t confirm disabling the link itself, so if ${rowFirstName(row)} still pays it you’ll get an alert email and nothing is lost.`,
+        )
+        loadOutstanding()
+      } else {
+        setCancelRow(null)
+        setResendError(json.error ?? 'Could not cancel the link — please try again.')
+      }
+    } catch {
+      setCancelRow(null)
+      setResendError('Network error — please try again.')
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   const resendRowLink = async (row: PendingLink) => {
     if (resendingRowId !== null) return
@@ -230,6 +281,9 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               {resendError && (
                 <p style={{ margin: '4px 0 0', color: '#991b1b' }}>{resendError}</p>
               )}
+              {cancelNotice && (
+                <p style={{ margin: '4px 0 0', color: '#065f46' }}>{cancelNotice}</p>
+              )}
               <ul style={{ margin: '6px 0 0', padding: 0, listStyle: 'none' }}>
                 {outstanding.map((o) => (
                   <li key={o.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
@@ -280,6 +334,23 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
                           {resendingRowId === o.id ? 'Sending…' : resentRowId === o.id ? 'Sent ✓' : 'Resend Email'}
                         </button>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => setCancelRow(o)}
+                        style={{
+                          padding: '1px 8px',
+                          borderRadius: 'var(--style-radius-s, 4px)',
+                          border: '1px solid rgba(153, 27, 27, 0.45)',
+                          background: 'transparent',
+                          color: '#b91c1c',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Cancel &amp; Release Seat
+                      </button>
                     </span>
                   </li>
                 ))}
@@ -458,6 +529,99 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
                 }}
               >
                 {modalCopied ? 'Copied ✓' : `Copy ${rowFirstName(modalRow) === 'this person' ? 'the' : `${rowFirstName(modalRow)}’s`} Link`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cancel & Release Seat modal ──────────────────────────────────────
+          Plain-language safety stop before cancelling an outstanding payment
+          link: says exactly what will happen (link disabled at Square, seat
+          released, no email sent) so the click is never a surprise. */}
+      {cancelRow && (
+        <div
+          onClick={closeCancelModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Cancel payment link"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--theme-bg)',
+              borderRadius: 'var(--style-radius-m, 8px)',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '460px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: '0 0 14px', fontSize: '16px', fontWeight: 700, color: 'var(--theme-text)' }}>
+              Cancel this payment link?
+            </p>
+
+            {/* Whose link is being cancelled */}
+            <div style={{
+              background: 'var(--theme-elevation-50)',
+              borderRadius: 'var(--style-radius-s, 4px)',
+              padding: '14px 16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--theme-text)' }}>
+                {cancelRow.name ?? cancelRow.email}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--theme-elevation-600)' }}>
+                {cancelRow.email}
+                {cancelRow.phone ? ` · ${formatRowPhone(cancelRow.phone)}` : ''}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--theme-elevation-600)' }}>
+                {cancelRow.totalCents != null ? `Link total: $${(cancelRow.totalCents / 100).toFixed(2)} · ` : ''}
+                Link emailed {new Date(cancelRow.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </p>
+            </div>
+
+            <p style={{ margin: '0 0 6px', fontSize: '13px', lineHeight: 1.6, color: 'var(--theme-text)' }}>
+              Here&rsquo;s what happens:
+            </p>
+            <ul style={{ margin: '0 0 14px', paddingLeft: '20px', fontSize: '13px', lineHeight: 1.7, color: 'var(--theme-text)' }}>
+              <li>
+                {cancelRow.canDisable ? (
+                  <>The payment link {rowFirstName(cancelRow)} received <strong>stops working</strong> — nobody can pay it anymore.</>
+                ) : (
+                  <>This link was sent before link-cancelling existed, so the link itself <strong>may still open</strong>. If {rowFirstName(cancelRow)} pays it anyway, you&rsquo;ll get an alert email and no money is lost.</>
+                )}
+              </li>
+              <li>The seat being held for {rowFirstName(cancelRow)} goes <strong>back on sale</strong> right away.</li>
+              <li><strong>No email is sent</strong> — if you told {rowFirstName(cancelRow)} to expect the link, let them know it&rsquo;s cancelled.</li>
+            </ul>
+            <p style={{ margin: '0 0 22px', fontSize: '13px', lineHeight: 1.6, color: 'var(--theme-elevation-600)' }}>
+              Nothing else changes — {rowFirstName(cancelRow)} has no booking yet, and you can always send a fresh link later.
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button type="button" onClick={closeCancelModal} disabled={cancelling} style={ghostBtn}>
+                Keep the Link
+              </button>
+              <button
+                type="button"
+                onClick={() => confirmCancelLink(cancelRow)}
+                disabled={cancelling}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', padding: '9px 18px',
+                  borderRadius: 'var(--style-radius-s)', fontSize: '13px', fontWeight: 600,
+                  cursor: cancelling ? 'wait' : 'pointer', border: 'none',
+                  background: '#b91c1c', color: '#ffffff',
+                  opacity: cancelling ? 0.7 : 1,
+                }}
+              >
+                {cancelling ? 'Cancelling…' : 'Yes — Cancel & Release the Seat'}
               </button>
             </div>
           </div>
