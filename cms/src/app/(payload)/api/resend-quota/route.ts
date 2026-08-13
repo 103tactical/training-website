@@ -15,14 +15,50 @@ export const dynamic = 'force-dynamic'
  * (Until 2026-08-13 this read a single 100-row page, so the monthly figure
  * silently floored at 100 the first month real volume exceeded it.)
  */
+/**
+ * Start of the quota window the "monthly" count covers, as UTC
+ * { day: "YYYY-MM-DD", time: "HH:MM:SS" }.
+ * Resend's own usage counter runs on the account's BILLING CYCLE, anchored to
+ * the signup anniversary — NOT the calendar month. Verified 2026-08-13: the
+ * Resend UI read 124 while calendar-August held 112 emails; counting from
+ * Jul 30 ~10:00 UTC onward reproduced 124 exactly (the anchor instant lies
+ * between the 09:08 and 10:15 UTC sends that day).
+ * Set RESEND_BILLING_CYCLE_START to ANY past cycle-start instant (ISO, e.g.
+ * "2026-07-30T10:00:00Z"); the window is that instant's latest monthly
+ * recurrence (day-of-month clamped for short months). Unset/invalid =
+ * calendar month.
+ */
+function windowStart(now: Date): { day: string; time: string } {
+  const raw = process.env.RESEND_BILLING_CYCLE_START?.trim()
+  const anchor = raw ? new Date(raw) : null
+  if (!anchor || isNaN(anchor.getTime()) || anchor.getTime() > now.getTime()) {
+    return { day: now.toISOString().slice(0, 8) + '01', time: '00:00:00' } // calendar month
+  }
+  const anchorDay = anchor.getUTCDate()
+  const time = anchor.toISOString().slice(11, 19)
+  const y = now.getUTCFullYear()
+  const m = now.getUTCMonth()
+  const recurrence = (yy: number, mm: number) => {
+    const lastDay = new Date(Date.UTC(yy, mm + 1, 0)).getUTCDate()
+    const d = new Date(Date.UTC(yy, mm, Math.min(anchorDay, lastDay)))
+    return d
+  }
+  let start = recurrence(y, m)
+  if (`${start.toISOString().slice(0, 10)}T${time}` > now.toISOString().slice(0, 19)) {
+    start = recurrence(y, m - 1)
+  }
+  return { day: start.toISOString().slice(0, 10), time }
+}
+
 async function liveCounts(): Promise<{ dailyUsed: number; monthlyUsed: number } | null> {
   const key = process.env.RESEND_API_KEY
   if (!key) return null
   try {
-    // created_at is UTC ("2026-07-30 09:08:40.358000+00") — prefix-compare
-    // against UTC day/month, matching Resend's midnight-UTC daily reset.
-    const today = new Date().toISOString().slice(0, 10)
-    const month = today.slice(0, 7)
+    // created_at is UTC ("2026-07-30 09:08:40.358000+00") — YYYY-MM-DD prefix
+    // comparisons work lexicographically, matching Resend's UTC resets.
+    const now = new Date()
+    const today = now.toISOString().slice(0, 10)
+    const win = windowStart(now)
     let dailyUsed = 0
     let monthlyUsed = 0
     let after: string | null = null
@@ -38,16 +74,21 @@ async function liveCounts(): Promise<{ dailyUsed: number; monthlyUsed: number } 
       const json = await res.json()
       const rows: { id?: string; created_at?: string }[] = Array.isArray(json?.data) ? json.data : []
       if (rows.length === 0) break
-      let sawOlderMonth = false
+      let sawOlderThanWindow = false
       for (const r of rows) {
         const ts = String(r.created_at ?? '')
-        if (ts.startsWith(month)) monthlyUsed++
-        else sawOlderMonth = true
-        if (ts.startsWith(today)) dailyUsed++
+        const rowDay = ts.slice(0, 10)
+        // In-window: after the window's start day, or ON it at/after the
+        // start time (HH:MM:SS compares lexicographically).
+        const inWindow =
+          rowDay > win.day || (rowDay === win.day && ts.slice(11, 19) >= win.time)
+        if (inWindow) monthlyUsed++
+        else sawOlderThanWindow = true
+        if (rowDay === today) dailyUsed++
       }
-      // List is newest-first: once a row predates this month, later pages
-      // are all older — the monthly count is complete.
-      if (sawOlderMonth || json?.has_more !== true) break
+      // List is newest-first: once a row predates the window, later pages
+      // are all older — the window count is complete.
+      if (sawOlderThanWindow || json?.has_more !== true) break
       after = String(rows[rows.length - 1].id ?? '')
       if (!after) break
     }
