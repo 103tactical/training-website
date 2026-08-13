@@ -63,13 +63,13 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 // ── Anti-abuse throttles (shared factory in lib/form-guard.server.ts) ─────────
 // Discount validation is reachable by anonymous visitors (the Apply button and
 // the final submit), so without a throttle a bot could enumerate codes.
-const codeAttemptAllowed = createIpThrottle(10 * 60 * 1000, 15);
+const codeAttemptAllowed = createIpThrottle(10 * 60 * 1000, 15, "discount-code");
 
 // The final booking submit creates a PendingBooking + a live Square payment
 // link — throttled so a bot can't pollute the ledger or hammer Square.
 // Generous window: a family booking several attendees back-to-back stays
 // well inside it.
-const bookingAllowed = createIpThrottle(10 * 60 * 1000, 8);
+const bookingAllowed = createIpThrottle(10 * 60 * 1000, 8, "booking");
 
 const CODE_THROTTLE_MESSAGE = "Too many discount code attempts — please wait a few minutes and try again.";
 
@@ -263,19 +263,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
     }
   }
 
-  // ── Spam guards on the final submit (before any record or Square link) ────
-  if (!bookingAllowed(request)) {
-    return json<BookActionData>(
-      { errors: {}, formError: "Too many booking attempts — please wait a few minutes and try again." },
-      { status: 429 },
-    );
-  }
-  // Time trap: reject submissions faster than a human could fill the form, or
-  // missing the token the page renders (a bot POSTing without loading it).
-  if (checkFormToken(formData.get("formToken") as string | null) !== "ok") {
-    return json<BookActionData>({ errors: {}, formError: FORM_TOKEN_MESSAGE }, { status: 400 });
-  }
-
   const firstName = (formData.get("firstName") as string | null)?.trim().slice(0, 100) ?? "";
   const lastName  = (formData.get("lastName")  as string | null)?.trim().slice(0, 100) ?? "";
   const email = (formData.get("email") as string | null)?.trim() ?? "";
@@ -301,6 +288,20 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   if (Object.keys(errors).length > 0) {
     return json<BookActionData>({ errors, formError: null }, { status: 422 });
+  }
+
+  // ── Spam guards — AFTER validation (incomplete human submissions get field
+  // errors, not guard copy) and BEFORE any record or Square link exists. ────
+  if (!bookingAllowed(request)) {
+    return json<BookActionData>(
+      { errors: {}, formError: "Too many booking attempts — please wait a few minutes and try again." },
+      { status: 429 },
+    );
+  }
+  // Time trap: reject submissions faster than a human could fill the form, or
+  // missing the token the page renders (a bot POSTing without loading it).
+  if (checkFormToken(formData.get("formToken") as string | null) !== "ok") {
+    return json<BookActionData>({ errors: {}, formError: FORM_TOKEN_MESSAGE }, { status: 400 });
   }
 
   if (!SQUARE_CONFIGURED || !squareClient) {

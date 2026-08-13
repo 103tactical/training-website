@@ -67,13 +67,35 @@ export const FORM_TOKEN_MESSAGE =
   "Something went wrong sending the form — please refresh the page and try again.";
 
 /**
+ * Best-effort client IP. Render fronts the site with Cloudflare, so
+ * cf-connecting-ip is the authoritative client address when present;
+ * x-forwarded-for's first hop is the fallback. Returns null when nothing
+ * identifies the client.
+ */
+function getClientIp(request: Request): string | null {
+  const h = request.headers;
+  const cf = h.get("cf-connecting-ip")?.trim();
+  if (cf) return cf;
+  const tci = h.get("true-client-ip")?.trim();
+  if (tci) return tci;
+  const first = h.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return first || null;
+}
+
+/**
  * Per-IP sliding-window throttle factory (fixed window, opportunistic
  * cleanup). Returns true when the request is within limits.
+ *
+ * CRITICAL: when the client IP cannot be determined the request is ALLOWED —
+ * a shared fallback bucket would rate-limit every visitor collectively
+ * (which is exactly what happened on 2026-08-13 when x-forwarded-for didn't
+ * carry the real client address and all visitors pooled into "unknown").
  */
-export function createIpThrottle(windowMs: number, maxAttempts: number) {
+export function createIpThrottle(windowMs: number, maxAttempts: number, label = "form") {
   const attempts = new Map<string, { count: number; windowStart: number }>();
   return function allowed(request: Request): boolean {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const ip = getClientIp(request);
+    if (!ip) return true; // never pool unidentified visitors into one bucket
     const now = Date.now();
     const entry = attempts.get(ip);
     if (!entry || now - entry.windowStart > windowMs) {
@@ -86,6 +108,8 @@ export function createIpThrottle(windowMs: number, maxAttempts: number) {
       return true;
     }
     entry.count += 1;
-    return entry.count <= maxAttempts;
+    const ok = entry.count <= maxAttempts;
+    if (!ok) console.warn(`[form-guard] ${label} throttle blocked ip=${ip} count=${entry.count}`);
+    return ok;
   };
 }
