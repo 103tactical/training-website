@@ -252,26 +252,71 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
             </span>
             Add Attendee via Payment Link
           </button>
+          {/* Cancel confirmation lives OUTSIDE the awaiting box: cancelling
+              the LAST link unmounts the box, and the reassurance must
+              survive that (found in live testing 2026-08-13) */}
+          {cancelNotice && outstanding.length === 0 && (
+            <p style={{ flexBasis: '100%', margin: '4px 0 0', fontSize: '12px', color: '#065f46' }}>
+              {cancelNotice}
+            </p>
+          )}
+          {resendError && outstanding.length === 0 && (
+            <p style={{ flexBasis: '100%', margin: '4px 0 0', fontSize: '12px', color: '#991b1b' }}>
+              {resendError}
+            </p>
+          )}
           {outstanding.length > 0 && (
             // Outer div owns the flex line-break (basis 100%, no max-width —
             // a max-width here would clamp the basis and let the box sit
             // inline beside the buttons on wide screens)
             <div style={{ flexBasis: '100%', minWidth: '100%' }}>
-            <div style={{
-              marginTop: '2px',
-              padding: '10px 14px',
-              background: 'var(--theme-elevation-50)',
-              border: '1px solid var(--theme-elevation-150)',
-              borderRadius: 'var(--style-radius-s, 4px)',
-              fontSize: '12px',
-              color: 'var(--theme-elevation-600)',
-              // Wide enough that the flush-right buttons form a clean column,
-              // capped so they don't drift a full monitor-width away from the
-              // names they belong to
-              width: '100%',
-              maxWidth: '720px',
-              boxSizing: 'border-box',
-            }}>
+            {/* Row layout: person info grows/wraps (min 240px before the
+                actions drop below it), the action buttons hug the right on
+                wide screens and wrap onto their own left-aligned line on
+                narrow ones — each button can wrap independently on phones.
+                Box cap sized so name + email + three buttons fit one line
+                on desktop (the old 720px cap forced awkward wrapping). */}
+            <style>{`
+              .apl-box {
+                margin-top: 2px;
+                padding: 10px 14px;
+                background: var(--theme-elevation-50);
+                border: 1px solid var(--theme-elevation-150);
+                border-radius: var(--style-radius-s, 4px);
+                font-size: 12px;
+                color: var(--theme-elevation-600);
+                width: 100%;
+                max-width: 960px;
+                box-sizing: border-box;
+              }
+              .apl-rows { margin: 6px 0 0; padding: 0; list-style: none; }
+              .apl-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                column-gap: 10px;
+                row-gap: 6px;
+                padding: 4px 0;
+              }
+              .apl-meta {
+                flex: 1 1 240px;
+                min-width: 0;
+                overflow-wrap: anywhere;
+              }
+              .apl-actions {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px;
+                margin-left: auto;
+              }
+              /* When the actions wrap to their own line, left-align them
+                 under the name instead of floating detached on the right */
+              @media (max-width: 700px) {
+                .apl-actions { margin-left: 0; width: 100%; }
+              }
+            `}</style>
+            <div className="apl-box">
               <strong style={{ color: 'var(--theme-text)' }}>
                 Awaiting payment from {outstanding.length} {outstanding.length === 1 ? 'person' : 'people'}
               </strong>
@@ -284,16 +329,13 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               {cancelNotice && (
                 <p style={{ margin: '4px 0 0', color: '#065f46' }}>{cancelNotice}</p>
               )}
-              <ul style={{ margin: '6px 0 0', padding: 0, listStyle: 'none' }}>
+              <ul className="apl-rows">
                 {outstanding.map((o) => (
-                  <li key={o.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                      <span>
+                  <li key={o.id} className="apl-row">
+                      <span className="apl-meta">
                         {o.name ?? o.email}{o.name ? ` — ${o.email}` : ''} · sent {new Date(o.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
-                      {/* marginLeft:auto keeps the pair flush right, and when a
-                          narrow screen wraps them to their own line they stay
-                          right-aligned */}
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
+                      <span className="apl-actions">
                       {o.url && (
                         <button
                           type="button"

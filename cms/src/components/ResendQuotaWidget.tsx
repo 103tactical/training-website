@@ -2,14 +2,21 @@
 
 import React, { useEffect, useState } from 'react'
 
+interface PlanInfo {
+  name: string
+  dailyLimit: number | null // null = plan has no daily cap (paid plans)
+  monthlyLimit: number
+}
+
 interface ResendQuota {
   dailyUsed:   number | null
   monthlyUsed: number | null
+  plan?:       PlanInfo
   error:       string | null
 }
 
-const FREE_DAILY_LIMIT   = 100
-const FREE_MONTHLY_LIMIT = 3_000
+// Fallback when the API response predates the plan field (stale deploy skew)
+const DEFAULT_PLAN: PlanInfo = { name: 'Free', dailyLimit: 100, monthlyLimit: 3_000 }
 
 function pct(used: number, limit: number) {
   return Math.min(100, Math.round((used / limit) * 100))
@@ -19,13 +26,13 @@ function barColor(p: number) {
   return p >= 100 ? '#b91c1c' : p >= 80 ? '#d97706' : '#16a34a'
 }
 
-function statusMessage(quota: ResendQuota): React.ReactNode {
-  const isFreePlan  = quota.dailyUsed !== null
-  const dailyP      = isFreePlan && quota.dailyUsed  != null ? pct(quota.dailyUsed,  FREE_DAILY_LIMIT)   : 0
-  const monthlyP    = quota.monthlyUsed != null               ? pct(quota.monthlyUsed, FREE_MONTHLY_LIMIT) : 0
+function statusMessage(quota: ResendQuota, plan: PlanInfo): React.ReactNode {
+  const hasDailyCap = plan.dailyLimit != null
+  const dailyP      = hasDailyCap && quota.dailyUsed != null ? pct(quota.dailyUsed, plan.dailyLimit!) : 0
+  const monthlyP    = quota.monthlyUsed != null ? pct(quota.monthlyUsed, plan.monthlyLimit) : 0
 
-  const dailyRemain   = Math.max(0, FREE_DAILY_LIMIT   - (quota.dailyUsed   ?? 0))
-  const monthlyRemain = Math.max(0, FREE_MONTHLY_LIMIT - (quota.monthlyUsed ?? 0))
+  const dailyRemain   = hasDailyCap ? Math.max(0, plan.dailyLimit! - (quota.dailyUsed ?? 0)) : 0
+  const monthlyRemain = Math.max(0, plan.monthlyLimit - (quota.monthlyUsed ?? 0))
 
   if (dailyP >= 100 || monthlyP >= 100) {
     const which = dailyP >= 100 && monthlyP >= 100
@@ -63,16 +70,16 @@ function statusMessage(quota: ResendQuota): React.ReactNode {
     )
   }
 
-  return isFreePlan ? (
+  return hasDailyCap ? (
     <>
       <strong>Email delivery is operating normally.</strong> {dailyRemain} email{dailyRemain !== 1 ? 's' : ''} remaining
-      today and {monthlyRemain.toLocaleString()} remaining this month. At current usage the free plan
+      today and {monthlyRemain.toLocaleString()} remaining this month. At current usage the {plan.name.toLowerCase()} plan
       is sufficient — no action needed.
     </>
   ) : (
     <>
       <strong>Email delivery is operating normally.</strong> {monthlyRemain.toLocaleString()} email{monthlyRemain !== 1 ? 's' : ''} remaining
-      this month. No action needed.
+      this month on the {plan.name} plan. No action needed.
     </>
   )
 }
@@ -87,9 +94,10 @@ export default function ResendQuotaWidget() {
       .catch(() => setQuota({ dailyUsed: null, monthlyUsed: null, error: 'Request failed' }))
   }, [])
 
-  const isFreePlan  = quota !== null && quota.dailyUsed !== null
-  const dailyP      = isFreePlan && quota?.dailyUsed  != null ? pct(quota.dailyUsed,  FREE_DAILY_LIMIT)   : 0
-  const monthlyP    = quota?.monthlyUsed != null               ? pct(quota.monthlyUsed, FREE_MONTHLY_LIMIT) : 0
+  const plan        = quota?.plan ?? DEFAULT_PLAN
+  const hasDailyCap = plan.dailyLimit != null
+  const dailyP      = hasDailyCap && quota?.dailyUsed != null ? pct(quota.dailyUsed, plan.dailyLimit!) : 0
+  const monthlyP    = quota?.monthlyUsed != null ? pct(quota.monthlyUsed, plan.monthlyLimit) : 0
   const worstPct    = Math.max(dailyP, monthlyP)
   const color       = quota && !quota.error ? barColor(worstPct) : '#888'
   const msgColor    = worstPct >= 80 ? color : 'var(--theme-elevation-500)'
@@ -208,7 +216,7 @@ export default function ResendQuotaWidget() {
             <div className="rq-title-row">
               <div className="rq-left">
                 <span className="rq-title">Email Delivery Status</span>
-                {isFreePlan && <span className="rq-badge">Free Plan</span>}
+                <span className="rq-badge">{plan.name} Plan</span>
               </div>
               <a
                 href="https://resend.com/settings/usage"
@@ -235,19 +243,21 @@ export default function ResendQuotaWidget() {
 
             {/* ── Numbers ── */}
             <div className="rq-numbers">
-              <span className="rq-num-line">
-                <span className="rq-num-label">Daily: </span>
-                {(quota.dailyUsed ?? 0)} of {FREE_DAILY_LIMIT}
-              </span>
+              {hasDailyCap && (
+                <span className="rq-num-line">
+                  <span className="rq-num-label">Daily: </span>
+                  {(quota.dailyUsed ?? 0)} of {plan.dailyLimit!.toLocaleString()}
+                </span>
+              )}
               <span className="rq-num-line">
                 <span className="rq-num-label">Monthly: </span>
-                {(quota.monthlyUsed ?? 0).toLocaleString()} of {FREE_MONTHLY_LIMIT.toLocaleString()}
+                {(quota.monthlyUsed ?? 0).toLocaleString()} of {plan.monthlyLimit.toLocaleString()}
               </span>
             </div>
 
             {/* ── Status message ── */}
             <div className="rq-status" style={{ color: msgColor }}>
-              {statusMessage(quota)}
+              {statusMessage(quota, plan)}
             </div>
           </>
         )}
