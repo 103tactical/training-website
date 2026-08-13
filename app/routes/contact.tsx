@@ -9,6 +9,11 @@ import { trackContactFormSubmit } from "~/lib/analytics";
 import { sendAdminContactFormEmail } from "~/lib/email.server";
 import { createCmsNotification } from "~/lib/cms-notify.server";
 import { normalizeUSPhone, PHONE_ERROR } from "~/lib/phone";
+import { issueFormToken, checkFormToken, createIpThrottle, FORM_TOKEN_MESSAGE } from "~/lib/form-guard.server";
+
+// Contact-form spam guard: nobody legitimately sends more than a handful of
+// messages — bots do. 5 submissions per 10 minutes per IP.
+const contactAllowed = createIpThrottle(10 * 60 * 1000, 5);
 
 export const meta: MetaFunction<typeof loader> = ({ data, matches }) => {
   const { defaultOgImage, defaultSiteName } = getRootSeoDefaults(matches);
@@ -68,6 +73,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     seoDescription: cs?.seo?.description ?? null,
     seoOgImage:     cs?.seo?.ogImage?.url ?? null,
     canonicalUrl: new URL(request.url).toString(),
+    formToken: issueFormToken(),
   });
 }
 
@@ -80,6 +86,24 @@ type ContactActionData = {
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
+
+  // ── Spam guards (before anything is stored or emailed) ──────────────────
+  if (!contactAllowed(request)) {
+    return json<ContactActionData>(
+      { success: false, errors: { form: "Too many messages sent — please wait a few minutes and try again." } },
+      { status: 429 },
+    );
+  }
+  // Time trap: a submission faster than a human could type, or missing the
+  // token the page renders (a bot POSTing without loading the page), is
+  // rejected with a refresh prompt. Refreshing issues a fresh valid token.
+  if (checkFormToken(formData.get("formToken") as string | null) !== "ok") {
+    return json<ContactActionData>(
+      { success: false, errors: { form: FORM_TOKEN_MESSAGE } },
+      { status: 400 },
+    );
+  }
+
   const name    = (formData.get("name")    as string | null)?.trim() ?? "";
   const email   = (formData.get("email")   as string | null)?.trim() ?? "";
   const phone   = (formData.get("phone")   as string | null)?.trim() ?? "";
@@ -142,7 +166,7 @@ export async function action({ request }: ActionFunctionArgs) {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function Contact() {
-  const { topics, heroImageUrl, heroImageAlt, phone, email, address, city } =
+  const { topics, heroImageUrl, heroImageAlt, phone, email, address, city, formToken } =
     useLoaderData<typeof loader>();
   const actionData   = useActionData<typeof action>();
   const navigation   = useNavigation();
@@ -152,6 +176,10 @@ export default function Contact() {
   // errors after the user has touched a field or attempted submit.
   const [attempted, setAttempted] = useState(false);
   const [phoneValue, setPhoneValue] = useState("");
+  // Pin the anti-bot token to the FIRST page load: revalidation after a
+  // validation error would otherwise hand the form a brand-new token, and a
+  // visitor who fixes a typo within seconds would trip the time trap.
+  const [formTokenValue] = useState(formToken);
 
   const formatPhone = useCallback((raw: string) => {
     const digits = raw.replace(/\D/g, "").slice(0, 10);
@@ -264,6 +292,8 @@ export default function Contact() {
               {serverErrors.form && (
                 <p className="contact-form__error-banner">{serverErrors.form}</p>
               )}
+
+              <input type="hidden" name="formToken" value={formTokenValue} />
 
               {/* Name + Phone row */}
               <div className="contact-form__row">

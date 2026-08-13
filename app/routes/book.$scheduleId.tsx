@@ -28,6 +28,7 @@ import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
 import { isScheduleBookable } from "~/lib/schedule.server";
 import { normalizeUSPhone, PHONE_ERROR } from "~/lib/phone";
+import { issueFormToken, checkFormToken, createIpThrottle, FORM_TOKEN_MESSAGE } from "~/lib/form-guard.server";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -59,32 +60,16 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// ── Discount-code attempt throttle ────────────────────────────────────────────
+// ── Anti-abuse throttles (shared factory in lib/form-guard.server.ts) ─────────
 // Discount validation is reachable by anonymous visitors (the Apply button and
 // the final submit), so without a throttle a bot could enumerate codes.
-// In-memory is sufficient: the site runs as a single Render instance, and a
-// restart resetting the counters is harmless.
-const codeAttempts = new Map<string, { count: number; windowStart: number }>();
-const CODE_WINDOW_MS = 10 * 60 * 1000;
-const CODE_MAX_ATTEMPTS = 15;
+const codeAttemptAllowed = createIpThrottle(10 * 60 * 1000, 15);
 
-function codeAttemptAllowed(request: Request): boolean {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const now = Date.now();
-  const entry = codeAttempts.get(ip);
-  if (!entry || now - entry.windowStart > CODE_WINDOW_MS) {
-    // Opportunistic cleanup keeps the map from growing unbounded
-    if (codeAttempts.size > 5000) {
-      for (const [k, v] of codeAttempts) {
-        if (now - v.windowStart > CODE_WINDOW_MS) codeAttempts.delete(k);
-      }
-    }
-    codeAttempts.set(ip, { count: 1, windowStart: now });
-    return true;
-  }
-  entry.count += 1;
-  return entry.count <= CODE_MAX_ATTEMPTS;
-}
+// The final booking submit creates a PendingBooking + a live Square payment
+// link — throttled so a bot can't pollute the ledger or hammer Square.
+// Generous window: a family booking several attendees back-to-back stays
+// well inside it.
+const bookingAllowed = createIpThrottle(10 * 60 * 1000, 8);
 
 const CODE_THROTTLE_MESSAGE = "Too many discount code attempts — please wait a few minutes and try again.";
 
@@ -225,6 +210,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     autoDiscount,
     surchargeNoticeHeading,
     surchargeNoticeBody,
+    formToken: issueFormToken(),
   });
 }
 
@@ -275,6 +261,19 @@ export async function action({ request, params }: ActionFunctionArgs) {
       console.error("[book] apply-code error:", err);
       return json<ApplyCodeData>({ discountError: "Could not check that code right now. Please try again." });
     }
+  }
+
+  // ── Spam guards on the final submit (before any record or Square link) ────
+  if (!bookingAllowed(request)) {
+    return json<BookActionData>(
+      { errors: {}, formError: "Too many booking attempts — please wait a few minutes and try again." },
+      { status: 429 },
+    );
+  }
+  // Time trap: reject submissions faster than a human could fill the form, or
+  // missing the token the page renders (a bot POSTing without loading it).
+  if (checkFormToken(formData.get("formToken") as string | null) !== "ok") {
+    return json<BookActionData>({ errors: {}, formError: FORM_TOKEN_MESSAGE }, { status: 400 });
   }
 
   const firstName = (formData.get("firstName") as string | null)?.trim().slice(0, 100) ?? "";
@@ -510,6 +509,10 @@ export default function BookSessionPage() {
 
   // ── Discount code (fetcher preview; server re-validates on final submit) ──
   const codeFetcher = useFetcher<ApplyCodeData>();
+  // Pin the anti-bot token to the FIRST page load — revalidation after a
+  // validation error would otherwise refresh it and a quick retry would trip
+  // the time trap.
+  const [formTokenValue] = useState(data.formToken);
   const [codeInput, setCodeInput] = useState(autoDiscount?.code ?? "");
   const [applied, setApplied] = useState<NonNullable<ApplyCodeData["discount"]> | null>(autoDiscount ?? null);
   const applying = codeFetcher.state !== "idle";
@@ -644,6 +647,7 @@ export default function BookSessionPage() {
             </div>
           ) : (
             <Form method="post" className="booking-form" noValidate>
+              <input type="hidden" name="formToken" value={formTokenValue} />
               <h2 className="booking-form__heading">Schedule Your Session</h2>
               <p className="booking-form__subtext">
                 Tell us who will be attending, then you&apos;ll be taken to
