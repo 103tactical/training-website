@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'crypto'
 import type { CollectionConfig, PayloadRequest } from 'payload'
 import { sendBulkEmail, sendEmail, questionsLine, type EmailAttachment } from '../lib/email'
 import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
+import { dismissNotificationsLinkingTo } from '../lib/dismiss-notifications'
 
 // ── Access control (same pattern as Attendees / Bookings) ─────────────────────
 
@@ -417,6 +418,21 @@ export const PendingBookings: CollectionConfig = {
     create: allowAccess,
     update: allowAccess,
     delete: ({ req }) => Boolean(req?.user), // only logged-in admins can delete
+  },
+  hooks: {
+    // Deleting a pending record (releasing a hold, clearing a failed row)
+    // dismisses any failed-booking notification that deep-links to it, so
+    // the Notifications page never shows a broken "Open the failed record"
+    // button. Covers both raw list deletes and the Cancel & Release Seat
+    // endpoint (it deletes via the local API, so this hook runs there too).
+    afterDelete: [
+      async ({ id, req }) => {
+        await dismissNotificationsLinkingTo(
+          req.payload,
+          `/admin/collections/pending-bookings/${id}`,
+        )
+      },
+    ],
   },
   endpoints: [
     {

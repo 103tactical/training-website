@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "crypto";
 import type { CollectionConfig } from "payload";
 import { optionalPhoneValidate, phoneBeforeValidate } from "../lib/phone";
+import { dismissNotificationsLinkingTo } from "../lib/dismiss-notifications";
 
 /**
  * Constant-time comparison of two strings to prevent timing attacks.
@@ -46,6 +47,19 @@ export const ContactSubmissions: CollectionConfig = {
     read: ({ req }) => !!req.user,
     update: ({ req }) => !!req.user,
     delete: ({ req }) => !!req.user,
+  },
+  hooks: {
+    // Deleting a submission dismisses any dashboard notification that links
+    // to it — otherwise the Notifications page is left with a broken
+    // "View the message" button (reported 2026-08-20).
+    afterDelete: [
+      async ({ id, req }) => {
+        await dismissNotificationsLinkingTo(
+          req.payload,
+          `/admin/collections/contact-submissions/${id}`,
+        );
+      },
+    ],
   },
   // NOTE (2026-08-08): the new/read status field and its three coordinated
   // hooks were removed when dashboard Notifications took over the

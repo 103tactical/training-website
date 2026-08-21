@@ -7,6 +7,7 @@ import type {
 } from 'payload'
 import { SquareClient, SquareEnvironment } from 'square'
 import { sendEmail, questionsLine } from '../lib/email'
+import { dismissNotificationsLinkingTo } from '../lib/dismiss-notifications'
 
 function getSquareClient() {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
@@ -545,6 +546,17 @@ export const Bookings: CollectionConfig = {
     beforeChange: [validateBookingRules, recordTransfer, syncBookingTitle],
     afterChange: [afterChangeHook],
     beforeDelete: [beforeDeleteHook],
+    // Deleting a booking dismisses any notification that deep-links to it
+    // (paid-but-waitlisted alerts), so the Notifications page never shows a
+    // broken "Open their booking" button.
+    afterDelete: [
+      async ({ id, req }) => {
+        await dismissNotificationsLinkingTo(
+          req.payload,
+          `/admin/collections/bookings/${id}`,
+        )
+      },
+    ],
   },
   fields: [
     // Auto-managed — used as the document title in the CMS. Labeled
