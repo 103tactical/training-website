@@ -188,6 +188,11 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     attemptedAt: new Date().toISOString(),
   });
 
+  // Course + session dates for admin-facing failure messages ("NYS CCW Class —
+  // Aug 14/15"). Set as soon as the schedule resolves so the catch block can
+  // tell the admin WHICH session the payment was for.
+  let sessionContext = "";
+
   try {
     // ── Resolve the CourseSchedule ──────────────────────────────────────────
     // courseSchedule may be a populated object or a plain ID depending on depth
@@ -207,6 +212,11 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     if (!courseId) {
       throw new Error(`Schedule ${scheduleId} has no linked course`);
     }
+
+    sessionContext = [
+      typeof course === "object" && course !== null ? course.title : "",
+      formatSessionDates(schedule.sessions ?? []),
+    ].filter(Boolean).join(" — ");
 
     // ── Find or create Attendee ─────────────────────────────────────────────
     // The attendee's name is entered on OUR booking form and stored on the
@@ -413,6 +423,21 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     const reason = err instanceof Error ? err.message : String(err);
     console.error(`[webhook] Booking creation failed for pending ${pending.id}:`, reason);
 
+    // Duplicate-delivery race: Square re-delivers payment.updated, and a second
+    // concurrent run can pass the top-of-handler idempotency check before the
+    // first run's booking row exists — it then dies on the CMS duplicate-booking
+    // guard even though the payment is fully handled (happened 2026-08-14,
+    // pending 27). If a booking for this order exists NOW, mark the pending
+    // completed and stay quiet: no failure state, no alert, no notification.
+    const racedBooking = await findBookingBySquareOrderId(orderId).catch(() => null);
+    if (racedBooking) {
+      console.log(
+        `[webhook] Order ${orderId} already booked (duplicate delivery) — marking pending ${pending.id} completed`,
+      );
+      await updatePendingBooking(pending.id, { status: "completed" });
+      return;
+    }
+
     // Mark as failed so the admin can see it and use the Retry button
     await updatePendingBooking(pending.id, {
       status: "failed",
@@ -420,18 +445,40 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       attemptedAt: new Date().toISOString(),
     });
 
+    // Best-effort session context if the failure happened before the schedule
+    // resolved — the admin message should still say which class this was for.
+    if (!sessionContext) {
+      try {
+        const sid =
+          pending.courseSchedule !== null && typeof pending.courseSchedule === "object"
+            ? (pending.courseSchedule as { id: number }).id
+            : pending.courseSchedule;
+        if (sid) {
+          const s = await getCourseScheduleById(String(sid));
+          const c = s.course as Course;
+          sessionContext = [
+            typeof c === "object" && c !== null ? c.title : "",
+            formatSessionDates(s.sessions ?? []),
+          ].filter(Boolean).join(" — ");
+        }
+      } catch {
+        // context is a nicety — never let it mask the real failure
+      }
+    }
+
     // Alert the admin immediately — silent failure is easy to miss
     await sendAdminBookingFailureAlert({
       email: pending.email ?? "unknown",
       pendingId: pending.id,
       reason,
+      sessionContext: sessionContext || undefined,
     });
 
     await createCmsNotification({
-      whatHappened: `A payment was received from ${pending.email ?? "a customer"} but the booking couldn't be created automatically.`,
-      whatToDo: `Open Pending Bookings and press Retry on the failed record. (The developer has been alerted too.)`,
-      link: `/admin/collections/pending-bookings`,
-      linkLabel: "Open Pending Bookings",
+      whatHappened: `A payment was received from ${pending.email ?? "a customer"}${sessionContext ? ` for ${sessionContext}` : ""} but the booking couldn't be created automatically.`,
+      whatToDo: `Open the failed record below and press Retry. (The developer has been alerted too.)`,
+      link: `/admin/collections/pending-bookings/${pending.id}`,
+      linkLabel: "Open the failed record",
     });
   }
 }

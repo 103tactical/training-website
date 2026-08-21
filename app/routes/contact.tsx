@@ -152,6 +152,12 @@ export async function action({ request }: ActionFunctionArgs) {
     createCmsNotification({
       whatHappened: `${name} (${email}) sent a message through the website's contact form.`,
       whatToDo: `Read and reply to it from the ${inbox} inbox. Already saw it there? Just dismiss.`,
+      ...(submissionId
+        ? {
+            link: `/admin/collections/contact-submissions/${submissionId}`,
+            linkLabel: "View the message",
+          }
+        : {}),
     }).catch(() => {});
 
     return json<ContactActionData>({ success: true, errors: {} });

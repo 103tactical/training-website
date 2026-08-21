@@ -522,24 +522,28 @@ export async function sendAdminBookingFailureAlert(args: {
   email: string;
   pendingId: number | string;
   reason: string;
+  /** "Course Title — Aug 14/15" — which session the payment was for */
+  sessionContext?: string;
 }): Promise<void> {
-  const { email, pendingId, reason } = args;
+  const { email, pendingId, reason, sessionContext } = args;
   const cmsBase = process.env.PAYLOAD_API_URL ?? "https://training-cms.onrender.com";
-  const cmsLink = `${cmsBase}/admin/collections/pending-bookings`;
+  const cmsLink = `${cmsBase}/admin/collections/pending-bookings/${pendingId}`;
 
   await sendAdminEmail(
     `⚠️ Booking Creation Failed — ${email}`,
     [
       `<strong style="color:#c00;">A booking failed to create after payment was received.</strong>`,
       `<strong>Customer email:</strong> ${escapeHtml(email)}`,
+      ...(sessionContext ? [`<strong>Session:</strong> ${escapeHtml(sessionContext)}`] : []),
       `<strong>Pending Booking ID:</strong> ${pendingId}`,
       `<strong>Reason:</strong> ${escapeHtml(reason)}`,
-      `<a href="${cmsLink}" style="color:#ea580c;">Review in CMS → Pending Bookings</a>`,
+      `<a href="${cmsLink}" style="color:#ea580c;">Open the failed record in the CMS</a>`,
     ],
     [
       `⚠️ Booking Creation Failed`,
       ``,
       `Customer email: ${email}`,
+      ...(sessionContext ? [`Session: ${sessionContext}`] : []),
       `Pending Booking ID: ${pendingId}`,
       `Reason: ${reason}`,
       ``,
