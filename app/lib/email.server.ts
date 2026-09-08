@@ -518,6 +518,56 @@ export async function sendAdminBookingNotification(args: {
 
 // ── 5. Admin — booking failure alert ──────────────────────────────────────────
 
+/**
+ * A payment arrived under an email that already holds a seat in the session
+ * (double payment, or a second person sharing an address). No booking was
+ * created; the admin must refund it or seat the person from the CMS.
+ */
+export async function sendAdminDuplicatePaymentAlert(args: {
+  email: string;
+  pendingId: number | string;
+  amountDollars: string;
+  sessionContext: string;
+  pendingName: string;
+  existingName: string;
+  existingBookingId: number;
+  samePerson: boolean;
+}): Promise<void> {
+  const { email, pendingId, amountDollars, sessionContext, pendingName, existingName, existingBookingId, samePerson } = args;
+  const cmsBase = process.env.PAYLOAD_API_URL ?? "https://training-cms.onrender.com";
+  const cmsLink = `${cmsBase}/admin/collections/pending-bookings/${pendingId}`;
+  const verdict = samePerson
+    ? `This looks like the same person paying twice — they already have their seat.`
+    : `This looks like a second person using the same email address — ${escapeHtml(pendingName)} does NOT have a seat yet.`;
+
+  await sendAdminEmail(
+    `⚠️ Duplicate Payment Needs a Decision — ${email}`,
+    [
+      `<strong style="color:#c00;">A payment came in under an email that already holds a seat in this session.</strong>`,
+      `<strong>Paid by:</strong> ${escapeHtml(pendingName)} (${escapeHtml(email)}) — ${escapeHtml(amountDollars)}`,
+      `<strong>Session:</strong> ${escapeHtml(sessionContext)}`,
+      `<strong>Existing seat:</strong> Booking #${existingBookingId} — ${escapeHtml(existingName)}`,
+      verdict,
+      `No booking was created for this payment. Open the record in the CMS and choose: <strong>refund</strong> the ${escapeHtml(amountDollars)}, or <strong>seat them</strong> under their own email. The money sits in Square until you decide.`,
+      `<a href="${cmsLink}" style="color:#ea580c;">Open the record in the CMS</a>`,
+    ],
+    [
+      `⚠️ Duplicate Payment Needs a Decision`,
+      ``,
+      `Paid by: ${pendingName} (${email}) — ${amountDollars}`,
+      `Session: ${sessionContext}`,
+      `Existing seat: Booking #${existingBookingId} — ${existingName}`,
+      samePerson
+        ? `This looks like the same person paying twice — they already have their seat.`
+        : `This looks like a second person using the same email address — ${pendingName} does NOT have a seat yet.`,
+      ``,
+      `No booking was created for this payment. Open the record in the CMS and choose: refund the ${amountDollars}, or seat them under their own email.`,
+      `Open: ${cmsLink}`,
+    ],
+    { issue: true },
+  );
+}
+
 export async function sendAdminBookingFailureAlert(args: {
   email: string;
   pendingId: number | string;

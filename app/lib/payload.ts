@@ -187,7 +187,13 @@ export interface PendingBooking {
   firstName: string;
   lastName: string;
   phone?: string;
-  status: "pending" | "completed" | "failed" | "expired";
+  /**
+   * duplicate = payment received, but the email already holds a seat in the
+   * session (a double payment, or a second person using a shared address) —
+   * the admin decides in the CMS: refund it, or seat the person.
+   * refunded  = a duplicate payment the admin refunded from the CMS.
+   */
+  status: "pending" | "completed" | "failed" | "expired" | "duplicate" | "refunded";
   squareOrderId?: string;
   squarePaymentId?: string;
   amountPaidCents?: number;
@@ -574,6 +580,47 @@ export async function findBookingBySquareOrderId(orderId: string): Promise<Booki
     `/bookings?where[squareOrderId][equals]=${encodeURIComponent(orderId)}&depth=2&limit=1`
   );
   return res.docs[0] ?? null;
+}
+
+/** Minimal shape of an active seat, used by the duplicate-seat checks below. */
+export interface ActiveSeat {
+  id: number;
+  status: string;
+  squareOrderId?: string | null;
+  squarePaymentId?: string | null;
+  amountPaidCents?: number | null;
+}
+
+/**
+ * The confirmed/waitlisted booking an attendee already holds in a session,
+ * if any. Mirrors the CMS's own duplicate-booking guard (attendee + session),
+ * so a hit here means a second booking can never be created.
+ */
+export async function findActiveBookingForAttendee(
+  attendeeId: number,
+  courseScheduleId: number,
+): Promise<ActiveSeat | null> {
+  const res = await fetchPayloadAuth<{ docs: ActiveSeat[] }>(
+    `/bookings?where[attendee][equals]=${attendeeId}&where[courseSchedule][equals]=${courseScheduleId}&where[status][in]=confirmed,waitlisted&depth=0&limit=1`
+  );
+  return res.docs[0] ?? null;
+}
+
+/**
+ * Does this EMAIL already hold a seat in the session? Attendee identity is
+ * the email address, so a second checkout under an email that is already
+ * booked can only ever produce a payment that has to be refunded — the
+ * booking page uses this to stop it before Square. Resolves the attendee the
+ * same way the webhook does, so the answer matches what the webhook would hit.
+ */
+export async function findActiveBookingByEmail(
+  email: string,
+  courseScheduleId: number,
+): Promise<{ seat: ActiveSeat; attendee: Attendee } | null> {
+  const attendee = await findAttendeeByEmail(email);
+  if (!attendee) return null;
+  const seat = await findActiveBookingForAttendee(attendee.id, courseScheduleId);
+  return seat ? { seat, attendee } : null;
 }
 
 /** Update booking status via the Payload REST API */

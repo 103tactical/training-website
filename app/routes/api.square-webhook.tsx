@@ -36,6 +36,7 @@ import {
   markPrivateGroupAttendeePaid,
   redeemDiscountCode,
   resolveMediaUrl,
+  findActiveBookingForAttendee,
 } from "~/lib/payload";
 import type { Course } from "~/lib/payload";
 import {
@@ -47,6 +48,7 @@ import {
   sendCancellationEmail,
   sendAdminBookingNotification,
   sendAdminBookingFailureAlert,
+  sendAdminDuplicatePaymentAlert,
   sendAdminCancellationAlert,
 } from "~/lib/email.server";
 import { createCmsNotification } from "~/lib/cms-notify.server";
@@ -179,6 +181,19 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     return;
   }
 
+  // Square re-delivers payment.updated freely (several copies within seconds,
+  // and again minutes later as the payment object changes). A record that is
+  // already settled needs nothing; a record already flagged for the admin must
+  // not be re-flagged — 2026-08-23 one duplicate payment produced FOUR
+  // identical alerts and notifications this way.
+  if (pending.status === "completed" || pending.status === "refunded" || pending.status === "duplicate") {
+    console.log(`[webhook] Pending ${pending.id} is already ${pending.status} — ignoring re-delivery for order ${orderId}`);
+    return;
+  }
+  // A failed record gets a fresh attempt (the failure may have been
+  // transient) but never a second alert if it fails again.
+  const alreadyFlagged = pending.status === "failed";
+
   // Store Square IDs on the PendingBooking before attempting booking creation
   // so the admin can see what Square gave us if something fails below.
   await updatePendingBooking(pending.id, {
@@ -270,6 +285,63 @@ async function handlePaymentUpdated(event: Record<string, any>) {
         phone: pending.phone ?? undefined,
       });
     } else {
+      // ── Does this attendee ALREADY hold a seat in the session? ───────────
+      // The CMS duplicate guard would reject the booking below anyway; catch
+      // it here so it is classified correctly instead of dumped as a generic
+      // "failed" record. Two real cases (both seen 2026-08-23):
+      //   • the same order (Square delivered the event twice and the other
+      //     copy already created the booking) → settled, nothing to do;
+      //   • a DIFFERENT order → a genuine second payment under an email that
+      //     is already booked (double payment, or a second person sharing the
+      //     address) → the admin has to decide: refund it, or seat the person.
+      const existingSeat = await findActiveBookingForAttendee(attendee.id, scheduleId);
+      if (existingSeat) {
+        if (existingSeat.squareOrderId === orderId) {
+          console.log(`[webhook] Order ${orderId} already booked (duplicate delivery) — marking pending ${pending.id} completed`);
+          await updatePendingBooking(pending.id, { status: "completed" });
+          return;
+        }
+        const amountDollars = formatCents(amountCents);
+        const pendingName = `${firstName} ${lastName}`.trim();
+        const existingName = `${attendee.firstName ?? ""} ${attendee.lastName ?? ""}`.trim() || buyerEmail;
+        const samePerson = pendingName.toLowerCase() === existingName.toLowerCase();
+        const where = sessionContext || "this session";
+        const reason =
+          `DUPLICATE PAYMENT — ${pendingName || buyerEmail} paid ${amountDollars} for ${where} using ${buyerEmail}, ` +
+          `but that email already holds a seat there (Booking #${existingSeat.id}, ${existingName}, Square order ${existingSeat.squareOrderId ?? "n/a"}). ` +
+          (samePerson
+            ? `This looks like the same person paying twice.`
+            : `This looks like a second person using the same email address — they do NOT have a seat yet.`) +
+          ` No booking was created for this payment. Use the buttons above to refund it, or to seat this person under their own email.`;
+        await updatePendingBooking(pending.id, {
+          status: "duplicate",
+          failureReason: reason,
+          attemptedAt: new Date().toISOString(),
+        });
+        console.warn(`[webhook] Duplicate payment on pending ${pending.id} (order ${orderId}) — existing booking ${existingSeat.id}`);
+        if (!alreadyFlagged) {
+          await sendAdminDuplicatePaymentAlert({
+            email: buyerEmail,
+            pendingId: pending.id,
+            amountDollars,
+            sessionContext: where,
+            pendingName: pendingName || buyerEmail,
+            existingName,
+            existingBookingId: existingSeat.id,
+            samePerson,
+          });
+          await createCmsNotification({
+            whatHappened: samePerson
+              ? `${pendingName} (${buyerEmail}) paid twice for ${where} — the second ${amountDollars} payment needs a decision. They already have their seat.`
+              : `${pendingName} paid ${amountDollars} for ${where} using ${buyerEmail}, but that email already holds ${existingName}'s seat. ${pendingName} does NOT have a seat yet.`,
+            whatToDo: `Open the record and choose: refund the ${amountDollars}, or seat them under their own email. The money sits in Square until you decide.`,
+            link: `/admin/collections/pending-bookings/${pending.id}`,
+            linkLabel: "Open the record",
+          });
+        }
+        return;
+      }
+
       // Backfill EMPTY attendee fields from the checkout snapshot — fill
       // blanks only, never overwrite curated data. Non-fatal.
       const backfill: { phone?: string; lastName?: string } = {};
@@ -466,7 +538,14 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       }
     }
 
-    // Alert the admin immediately — silent failure is easy to miss
+    // Alert the admin immediately — silent failure is easy to miss — but only
+    // once per record: a re-delivered event that fails the same way again
+    // must not stack up duplicate alerts and notifications.
+    if (alreadyFlagged) {
+      console.log(`[webhook] Pending ${pending.id} failed again on re-delivery — admin already alerted, not re-notifying`);
+      return;
+    }
+
     await sendAdminBookingFailureAlert({
       email: pending.email ?? "unknown",
       pendingId: pending.id,

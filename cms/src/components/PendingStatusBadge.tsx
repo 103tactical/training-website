@@ -23,6 +23,16 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#6b7280',
     borderColor: '#d1d5db',
   },
+  duplicate: {
+    background: '#fef3c7',
+    color: '#92400e',
+    borderColor: '#fcd34d',
+  },
+  refunded: {
+    background: '#ede9fe',
+    color: '#5b21b6',
+    borderColor: '#c4b5fd',
+  },
 }
 
 const labels: Record<string, string> = {
@@ -30,6 +40,8 @@ const labels: Record<string, string> = {
   completed: 'Completed',
   failed:    'Failed',
   expired:   'Expired',
+  duplicate: 'Duplicate — Act',
+  refunded:  'Refunded',
 }
 
 export default function PendingStatusBadge({ cellData }: DefaultCellComponentProps) {

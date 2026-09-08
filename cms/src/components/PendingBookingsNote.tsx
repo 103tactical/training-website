@@ -36,11 +36,13 @@ export default function PendingBookingsNote() {
       <p style={{ margin: '0.75rem 0 0', color: 'var(--theme-elevation-600)', lineHeight: 1.55 }}>
         The system&rsquo;s ledger of started checkouts and outstanding payment links. It runs
         itself: paid records become Bookings automatically, abandoned ones expire after the course
-        date. You normally never need to touch it, with three exceptions &mdash; press{' '}
-        <strong>Retry</strong> on a Failed record (you&rsquo;ll receive an email alert if that ever
-        happens), use <strong>Email Expired Leads</strong> to market to people who didn&rsquo;t
-        finish checkout, or delete an admin-sent link&rsquo;s record to release its held seat when
-        someone isn&rsquo;t coming.
+        date. You normally never need to touch it, with a few exceptions &mdash; press{' '}
+        <strong>Retry</strong> on a Failed record, decide on a <strong>Duplicate Payment</strong>{' '}
+        record (someone paid under an email that already holds a seat: refund it, or seat them
+        &mdash; you&rsquo;ll receive an email alert and a dashboard notification for either case),
+        use <strong>Email Expired Leads</strong> to market to people who didn&rsquo;t finish
+        checkout, or delete an admin-sent link&rsquo;s record to release its held seat when someone
+        isn&rsquo;t coming.
       </p>
       <p style={{ margin: '1rem 0 0' }}>
         <a href="/admin/collections/pending-bookings" className="roster-btn">

@@ -26,7 +26,11 @@ export default function RetryBookingButton() {
         credentials: 'include', // send admin session cookie
       })
       const json = await res.json()
-      if (res.ok) {
+      if (res.ok && json.note) {
+        // Settled without creating anything (the booking already existed for
+        // this exact payment) — say that, not "created".
+        setResult({ ok: true, message: `${json.note} Refresh to see updated status.` })
+      } else if (res.ok) {
         const emails = json.emails as Record<string, string> | undefined
         const emailNote = emails
           ? ` Confirmation email: ${emails.confirmation ?? 'not attempted'}. Enrollment email: ${emails.enrollment ?? 'not attempted'}.`

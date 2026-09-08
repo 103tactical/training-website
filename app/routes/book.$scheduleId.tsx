@@ -23,6 +23,7 @@ import {
   getFeaturedDiscounts,
   courseDisplayDiscount,
   countAdminLinkHolds,
+  findActiveBookingByEmail,
 } from "~/lib/payload";
 import type { CourseSchedule, Course, Instructor } from "~/lib/payload";
 import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/square.server";
@@ -360,13 +361,38 @@ export async function action({ request, params }: ActionFunctionArgs) {
       ? Math.round((discountedPriceCents + fixedFeeCents) / (1 - surchargePercent / 100)) - discountedPriceCents
       : 0;
 
+    const scheduleIdInt = parseInt(scheduleId, 10);
+
+    // ── Already booked under this email? Stop BEFORE Square. ───────────────
+    // Attendee identity is the email address, so a second checkout under an
+    // email that already holds a seat can never become a second booking — it
+    // can only produce a payment that has to be refunded. 2026-08-23: a
+    // second person paid $103.30 under a friend's email and got no seat.
+    // Fails open (a CMS hiccup must never block a legitimate booking).
+    const alreadyBooked = await findActiveBookingByEmail(email, scheduleIdInt).catch(() => null);
+    if (alreadyBooked) {
+      const who = [alreadyBooked.attendee.firstName, alreadyBooked.attendee.lastName?.charAt(0)]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      return json<BookActionData>(
+        {
+          errors: {},
+          formError:
+            `This email address already has a seat in this session${who ? ` (registered to ${who}.)` : ""}. ` +
+            `If that's you, you're all set — your confirmation is in your inbox. ` +
+            `If you're booking for someone else, please use their own email address so their confirmation and class details reach them.`,
+        },
+        { status: 409 },
+      );
+    }
+
     // ── Upsert PendingBooking ───────────────────────────────────────────────
     // If this email already has a pending record for this schedule (e.g. the
     // user hit back and resubmitted, or is returning later), refresh the token
     // and phone on the existing record instead of creating a duplicate.
     // A fresh token means a fresh Square payment link either way.
     const token = crypto.randomUUID().replace(/-/g, "");
-    const scheduleIdInt = parseInt(scheduleId, 10);
     const existing = await findActivePendingBooking(email, scheduleIdInt);
 
     if (existing) {
