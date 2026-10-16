@@ -61,6 +61,7 @@ import * as migration_20260730_discount_codes_show_on_site from './20260730_disc
 import * as migration_20260730_ecommerce_surcharge_notice from './20260730_ecommerce_surcharge_notice';
 import * as migration_20260808_notifications from './20260808_notifications';
 import * as migration_20260813_pending_bookings_square_link_id from './20260813_pending_bookings_square_link_id';
+import * as migration_20261016_mailing_address from './20261016_mailing_address';
 
 export const migrations = [
   {
@@ -377,5 +378,10 @@ export const migrations = [
     up: migration_20260813_pending_bookings_square_link_id.up,
     down: migration_20260813_pending_bookings_square_link_id.down,
     name: '20260813_pending_bookings_square_link_id'
+  },
+  {
+    up: migration_20261016_mailing_address.up,
+    down: migration_20261016_mailing_address.down,
+    name: '20261016_mailing_address'
   },
 ];

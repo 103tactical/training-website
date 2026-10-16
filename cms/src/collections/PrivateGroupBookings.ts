@@ -4,6 +4,7 @@ import { Resend } from 'resend'
 import { SquareClient, SquareEnvironment } from 'square'
 import { sendEmail, questionsLine, type EmailAttachment } from '../lib/email'
 import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
+import { mailingAddressGroup, normalizeMailingAddress, isCompleteMailingAddress, courseRequiresMailingAddress } from '../lib/mailing-address'
 
 function getResendClient(): Resend {
   const key = process.env.RESEND_API_KEY
@@ -368,6 +369,27 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
   const courseName: string = courseObj?.title ?? `Course #${courseId}`
   const priceInCents = Math.round((pricePerSeat ?? 0) * 100)
 
+  // ── Mailing addresses — mandatory for every unprocessed row when the course
+  // requires them. Checked BEFORE anything is created so a half-processed
+  // group can never result from a missing address.
+  const needsAddress = await courseRequiresMailingAddress(p, courseObj ?? courseId, req)
+  if (needsAddress) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const missing = (attendees as any[])
+      .filter((a) => !['paid', 'manual'].includes(a.paymentStatus) && !isCompleteMailingAddress(a.mailingAddress))
+      .map((a) => `${a.firstName ?? ''} ${a.lastName ?? ''}`.trim() || a.email)
+    if (missing.length > 0) {
+      return Response.json(
+        {
+          error:
+            `${courseName} requires a mailing address for every attendee. Missing or incomplete for: ${missing.join(', ')}. ` +
+            `Fill in their Mailing Address in the attendee list above, save, then process again.`,
+        },
+        { status: 400 },
+      )
+    }
+  }
+
   const sessionDateStr = (sessions as { date?: string }[])
     .filter((s) => s.date)
     .map((s) => {
@@ -485,10 +507,13 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
           req,
         })
 
+        const rowAddress = normalizeMailingAddress(attendee.mailingAddress)
+        const rowAddressData = isCompleteMailingAddress(rowAddress) ? { mailingAddress: rowAddress } : {}
+
         let attendeeDbId: number
         if (existingResult.docs.length > 0) {
           attendeeDbId = existingResult.docs[0].id as number
-          // Update name/phone if changed
+          // Update name/phone (and address, when given) if changed
           await p.update({
             collection: 'attendees',
             id: attendeeDbId,
@@ -496,6 +521,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
               firstName: attendee.firstName,
               lastName: attendee.lastName,
               ...(attendee.phone ? { phone: attendee.phone } : {}),
+              ...rowAddressData,
             },
             req,
           })
@@ -507,6 +533,7 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
               lastName: attendee.lastName,
               email: attendee.email,
               phone: attendee.phone || undefined,
+              ...rowAddressData,
             },
             req,
           })
@@ -545,6 +572,8 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
               amountPaidCents: priceInCents,
               paymentReference: payRef,
             },
+            // Addresses were validated for the whole group above.
+            context: { skipAddressGuard: true },
             req,
           })
           bookingId = newBooking.id as number
@@ -601,6 +630,9 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
             phone: attendee.phone || undefined,
             status: 'pending',
             source: 'admin-link',
+            ...(isCompleteMailingAddress(attendee.mailingAddress)
+              ? { mailingAddress: normalizeMailingAddress(attendee.mailingAddress) }
+              : {}),
           },
           req,
         })
@@ -933,7 +965,7 @@ export const PrivateGroupBookings: CollectionConfig = {
           },
           admin: {
             description:
-              'Add each person who will attend. First name, last name, and email are required. After processing, the Payment Status and Payment Link columns will update automatically.',
+              'Add each person who will attend. First name, last name, and email are required (plus a mailing address when the course requires one). After processing, the Payment Status and Payment Link columns will update automatically.',
           },
           fields: [
             {
@@ -956,6 +988,9 @@ export const PrivateGroupBookings: CollectionConfig = {
                 },
               ],
             },
+            mailingAddressGroup(
+              'Required for every attendee when the selected course has "Require a mailing address to book" turned on; optional otherwise.',
+            ),
             {
               type: 'row',
               fields: [

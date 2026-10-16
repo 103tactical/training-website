@@ -1,6 +1,7 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/node";
+import { formatMailingAddress, type MailingAddress } from "~/lib/mailing-address";
 
 const API = process.env.PAYLOAD_API_URL ?? "";
 const PRINT_SECRET = process.env.PRINT_SECRET ?? "";
@@ -61,7 +62,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     })
   );
 
-  return json({ schedule, attendees, courseName, instructorName, dates, logoUrl });
+  // Address column appears ONLY for courses that require a mailing address, so
+  // every other roster prints exactly as before.
+  const showAddress: boolean =
+    typeof course === "object" && course !== null ? Boolean(course.requiresMailingAddress) : false;
+
+  return json({ schedule, attendees, courseName, instructorName, dates, logoUrl, showAddress });
 }
 
 interface Booking {
@@ -72,6 +78,7 @@ interface Booking {
     lastName: string;
     email: string;
     phone?: string;
+    mailingAddress?: MailingAddress | null;
   };
   status: string;
   paymentReference?: string;
@@ -80,7 +87,7 @@ interface Booking {
 }
 
 export default function PrintRoster() {
-  const { schedule, attendees, courseName, instructorName, dates, logoUrl } =
+  const { schedule, attendees, courseName, instructorName, dates, logoUrl, showAddress } =
     useLoaderData<typeof loader>();
 
   const confirmed   = attendees.filter((a) => a.status === "confirmed");
@@ -144,9 +151,9 @@ export default function PrintRoster() {
         </dl>
       </header>
 
-      <AttendeeTable title="Confirmed" attendees={confirmed} />
-      {waitlisted.length  > 0 && <AttendeeTable title="Waitlisted"  attendees={waitlisted}  />}
-      {cancelled.length > 0 && <AttendeeTable title="Cancelled" attendees={cancelled} />}
+      <AttendeeTable title="Confirmed" attendees={confirmed} showAddress={showAddress} />
+      {waitlisted.length  > 0 && <AttendeeTable title="Waitlisted"  attendees={waitlisted}  showAddress={showAddress} />}
+      {cancelled.length > 0 && <AttendeeTable title="Cancelled" attendees={cancelled} showAddress={showAddress} />}
 
       <footer className="print-page__footer">
         103 Tactical Training &nbsp;·&nbsp; 2556 Arthur Kill Road, Staten Island, NY 10309
@@ -155,8 +162,12 @@ export default function PrintRoster() {
   );
 }
 
-function AttendeeTable({ title, attendees }: { title: string; attendees: Booking[] }) {
+function AttendeeTable({ title, attendees, showAddress }: { title: string; attendees: Booking[]; showAddress: boolean }) {
   if (attendees.length === 0) return null;
+  // Column widths: with the Address column the others tighten to make room.
+  const w = showAddress
+    ? { name: "15%", email: "19%", phone: "11%", address: "28%", discount: "8%", ref: "10%" }
+    : { name: "20%", email: "24%", phone: "15%", address: "0", discount: "12%", ref: "13%" };
   return (
     <section className="print-table">
       <h3 className="print-table__heading">
@@ -166,11 +177,12 @@ function AttendeeTable({ title, attendees }: { title: string; attendees: Booking
         <thead>
           <tr>
             <th style={{ width: "32px" }}>#</th>
-            <th style={{ width: "20%" }}>Name</th>
-            <th style={{ width: "24%" }}>Email</th>
-            <th style={{ width: "15%" }}>Phone</th>
-            <th style={{ width: "12%" }}>Discount</th>
-            <th style={{ width: "13%" }}>Ref #</th>
+            <th style={{ width: w.name }}>Name</th>
+            <th style={{ width: w.email }}>Email</th>
+            <th style={{ width: w.phone }}>Phone</th>
+            {showAddress && <th style={{ width: w.address }}>Mailing Address</th>}
+            <th style={{ width: w.discount }}>Discount</th>
+            <th style={{ width: w.ref }}>Ref #</th>
           </tr>
         </thead>
         <tbody>
@@ -181,13 +193,20 @@ function AttendeeTable({ title, attendees }: { title: string; attendees: Booking
                 <td>{a.attendee.firstName} {a.attendee.lastName}</td>
                 <td>{a.attendee.email}</td>
                 <td>{a.attendee.phone ?? "—"}</td>
+                {showAddress && (
+                  <td>
+                    {formatMailingAddress(a.attendee.mailingAddress) || (
+                      <span className="print-table__notonfile">Not on file</span>
+                    )}
+                  </td>
+                )}
                 <td>{a.discountCode ? <strong>{a.discountCode}</strong> : "—"}</td>
                 <td>{a.paymentReference ?? "—"}</td>
               </tr>
               {a.notes && (
                 <tr key={`${a.id}-notes`} className="print-table__notes-row">
                   <td />
-                  <td colSpan={5} className="print-table__notes-cell">
+                  <td colSpan={showAddress ? 6 : 5} className="print-table__notes-cell">
                     <span className="print-table__notes-label">Note:</span> {a.notes}
                   </td>
                 </tr>

@@ -5094,3 +5094,53 @@ body.layout-print .app-content { transform: none !important; }
   .confirmation-detail:nth-child(even) { background: #f5f5f5 !important; }
   .confirmation-card__icon { color: #16a34a !important; }
 }
+
+
+/* ── Booking form: mailing address block (shown only when the course requires it) ── */
+.booking-form__address {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.booking-form__address > legend {
+  padding: 0;
+  margin-bottom: var(--spacing-1);
+}
+.booking-form__address-hint {
+  margin-top: calc(-1 * var(--spacing-3));
+}
+.booking-form__optional {
+  font-weight: 400;
+  opacity: 0.6;
+}
+.booking-form__address-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: var(--spacing-4);
+}
+@media (max-width: 560px) {
+  .booking-form__address-row { grid-template-columns: 1fr; }
+}
+select.booking-form__input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23ffffff' stroke-opacity='0.6' stroke-width='1.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-4) center;
+  padding-right: calc(var(--spacing-4) * 2 + 12px);
+  cursor: pointer;
+}
+select.booking-form__input option {
+  color: #111;
+  background: #fff;
+}
+
+/* ── Print roster: address not yet collected (neutral, not an error) ── */
+.print-table__notonfile {
+  color: #8a8a8a;
+  font-style: italic;
+}

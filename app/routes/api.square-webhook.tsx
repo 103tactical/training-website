@@ -52,6 +52,7 @@ import {
   sendAdminCancellationAlert,
 } from "~/lib/email.server";
 import { createCmsNotification } from "~/lib/cms-notify.server";
+import { isCompleteMailingAddress, formatMailingAddress } from "~/lib/mailing-address";
 
 export async function action({ request }: ActionFunctionArgs) {
   const rawBody = await request.text();
@@ -276,6 +277,9 @@ async function handlePaymentUpdated(event: Record<string, any>) {
     // purchases — fall back to it only if the form email is somehow missing.
     const buyerEmail: string = pending.email ?? payment.buyer_email_address;
 
+    // Mailing address collected at checkout (only when the course requires it).
+    const checkoutAddress = isCompleteMailingAddress(pending.mailingAddress) ? pending.mailingAddress! : null;
+
     let attendee = await findAttendeeByEmail(buyerEmail);
     if (!attendee) {
       attendee = await createAttendee({
@@ -283,6 +287,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
         lastName,
         email: buyerEmail,
         phone: pending.phone ?? undefined,
+        ...(checkoutAddress ? { mailingAddress: checkoutAddress } : {}),
       });
     } else {
       // ── Does this attendee ALREADY hold a seat in the session? ───────────
@@ -353,6 +358,16 @@ async function handlePaymentUpdated(event: Record<string, any>) {
           console.log(`[webhook] Backfilled attendee ${attendee.id}: ${Object.keys(backfill).join(", ")}`);
         } catch (err) {
           console.error("[webhook] Attendee backfill failed (non-fatal):", err);
+        }
+      }
+      // Mailing address: unlike phone/last name this is NOT fill-blanks-only —
+      // the attendee just told us where they live, so the checkout address
+      // replaces whatever was on file (people move). Non-fatal.
+      if (checkoutAddress) {
+        try {
+          await updateAttendee(attendee.id, { mailingAddress: checkoutAddress });
+        } catch (err) {
+          console.error("[webhook] Attendee address update failed (non-fatal):", err);
         }
       }
     }
@@ -430,6 +445,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
           sessionDates,
           amountDollars,
           orderId,
+          ...(checkoutAddress ? { mailingAddress: formatMailingAddress(checkoutAddress) } : {}),
         });
         console.log(`[webhook] Confirmation email sent to ${buyerEmail}`);
       } catch (emailErr) {
@@ -472,6 +488,7 @@ async function handlePaymentUpdated(event: Record<string, any>) {
       amountDollars,
       orderId,
       waitlisted: bookingStatus === "waitlisted",
+      ...(checkoutAddress ? { mailingAddress: formatMailingAddress(checkoutAddress) } : {}),
       ...(pending.discountCode
         ? {
             discountCode: pending.discountCode,

@@ -303,7 +303,10 @@ async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
     return Response.json({ error: 'Missing schedule id' }, { status: 400 })
   }
 
-  let body: { firstName?: string; lastName?: string; email?: string; phone?: string; discountCode?: string }
+  let body: {
+    firstName?: string; lastName?: string; email?: string; phone?: string; discountCode?: string
+    mailingAddress?: { street?: string; street2?: string; city?: string; state?: string; zip?: string } | null
+  }
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body = (await (req as any).json()) as typeof body
@@ -346,6 +349,7 @@ async function sendPaymentLinkHandler(req: PayloadRequest): Promise<Response> {
       email,
       phone,
       discountCode,
+      mailingAddress: body.mailingAddress ?? null,
     })
     return Response.json(result)
   } catch (err) {
@@ -627,7 +631,7 @@ export const CourseSchedules: CollectionConfig = {
           defaultLimit: 0,
           defaultSort: "adminTitle",
           admin: {
-            defaultColumns: ["adminTitle", "status", "paymentMethod", "discountCode", "squarePaymentId"],
+            defaultColumns: ["adminTitle", "status", "paymentMethod", "discountCode", "attendeeAddress", "squarePaymentId"],
             description:
               "Bookings for this session. Go to Course Management → Bookings to add or manage registrations.",
           },

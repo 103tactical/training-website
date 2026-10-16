@@ -8,6 +8,7 @@ import type {
 import { SquareClient, SquareEnvironment } from 'square'
 import { sendEmail, questionsLine } from '../lib/email'
 import { dismissNotificationsLinkingTo } from '../lib/dismiss-notifications'
+import { isCompleteMailingAddress } from '../lib/mailing-address'
 
 function getSquareClient() {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN
@@ -308,6 +309,38 @@ const validateBookingRules: CollectionBeforeChangeHook = async ({ data, original
     }
   }
 
+  // ── #1b: Mailing-address requirement — NEW admin-created bookings only ─────
+  // Courses with "Require a mailing address to book" need one on the attendee
+  // before an admin books them by hand ("Add New" for walk-ins). Scope is
+  // deliberately narrow: create only (never an edit of an existing booking),
+  // admin sessions only (the webhook authenticates with the bearer token and
+  // carries the checkout address itself), and programmatic creates that have
+  // already handled the address (Retry, Seat, private groups) opt out via
+  // context.skipAddressGuard. A real payment is never blocked by this.
+  if (
+    operation === 'create' &&
+    ACTIVE_STATUSES.includes(newStatus) &&
+    req.user &&
+    !req.context?.skipAddressGuard &&
+    attendeeId
+  ) {
+    const courseId = resolveId(data.course)
+    if (courseId) {
+      const course = await p.findByID({ collection: 'courses', id: courseId, depth: 0, req }).catch(() => null)
+      if (course?.requiresMailingAddress) {
+        const attendee = await p.findByID({ collection: 'attendees', id: attendeeId, depth: 0, req }).catch(() => null)
+        if (!isCompleteMailingAddress(attendee?.mailingAddress)) {
+          const who = `${attendee?.firstName ?? ''} ${attendee?.lastName ?? ''}`.trim() || 'this attendee'
+          throw new APIError(
+            `${course.title} requires a mailing address, and ${who} doesn't have one on file yet. ` +
+            `Open their Attendee record, fill in the Mailing Address, save, then create this booking.`,
+            400, undefined, true,
+          )
+        }
+      }
+    }
+  }
+
   // ── #2: Overbooking guard ────────────────────────────────────────────────────
   // Only check if the booking is newly becoming active (wasn't active before).
   const becomingActive =
@@ -578,6 +611,16 @@ export const Bookings: CollectionConfig = {
         description:
           'The person being booked. If they are new, create an Attendee record first.',
       },
+    },
+    {
+      // Read-through to the attendee's one-line address (no column of its own):
+      // the "Address" column on session rosters and the Bookings list, so
+      // Bernie never has to open each attendee. Hidden on the edit form.
+      name: 'attendeeAddress',
+      type: 'text',
+      label: 'Address',
+      virtual: 'attendee.mailingAddressLine',
+      admin: { hidden: true },
     },
     {
       name: 'course',

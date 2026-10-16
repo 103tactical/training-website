@@ -13,6 +13,7 @@
  * Private Group Bookings.
  */
 import { SquareClient, SquareEnvironment } from 'square'
+import { normalizeMailingAddress, mailingAddressProblem, type MailingAddress } from './mailing-address'
 import type { PayloadRequest } from 'payload'
 import { questionsLine } from './email'
 import { validateDiscountCode } from './discount'
@@ -44,6 +45,8 @@ export interface SendPaymentLinkArgs {
   phone?: string
   /** Optional discount code — validated with the same rules as the website */
   discountCode?: string
+  /** Required when the course has "Require a mailing address to book" on */
+  mailingAddress?: MailingAddress | null
 }
 
 export interface SendPaymentLinkResult {
@@ -70,6 +73,15 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
   if (!schedule) throw new Error('Session not found.')
   const course = typeof schedule.course === 'object' && schedule.course !== null ? schedule.course : null
   if (!course) throw new Error('Session has no linked course.')
+
+  // ── Mailing address — mandatory when the course says so ───────────────────
+  const mailingAddress = normalizeMailingAddress(args.mailingAddress)
+  if (course.requiresMailingAddress) {
+    const problem = mailingAddressProblem(mailingAddress)
+    if (problem) {
+      throw new Error(`${course.title} requires the attendee's mailing address before a link can be sent — ${problem}.`)
+    }
+  }
 
   // ── Guard: session must still be bookable ────────────────────────────────
   const firstSession = (schedule.sessions ?? [])[0]
@@ -150,6 +162,7 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
       status: 'pending',
       source: 'admin-link',
       ...(appliedCode ? { discountCode: appliedCode, discountCents } : {}),
+      ...(mailingAddress ? { mailingAddress } : {}),
     },
     req,
   })

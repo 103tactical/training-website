@@ -1,3 +1,5 @@
+import type { MailingAddress } from "~/lib/mailing-address";
+
 export const PAYLOAD_API_URL =
   typeof process !== "undefined" && process.env.PAYLOAD_API_URL
     ? process.env.PAYLOAD_API_URL
@@ -156,6 +158,7 @@ export async function createAttendee(data: {
   lastName?: string;
   email: string;
   phone?: string;
+  mailingAddress?: MailingAddress;
 }): Promise<Attendee> {
   const secret = process.env.CMS_WRITE_SECRET;
   // Strip empty-string lastName so Payload doesn't receive "" for an optional field
@@ -201,6 +204,8 @@ export interface PendingBooking {
   discountCents?: number | null;
   failureReason?: string;
   attemptedAt?: string;
+  /** Snapshot of the address entered at checkout (only when the course requires one) */
+  mailingAddress?: MailingAddress | null;
 }
 
 /** Create a pending booking record (called by the booking form action). */
@@ -214,6 +219,7 @@ export async function createPendingBooking(data: {
   discountCode?: string;
   discountCents?: number;
   source?: "website" | "admin-link";
+  mailingAddress?: MailingAddress;
 }): Promise<PendingBooking> {
   const secret = process.env.CMS_WRITE_SECRET;
   const res = await fetch(`${PAYLOAD_API_URL}/api/pending-bookings`, {
@@ -252,7 +258,7 @@ export async function findActivePendingBooking(
  */
 export async function updateAttendee(
   id: number,
-  data: Partial<Pick<Attendee, "firstName" | "lastName" | "phone">>,
+  data: Partial<Pick<Attendee, "firstName" | "lastName" | "phone" | "mailingAddress">>,
 ): Promise<void> {
   const secret = process.env.CMS_WRITE_SECRET;
   const res = await fetch(`${PAYLOAD_API_URL}/api/attendees/${id}`, {
@@ -302,7 +308,7 @@ export async function updatePendingBooking(
   id: number,
   data: Partial<Pick<
     PendingBooking,
-    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt" | "token" | "phone" | "firstName" | "lastName" | "discountCode" | "discountCents"
+    "status" | "squareOrderId" | "squarePaymentId" | "amountPaidCents" | "failureReason" | "attemptedAt" | "token" | "phone" | "firstName" | "lastName" | "discountCode" | "discountCents" | "mailingAddress"
   >>,
 ): Promise<void> {
   const secret = process.env.CMS_WRITE_SECRET;
@@ -740,6 +746,8 @@ export interface Course {
   /** Optional enrollment email content — set by admin on the Course record */
   enrollmentMessage?: string;
   enrollmentFile?: { url: string; filename?: string; mimeType?: string };
+  /** When true, booking this course requires a US mailing address (per-course CMS toggle) */
+  requiresMailingAddress?: boolean;
 }
 
 export interface CoursesPage {
@@ -825,6 +833,7 @@ export interface Attendee {
   lastName: string;
   email: string;
   phone?: string;
+  mailingAddress?: MailingAddress | null;
 }
 
 export interface Instructor {

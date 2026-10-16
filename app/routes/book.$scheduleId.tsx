@@ -30,6 +30,7 @@ import { squareClient, SQUARE_LOCATION_ID, SQUARE_CONFIGURED } from "~/lib/squar
 import { isScheduleBookable } from "~/lib/schedule.server";
 import { normalizeUSPhone, PHONE_ERROR } from "~/lib/phone";
 import { issueFormToken, checkFormToken, createIpThrottle, FORM_TOKEN_MESSAGE } from "~/lib/form-guard.server";
+import { US_STATES, ADDRESS_FIELDS, readRequiredMailingAddress, type MailingAddress } from "~/lib/mailing-address";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -212,6 +213,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     surchargeNoticeHeading,
     surchargeNoticeBody,
     formToken: issueFormToken(),
+    requiresMailingAddress: Boolean(course?.requiresMailingAddress),
   });
 }
 
@@ -286,6 +288,20 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const sanitizedPhone = phone ? normalizeUSPhone(phone) ?? "" : "";
   if (phone && !sanitizedPhone) errors.phone = PHONE_ERROR;
   const e164Phone = sanitizedPhone ? `+1${sanitizedPhone}` : undefined;
+
+  // ── Mailing address — required only when the course says so ────────────────
+  // Looked up here (before the spam guards, like every other field check) so
+  // an incomplete address gets field errors instead of consuming a throttle
+  // slot. Fails open: if the lookup errors, the address is simply not required
+  // and the full schedule load below reports the real problem.
+  const preSchedule = await getCourseScheduleById(scheduleId).catch(() => null);
+  const requiresMailingAddress = Boolean((preSchedule?.course as Course | undefined)?.requiresMailingAddress);
+  let mailingAddress: MailingAddress | undefined;
+  if (requiresMailingAddress) {
+    const read = readRequiredMailingAddress(formData);
+    Object.assign(errors, read.errors);
+    if (Object.keys(read.errors).length === 0) mailingAddress = read.address;
+  }
 
   if (Object.keys(errors).length > 0) {
     return json<BookActionData>({ errors, formError: null }, { status: 422 });
@@ -404,6 +420,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         // Always overwrite — a resubmit may add, change, or remove the code
         discountCode: appliedCode ?? null,
         discountCents: appliedCode ? discountCents : null,
+        ...(mailingAddress ? { mailingAddress } : {}),
       });
     } else {
       await createPendingBooking({
@@ -415,6 +432,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         phone: sanitizedPhone || undefined,
         source: "website",
         ...(appliedCode ? { discountCode: appliedCode, discountCents } : {}),
+        ...(mailingAddress ? { mailingAddress } : {}),
       });
     }
 
@@ -776,6 +794,100 @@ export default function BookSessionPage() {
                   </span>
                 )}
               </div>
+
+              {data.requiresMailingAddress && (
+                <fieldset className="booking-form__address">
+                  <legend className="booking-form__label">
+                    Mailing Address <span className="booking-form__required">*</span>
+                  </legend>
+                  <span className="booking-form__field-hint booking-form__address-hint">
+                    This course requires a US mailing address for each attendee.
+                  </span>
+
+                  <div className="booking-form__field">
+                    <label className="booking-form__label" htmlFor={ADDRESS_FIELDS.street}>Street Address</label>
+                    <input
+                      id={ADDRESS_FIELDS.street}
+                      name={ADDRESS_FIELDS.street}
+                      type="text"
+                      maxLength={200}
+                      autoComplete="address-line1"
+                      className={inputClass(ADDRESS_FIELDS.street)}
+                      aria-describedby={errors[ADDRESS_FIELDS.street] ? `${ADDRESS_FIELDS.street}-error` : undefined}
+                    />
+                    {errors[ADDRESS_FIELDS.street] && (
+                      <span id={`${ADDRESS_FIELDS.street}-error`} className="booking-form__field-error">{errors[ADDRESS_FIELDS.street]}</span>
+                    )}
+                  </div>
+
+                  <div className="booking-form__field">
+                    <label className="booking-form__label" htmlFor={ADDRESS_FIELDS.street2}>
+                      Apt / Suite / Unit <span className="booking-form__optional">(optional)</span>
+                    </label>
+                    <input
+                      id={ADDRESS_FIELDS.street2}
+                      name={ADDRESS_FIELDS.street2}
+                      type="text"
+                      maxLength={100}
+                      autoComplete="address-line2"
+                      className={inputClass(ADDRESS_FIELDS.street2)}
+                    />
+                  </div>
+
+                  <div className="booking-form__address-row">
+                    <div className="booking-form__field">
+                      <label className="booking-form__label" htmlFor={ADDRESS_FIELDS.city}>City</label>
+                      <input
+                        id={ADDRESS_FIELDS.city}
+                        name={ADDRESS_FIELDS.city}
+                        type="text"
+                        maxLength={100}
+                        autoComplete="address-level2"
+                        className={inputClass(ADDRESS_FIELDS.city)}
+                        aria-describedby={errors[ADDRESS_FIELDS.city] ? `${ADDRESS_FIELDS.city}-error` : undefined}
+                      />
+                      {errors[ADDRESS_FIELDS.city] && (
+                        <span id={`${ADDRESS_FIELDS.city}-error`} className="booking-form__field-error">{errors[ADDRESS_FIELDS.city]}</span>
+                      )}
+                    </div>
+                    <div className="booking-form__field">
+                      <label className="booking-form__label" htmlFor={ADDRESS_FIELDS.state}>State</label>
+                      <select
+                        id={ADDRESS_FIELDS.state}
+                        name={ADDRESS_FIELDS.state}
+                        autoComplete="address-level1"
+                        defaultValue=""
+                        className={inputClass(ADDRESS_FIELDS.state)}
+                        aria-describedby={errors[ADDRESS_FIELDS.state] ? `${ADDRESS_FIELDS.state}-error` : undefined}
+                      >
+                        <option value="">Select…</option>
+                        {US_STATES.map((st) => (
+                          <option key={st.code} value={st.code}>{st.code} — {st.name}</option>
+                        ))}
+                      </select>
+                      {errors[ADDRESS_FIELDS.state] && (
+                        <span id={`${ADDRESS_FIELDS.state}-error`} className="booking-form__field-error">{errors[ADDRESS_FIELDS.state]}</span>
+                      )}
+                    </div>
+                    <div className="booking-form__field">
+                      <label className="booking-form__label" htmlFor={ADDRESS_FIELDS.zip}>ZIP</label>
+                      <input
+                        id={ADDRESS_FIELDS.zip}
+                        name={ADDRESS_FIELDS.zip}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={10}
+                        autoComplete="postal-code"
+                        className={inputClass(ADDRESS_FIELDS.zip)}
+                        aria-describedby={errors[ADDRESS_FIELDS.zip] ? `${ADDRESS_FIELDS.zip}-error` : undefined}
+                      />
+                      {errors[ADDRESS_FIELDS.zip] && (
+                        <span id={`${ADDRESS_FIELDS.zip}-error`} className="booking-form__field-error">{errors[ADDRESS_FIELDS.zip]}</span>
+                      )}
+                    </div>
+                  </div>
+                </fieldset>
+              )}
 
               {/* ── Discount code ── */}
               <div className="booking-form__field booking-form__discount">

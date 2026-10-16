@@ -8,6 +8,7 @@
  * the standard webhook: attendee, booking, seat, accounting — automatic.
  */
 import React, { useEffect, useState } from 'react'
+import { US_STATES } from '../lib/mailing-address'
 
 type Phase = 'idle' | 'composing' | 'sending' | 'done' | 'error'
 
@@ -30,6 +31,13 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [discountCode, setDiscountCode] = useState('')
+  // Mailing address — only shown (and required) when the course says so
+  const [needsAddress, setNeedsAddress] = useState(false)
+  const [addrStreet, setAddrStreet] = useState('')
+  const [addrStreet2, setAddrStreet2] = useState('')
+  const [addrCity, setAddrCity] = useState('')
+  const [addrState, setAddrState] = useState('')
+  const [addrZip, setAddrZip] = useState('')
   const [feedback, setFeedback] = useState('')
   const [resultUrl, setResultUrl] = useState('')
   const [resultTotal, setResultTotal] = useState('')
@@ -166,8 +174,18 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
 
   useEffect(() => { loadOutstanding() }, [loadOutstanding])
 
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/course-schedules/${scheduleId}?depth=1`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (!cancelled) setNeedsAddress(Boolean(j?.course?.requiresMailingAddress)) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [scheduleId])
+
   const close = () => {
     setPhase('idle'); setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setDiscountCode('')
+    setAddrStreet(''); setAddrStreet2(''); setAddrCity(''); setAddrState(''); setAddrZip('')
     setFeedback(''); setResultUrl(''); setResultTotal(''); setCopied(false)
   }
 
@@ -175,6 +193,12 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
     if (!firstName.trim() || !lastName.trim()) { setFeedback('First and last name are required.'); return }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setFeedback('A valid email address is required.'); return
+    }
+    if (needsAddress) {
+      if (!addrStreet.trim() || !addrCity.trim() || !addrState || !addrZip.trim()) {
+        setFeedback('This course requires a mailing address — street, city, state, and ZIP are all needed.'); return
+      }
+      if (!/^\d{5}(-\d{4})?$/.test(addrZip.trim())) { setFeedback('Enter a 5-digit ZIP code (or ZIP+4).'); return }
     }
     setPhase('sending'); setFeedback('')
     try {
@@ -188,6 +212,9 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
           email: email.trim(),
           phone: phone.trim() || undefined,
           discountCode: discountCode.trim() || undefined,
+          ...(needsAddress
+            ? { mailingAddress: { street: addrStreet.trim(), street2: addrStreet2.trim(), city: addrCity.trim(), state: addrState, zip: addrZip.trim() } }
+            : {}),
         }),
       })
       const json = await res.json() as {
@@ -435,6 +462,40 @@ export default function SendPaymentLinkForm({ scheduleId }: { scheduleId: number
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} disabled={phase === 'sending'} />
             </div>
           </div>
+          {needsAddress && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px', borderRadius: 'var(--style-radius-s)', background: 'var(--theme-elevation-50)' }}>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: 'var(--theme-text)' }}>
+                Mailing Address * <span style={{ fontWeight: 400, color: 'var(--theme-elevation-600)' }}>— this course requires one</span>
+              </p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ flex: 2 }}>
+                  <label style={labelStyle}>Street Address *</label>
+                  <input type="text" value={addrStreet} onChange={(e) => setAddrStreet(e.target.value)} style={inputStyle} disabled={phase === 'sending'} autoComplete="off" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Apt / Suite</label>
+                  <input type="text" value={addrStreet2} onChange={(e) => setAddrStreet2(e.target.value)} style={inputStyle} disabled={phase === 'sending'} autoComplete="off" />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ flex: 2 }}>
+                  <label style={labelStyle}>City *</label>
+                  <input type="text" value={addrCity} onChange={(e) => setAddrCity(e.target.value)} style={inputStyle} disabled={phase === 'sending'} autoComplete="off" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>State *</label>
+                  <select value={addrState} onChange={(e) => setAddrState(e.target.value)} style={inputStyle} disabled={phase === 'sending'}>
+                    <option value="">Select…</option>
+                    {US_STATES.map((st) => <option key={st.code} value={st.code}>{st.code} — {st.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>ZIP *</label>
+                  <input type="text" inputMode="numeric" value={addrZip} onChange={(e) => setAddrZip(e.target.value)} style={inputStyle} disabled={phase === 'sending'} autoComplete="off" maxLength={10} />
+                </div>
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '8px' }}>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Discount Code (optional)</label>

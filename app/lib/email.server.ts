@@ -279,8 +279,10 @@ export async function sendBookingConfirmationEmail(args: {
   sessionDates: string;
   amountDollars: string;
   orderId: string;
+  /** Formatted mailing address on file — shown back so typos get caught early */
+  mailingAddress?: string;
 }): Promise<void> {
-  const { to, firstName, courseTitle, sessionDates, amountDollars, orderId } = args;
+  const { to, firstName, courseTitle, sessionDates, amountDollars, orderId, mailingAddress } = args;
   const q = await questionsLine();
   const subject = `Booking Confirmed — ${courseTitle}`;
 
@@ -289,6 +291,7 @@ export async function sendBookingConfirmationEmail(args: {
     ...(sessionDates ? [detailRow("Date(s)", sessionDates)] : []),
     detailRow("Amount Paid", amountDollars),
     detailRow("Order", `<code style="font-size:12px;color:#555;">${orderId}</code>`),
+    ...(mailingAddress ? [detailRow("Mailing Address on File", escapeHtml(mailingAddress))] : []),
   ].join("");
 
   const html = brandedHtml(subject, `
@@ -311,6 +314,7 @@ export async function sendBookingConfirmationEmail(args: {
     ...(sessionDates ? [`Date(s): ${sessionDates}`] : []),
     `Amount Paid: ${amountDollars}`,
     `Order: ${orderId}`,
+    ...(mailingAddress ? [`Mailing Address on File: ${mailingAddress}`] : []),
     ``,
     q,
   ].join("\n");
@@ -481,8 +485,9 @@ export async function sendAdminBookingNotification(args: {
   waitlisted?: boolean;
   discountCode?: string;
   discountDollars?: string;
+  mailingAddress?: string;
 }): Promise<void> {
-  const { firstName, lastName, email, courseTitle, sessionDates, amountDollars, orderId, waitlisted, discountCode, discountDollars } = args;
+  const { firstName, lastName, email, courseTitle, sessionDates, amountDollars, orderId, waitlisted, discountCode, discountDollars, mailingAddress } = args;
   await sendAdminEmail(
     waitlisted
       ? `⚠ PAID BUT WAITLISTED — ${firstName} ${lastName} → ${courseTitle}`
@@ -498,6 +503,7 @@ export async function sendAdminBookingNotification(args: {
       ...(sessionDates ? [`<strong>Date(s):</strong> ${sessionDates}`] : []),
       `<strong>Amount:</strong> ${amountDollars}`,
       ...(discountCode ? [`<strong>Discount:</strong> ${escapeHtml(discountCode)}${discountDollars ? ` (−${discountDollars})` : ""}`] : []),
+      ...(mailingAddress ? [`<strong>Mailing Address:</strong> ${escapeHtml(mailingAddress)}`] : []),
       `<strong>Order ID:</strong> <code style="font-size:12px;">${orderId}</code>`,
     ],
     [
@@ -509,6 +515,7 @@ export async function sendAdminBookingNotification(args: {
       ...(sessionDates ? [`Date(s): ${sessionDates}`] : []),
       `Amount: ${amountDollars}`,
       ...(discountCode ? [`Discount: ${discountCode}${discountDollars ? ` (−${discountDollars})` : ""}`] : []),
+      ...(mailingAddress ? [`Mailing Address: ${mailingAddress}`] : []),
       `Order ID: ${orderId}`,
     ],
     // A paid-but-waitlisted booking denotes a problem — alert the developer too

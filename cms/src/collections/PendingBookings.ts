@@ -3,6 +3,7 @@ import type { CollectionConfig, PayloadRequest } from 'payload'
 import { sendBulkEmail, sendEmail, questionsLine, type EmailAttachment } from '../lib/email'
 import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
 import { dismissNotificationsLinkingTo } from '../lib/dismiss-notifications'
+import { mailingAddressGroup, normalizeMailingAddress, isCompleteMailingAddress } from '../lib/mailing-address'
 
 // ── Access control (same pattern as Attendees / Bookings) ─────────────────────
 
@@ -145,9 +146,17 @@ async function retryHandler(req: PayloadRequest): Promise<Response> {
       req,
     })
 
+    const pendingAddress = normalizeMailingAddress(pending.mailingAddress)
+    const addressData = isCompleteMailingAddress(pendingAddress) ? { mailingAddress: pendingAddress } : {}
+
     let attendeeId: number
     if (existingResult.docs.length > 0) {
       attendeeId = existingResult.docs[0].id as number
+      if (isCompleteMailingAddress(pendingAddress)) {
+        // The address entered at checkout is the newest statement of where
+        // they live — it wins over whatever was on file. Non-fatal.
+        await p.update({ collection: 'attendees', id: attendeeId, data: addressData, req }).catch(() => {})
+      }
     } else {
       const newAttendee = await p.create({
         collection: 'attendees',
@@ -156,6 +165,7 @@ async function retryHandler(req: PayloadRequest): Promise<Response> {
           lastName: pending.lastName as string,
           email,
           phone: (pending.phone as string | undefined) ?? undefined,
+          ...addressData,
         },
         req,
       })
@@ -235,6 +245,8 @@ async function retryHandler(req: PayloadRequest): Promise<Response> {
         amountPaidCents: (pending.amountPaidCents as number | undefined) ?? undefined,
         paymentReference: squareOrderId,
       },
+      // The payment is real — a missing address must never block seating it.
+      context: { skipAddressGuard: true },
       req,
     })
 
@@ -693,6 +705,7 @@ async function seatDuplicateHandler(req: PayloadRequest): Promise<Response> {
 
     // Always a NEW attendee — the whole point is that the existing attendee
     // record under this email belongs to someone else's seat.
+    const seatAddress = normalizeMailingAddress(pending.mailingAddress)
     const attendee = await p.create({
       collection: 'attendees',
       data: {
@@ -700,6 +713,7 @@ async function seatDuplicateHandler(req: PayloadRequest): Promise<Response> {
         lastName,
         email: seatEmail,
         phone: (pending.phone as string | undefined) ?? undefined,
+        ...(isCompleteMailingAddress(seatAddress) ? { mailingAddress: seatAddress } : {}),
       },
       req,
     })
@@ -721,6 +735,8 @@ async function seatDuplicateHandler(req: PayloadRequest): Promise<Response> {
         amountPaidCents: (pending.amountPaidCents as number | undefined) ?? undefined,
         paymentReference: squareOrderId,
       },
+      // The payment is real — a missing address must never block seating it.
+      context: { skipAddressGuard: true },
       req,
     })
 
@@ -915,6 +931,10 @@ export const PendingBookings: CollectionConfig = {
       validate: optionalPhoneValidate,
       hooks: { beforeValidate: [phoneBeforeValidate] },
     },
+    mailingAddressGroup(
+      'Snapshot of the address entered at checkout (only collected when the course requires one). ' +
+      'Copied onto the Attendee when the booking is created.',
+    ),
     {
       name: 'source',
       type: 'select',

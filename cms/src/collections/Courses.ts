@@ -238,6 +238,16 @@ export const Courses: CollectionConfig = {
     },
 
     {
+      name: "requiresMailingAddress",
+      type: "checkbox",
+      label: "Require a mailing address to book",
+      defaultValue: false,
+      admin: {
+        description:
+          "When checked, anyone booking this course — on the website, through an admin payment link, in a private group, or by a new booking created here — must provide a US mailing address, and the address prints on this course's rosters (\"Not on file\" for anyone booked before this was turned on). Leave unchecked for courses that don't need one.",
+      },
+    },
+    {
       name: "isActive",
       type: "checkbox",
       label: "Active (show on site)",

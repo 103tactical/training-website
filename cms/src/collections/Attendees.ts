@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'crypto'
 import { APIError } from 'payload'
 import type { CollectionConfig, CollectionBeforeDeleteHook } from 'payload'
 import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
+import { mailingAddressGroup, formatMailingAddress } from '../lib/mailing-address'
 
 /**
  * Constant-time comparison of two strings to prevent timing attacks.
@@ -75,7 +76,7 @@ export const Attendees: CollectionConfig = {
   admin: {
     useAsTitle: 'firstName',
     group: 'Course Management',
-    defaultColumns: ['firstName', 'lastName', 'email', 'phone'],
+    defaultColumns: ['firstName', 'lastName', 'email', 'phone', 'mailingAddressLine'],
     description:
       'One record per person. Create an Attendee here first, then add Bookings to link them to specific course sessions.',
   },
@@ -87,6 +88,18 @@ export const Attendees: CollectionConfig = {
   },
   hooks: {
     beforeDelete: [beforeDeleteHook],
+    // Keep the one-line address summary (the list/roster column) in sync with
+    // the parts on every save. A PATCH may carry only some parts — merge over
+    // the stored address so a partial update never blanks the summary.
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        if (data && (data.mailingAddress !== undefined || originalDoc?.mailingAddress !== undefined)) {
+          const merged = { ...(originalDoc?.mailingAddress ?? {}), ...(data.mailingAddress ?? {}) }
+          data.mailingAddressLine = formatMailingAddress(merged) || null
+        }
+        return data
+      },
+    ],
   },
   fields: [
     {
@@ -130,6 +143,18 @@ export const Attendees: CollectionConfig = {
           },
         },
       ],
+    },
+    mailingAddressGroup(
+      'Optional unless the course requires it (set per course with "Require a mailing address to book"). ' +
+      'Shown on rosters for those courses. The booking form fills this in automatically; you can add or correct it here any time.',
+    ),
+    {
+      // One-line summary synced by the beforeChange hook — hidden on the form,
+      // used as the "Mailing Address" column in lists and session rosters.
+      name: 'mailingAddressLine',
+      type: 'text',
+      label: 'Mailing Address',
+      admin: { hidden: true },
     },
     {
       name: 'bookings',
