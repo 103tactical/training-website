@@ -3,6 +3,7 @@ import type { CollectionConfig, PayloadRequest } from 'payload'
 import { sendBulkEmail, sendEmail, questionsLine, type EmailAttachment } from '../lib/email'
 import { optionalPhoneValidate, phoneBeforeValidate } from '../lib/phone'
 import { dismissNotificationsLinkingTo } from '../lib/dismiss-notifications'
+import { redeemDiscountCode } from '../lib/discount'
 import { mailingAddressGroup, normalizeMailingAddress, isCompleteMailingAddress } from '../lib/mailing-address'
 
 // ── Access control (same pattern as Attendees / Bookings) ─────────────────────
@@ -240,15 +241,36 @@ async function retryHandler(req: PayloadRequest): Promise<Response> {
         course: courseId,
         courseSchedule: scheduleId,
         status: 'confirmed',
+        // Same stamps the webhook applies (fixed 2026-11-22): a retried booking
+        // was paid through the website or a payment link, and it keeps the
+        // discount it was sold at — otherwise it shows up in the reports with
+        // no payment method and no discount.
+        paymentMethod: 'online',
         squareOrderId,
         squarePaymentId: (pending.squarePaymentId as string | undefined) ?? undefined,
         amountPaidCents: (pending.amountPaidCents as number | undefined) ?? undefined,
         paymentReference: squareOrderId,
+        ...(pending.discountCode
+          ? {
+              discountCode: pending.discountCode as string,
+              discountCents: (pending.discountCents as number | undefined) ?? 0,
+            }
+          : {}),
       },
       // The payment is real — a missing address must never block seating it.
       context: { skipAddressGuard: true },
       req,
     })
+
+    // Count the discount redemption, as the webhook does once a booking exists.
+    // It was not counted when the original attempt failed. Never fatal.
+    if (pending.discountCode) {
+      try {
+        await redeemDiscountCode({ payload: p, req, code: pending.discountCode as string })
+      } catch (err) {
+        console.error('[PendingBookings] retry: could not count the discount redemption:', err)
+      }
+    }
 
     // ── 4. Mark pending booking as completed ────────────────────────────────
     await p.update({

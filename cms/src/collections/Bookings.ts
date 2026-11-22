@@ -254,6 +254,36 @@ export async function promoteFromWaitlist(
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = payload as any
+
+    // Only promote when a CONFIRMED seat is actually free (fixed 2026-11-22).
+    // This runs whenever any active booking leaves the session — including a
+    // WAITLISTED one being cancelled or moved, which frees no seat. Without this
+    // check that promoted the next waitlisted person into a class that was
+    // already full, and an overbooked class stayed overbooked through a
+    // cancellation. A session with no seat limit set is left as before.
+    const schedule = await p.findByID({ collection: 'course-schedules', id: scheduleId, depth: 0, req })
+    const maxSeats: number = typeof schedule?.maxSeats === 'number' ? schedule.maxSeats : 0
+    if (maxSeats > 0) {
+      const confirmed = await p.find({
+        collection: 'bookings',
+        where: {
+          and: [
+            { courseSchedule: { equals: scheduleId } },
+            { status: { equals: 'confirmed' } },
+          ],
+        },
+        limit: 1,
+        depth: 0,
+        req,
+      })
+      if (confirmed.totalDocs >= maxSeats) {
+        console.log(
+          `[Bookings] No promotion for session ${scheduleId}: ${confirmed.totalDocs} confirmed of ${maxSeats} seats`,
+        )
+        return
+      }
+    }
+
     const result = await p.find({
       collection: 'bookings',
       where: {

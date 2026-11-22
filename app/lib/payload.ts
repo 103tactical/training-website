@@ -204,6 +204,8 @@ export interface PendingBooking {
   discountCents?: number | null;
   failureReason?: string;
   attemptedAt?: string;
+  /** Where the record came from. Absent on records older than 2026-07-30 (treated as website). */
+  source?: "website" | "admin-link" | null;
   /** Snapshot of the address entered at checkout (only when the course requires one) */
   mailingAddress?: MailingAddress | null;
 }
@@ -239,17 +241,26 @@ export async function createPendingBooking(data: {
 }
 
 /**
- * Find an active (status=pending) pending booking for a given email + schedule.
- * Used to avoid creating duplicate pending records on resubmit.
+ * Find an active (status=pending) WEBSITE pending booking for a given email +
+ * schedule. Used to avoid creating duplicate pending records on resubmit.
+ *
+ * Records created by an admin-sent payment link (source 'admin-link') are
+ * deliberately skipped (fixed 2026-11-22). The caller overwrites the token of
+ * the record it gets back; doing that to an admin link's record made the link
+ * the admin had already emailed unmatchable — the customer could pay it and no
+ * booking would be created. The website now leaves that record alone and makes
+ * its own. If both end up paid, the existing duplicate-payment handling takes
+ * over. The source is filtered here in code rather than in the query so that
+ * older records with no source at all still count as website records.
  */
 export async function findActivePendingBooking(
   email: string,
   courseScheduleId: number,
 ): Promise<PendingBooking | null> {
   const res = await fetchPayloadAuth<{ docs: PendingBooking[] }>(
-    `/pending-bookings?where[email][equals]=${encodeURIComponent(email)}&where[courseSchedule][equals]=${courseScheduleId}&where[status][equals]=pending&limit=1`
+    `/pending-bookings?where[email][equals]=${encodeURIComponent(email)}&where[courseSchedule][equals]=${courseScheduleId}&where[status][equals]=pending&limit=20`
   );
-  return res.docs[0] ?? null;
+  return res.docs.find((p) => p.source !== "admin-link") ?? null;
 }
 
 /**

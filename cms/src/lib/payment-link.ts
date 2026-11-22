@@ -91,6 +91,19 @@ export async function sendPaymentLink(args: SendPaymentLinkArgs): Promise<SendPa
       year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'America/New_York',
     }).format(new Date())
     if (day < nowDay) throw new Error('This session has already taken place.')
+    // Today: refuse once the class has started (fixed 2026-11-22 — this guard
+    // used to compare days only, so a link could still be sent hours after the
+    // start). Same rule as the website's isScheduleBookable: compare Eastern
+    // wall-clock HH:mm; a session with no start time stays open all day.
+    if (day === nowDay && firstSession.startTime) {
+      const clock = (d: Date) =>
+        new Intl.DateTimeFormat('en-GB', {
+          hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York',
+        }).format(d)
+      if (clock(new Date(firstSession.startTime)) <= clock(new Date())) {
+        throw new Error('This session has already started.')
+      }
+    }
   }
   // Availability counts outstanding admin links as held seats — Bernie can't
   // promise more seats than physically exist.
