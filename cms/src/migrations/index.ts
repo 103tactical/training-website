@@ -63,6 +63,7 @@ import * as migration_20260808_notifications from './20260808_notifications';
 import * as migration_20260813_pending_bookings_square_link_id from './20260813_pending_bookings_square_link_id';
 import * as migration_20261016_mailing_address from './20261016_mailing_address';
 import * as migration_20261122_drop_contact_submissions_status from './20261122_drop_contact_submissions_status';
+import * as migration_20261122_bookings_refund_facts from './20261122_bookings_refund_facts';
 
 export const migrations = [
   {
@@ -389,5 +390,10 @@ export const migrations = [
     up: migration_20261122_drop_contact_submissions_status.up,
     down: migration_20261122_drop_contact_submissions_status.down,
     name: '20261122_drop_contact_submissions_status'
+  },
+  {
+    up: migration_20261122_bookings_refund_facts.up,
+    down: migration_20261122_bookings_refund_facts.down,
+    name: '20261122_bookings_refund_facts'
   },
 ];

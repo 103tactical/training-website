@@ -86,6 +86,66 @@ export function getSessionLabel(b: RawBooking): string {
   return '—'
 }
 
+// ── Refund facts (2026-11-22) ───────────────────────────────────────────────
+// RULE: a report never infers a refund from a booking's status. Until this date
+// every report counted "cancelled + paid by card" as refunded in full, which
+// overstated refunds for a booking cancelled WITHOUT a refund. Refund figures
+// come only from what is stored on the booking:
+//   squareRefundedCents      what was refunded through Square: written when Square
+//                            accepts the refund, then confirmed or corrected by
+//                            Square's webhook (Square is the source of truth)
+//   manualRefundAmountCents  what the admin typed in for money returned another way
+// Whatever was paid and is covered by neither is reported as "no refund
+// recorded" — visible, never counted as refunded, never dropped. It does NOT
+// mean the business kept the money: it may have been returned some other way
+// that nobody recorded.
+
+/** Cents Square has confirmed refunding on this booking's payment. */
+export function squareRefundedCents(b: RawBooking): number {
+  return Number(b.squareRefundedCents ?? 0) || 0
+}
+
+/** Cents the admin recorded as refunded outside Square (cash, POS, …). */
+export function manualRefundedCents(b: RawBooking): number {
+  return Number(b.manualRefundAmountCents ?? 0) || 0
+}
+
+/** Total refund on record for this booking (Square-confirmed + manually recorded). */
+export function refundedCents(b: RawBooking): number {
+  return squareRefundedCents(b) + manualRefundedCents(b)
+}
+
+/**
+ * True when the admin cancelled WITH a card refund but no refund is on record.
+ * The refund is recorded the moment Square accepts it, so this state means the
+ * request to Square failed (or the record could not be written) — someone must
+ * check the payment in Square. It clears on its own if Square later confirms.
+ */
+export function isAwaitingSquareRefund(b: RawBooking): boolean {
+  return (
+    b.status === 'cancelled' &&
+    !!b.squarePaymentId &&
+    !b.skipRefund &&
+    b.squareRefundedCents == null &&
+    Number(b.amountPaidCents ?? 0) > 0
+  )
+}
+
+/**
+ * Cents paid on a cancelled booking that no recorded refund accounts for.
+ * Zero while a Square refund is still awaiting confirmation (that amount is
+ * reported separately as pending, not as unaccounted).
+ */
+export function noRefundRecordedCents(b: RawBooking): number {
+  if (b.status !== 'cancelled' || isAwaitingSquareRefund(b)) return 0
+  return Math.max(0, Number(b.amountPaidCents ?? 0) - refundedCents(b))
+}
+
+/** When the booking was cancelled (stored fact; falls back for legacy rows). */
+export function cancelledDate(b: RawBooking): string | null | undefined {
+  return b.cancelledAt ?? b.updatedAt
+}
+
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   'online':        'Website / Payment Link',
   'square-manual': 'Square POS',

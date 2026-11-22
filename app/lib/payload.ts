@@ -649,6 +649,31 @@ export async function updateBookingStatus(
   }
 }
 
+/**
+ * Record on a booking what Square says has actually been refunded on its
+ * payment, optionally cancelling the booking in the same write. Square is the
+ * source of truth for refunds — the CMS reports read this stored figure and
+ * never infer a refund from the booking's status.
+ */
+export async function recordBookingRefund(
+  bookingId: number,
+  data: { squareRefundedCents: number; squareRefundedAt: string; status?: "cancelled" },
+): Promise<void> {
+  const secret = process.env.CMS_WRITE_SECRET;
+  const res = await fetch(`${PAYLOAD_API_URL}/api/bookings/${bookingId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`recordBookingRefund failed: ${res.status} ${body}`);
+  }
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface SeoFields {

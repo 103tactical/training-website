@@ -6,6 +6,8 @@ import {
   formatCents, formatDate, getDateRange, getCourseName,
   getAttendeeName, getAttendeeEmail, getSessionLabel,
   PERIOD_LABELS,
+  squareRefundedCents, manualRefundedCents, refundedCents,
+  noRefundRecordedCents, isAwaitingSquareRefund, cancelledDate,
 } from './shared'
 import type { RawBooking } from './shared'
 
@@ -25,8 +27,8 @@ export default async function RefundsReport(props: any) {
 
   const dateFilter = period !== 'all-time'
     ? [
-        { updatedAt: { greater_than_equal: from.toISOString() } },
-        { updatedAt: { less_than_equal:    to.toISOString()   } },
+        { cancelledAt: { greater_than_equal: from.toISOString() } },
+        { cancelledAt: { less_than_equal:    to.toISOString()   } },
       ]
     : []
 
@@ -41,24 +43,43 @@ export default async function RefundsReport(props: any) {
     limit: 0,
     depth: 1,
     overrideAccess: true,
-    sort: '-updatedAt',
+    sort: '-cancelledAt',
   }) as { docs: RawBooking[] }
 
-  const squareRefunds       = cancellations.filter(b => b.squarePaymentId && b.amountPaidCents)
-  const totalSquareRefunded = squareRefunds.reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
-  const manualRefunds       = cancellations.filter(b => !b.squarePaymentId && (b.manualRefundAmountCents ?? 0) > 0)
-  const totalManualRefunded = manualRefunds.reduce((s, b) => s + (b.manualRefundAmountCents ?? 0), 0)
+  // Every figure below comes from refund FACTS stored on the booking (see
+  // shared.ts) — never from "cancelled + paid by card = refunded". Each dollar
+  // paid on a cancelled booking lands in exactly one bucket: refunded through
+  // Square, refunded another way, awaiting Square's confirmation, or no refund
+  // recorded.
+  const squareRefunds       = cancellations.filter(b => squareRefundedCents(b) > 0)
+  const totalSquareRefunded = squareRefunds.reduce((s, b) => s + squareRefundedCents(b), 0)
+  const manualRefunds       = cancellations.filter(b => manualRefundedCents(b) > 0)
+  const totalManualRefunded = manualRefunds.reduce((s, b) => s + manualRefundedCents(b), 0)
   const totalRefunded       = totalSquareRefunded + totalManualRefunded
-  const manualCancels       = cancellations.filter(b => !b.squarePaymentId)
+  const noRefundRows        = cancellations.filter(b => noRefundRecordedCents(b) > 0)
+  const totalNoRefund       = noRefundRows.reduce((s, b) => s + noRefundRecordedCents(b), 0)
+  const awaitingRows        = cancellations.filter(b => isAwaitingSquareRefund(b))
+  const totalAwaiting       = awaitingRows.reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
 
-  const csvHeaders = ['Date Cancelled', 'Attendee', 'Email', 'Course', 'Session', 'Amount Refunded', 'Square Order ID', 'Square Payment ID']
+  const dollars = (cents: number) => (cents / 100).toFixed(2)
+
+  // The CSV carries exactly the same figures as the on-screen table.
+  const csvHeaders = [
+    'Date Cancelled', 'Attendee', 'Email', 'Course', 'Session', 'Amount Paid',
+    'Refunded Through Square', 'Refunded Another Way', 'No Refund Recorded',
+    'Refund Not Confirmed', 'Square Order ID', 'Square Payment ID',
+  ]
   const csvRows = cancellations.map(b => [
-    formatDate(b.updatedAt),
+    formatDate(cancelledDate(b)),
     getAttendeeName(b),
     getAttendeeEmail(b),
     getCourseName(b),
     getSessionLabel(b),
-    b.amountPaidCents != null ? (b.amountPaidCents / 100).toFixed(2) : '',
+    b.amountPaidCents != null ? dollars(b.amountPaidCents) : '',
+    dollars(squareRefundedCents(b)),
+    dollars(manualRefundedCents(b)),
+    dollars(noRefundRecordedCents(b)),
+    isAwaitingSquareRefund(b) ? dollars(b.amountPaidCents ?? 0) : dollars(0),
     b.squareOrderId   ?? '',
     b.squarePaymentId ?? '',
   ])
@@ -138,20 +159,36 @@ export default async function RefundsReport(props: any) {
           <span style={{ fontSize: '26px', fontWeight: 700 }}>{cancellations.length}</span>
         </div>
         <div style={statCard}>
-          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Square Refunds</span>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Refunded Through Square</span>
           <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalSquareRefunded)}</span>
-          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{squareRefunds.length} transactions</span>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{squareRefunds.length} confirmed by Square</span>
         </div>
         <div style={statCard}>
-          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Manual Refunds</span>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Refunded Another Way</span>
           <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalManualRefunded)}</span>
-          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{manualCancels.length} manual cancellation{manualCancels.length !== 1 ? 's' : ''}</span>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>{manualRefunds.length} entered by hand on the booking</span>
         </div>
         <div style={statCard}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Total Refunded</span>
           <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalRefunded)}</span>
-          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>Square + manual</span>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>Square + another way</span>
         </div>
+        <div style={statCard}>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>No Refund Recorded</span>
+          <span style={{ fontSize: '26px', fontWeight: 700 }}>{formatCents(totalNoRefund)}</span>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>
+            {noRefundRows.length} cancelled with money paid and no refund on record. If it was returned another way, enter it in Manual Refund Amount on the booking.
+          </span>
+        </div>
+        {awaitingRows.length > 0 && (
+          <div style={statCard}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--theme-elevation-500)' }}>Refund Not Confirmed</span>
+            <span style={{ fontSize: '26px', fontWeight: 700, color: '#b91c1c' }}>{formatCents(totalAwaiting)}</span>
+            <span style={{ fontSize: '12px', color: 'var(--theme-elevation-500)' }}>
+              {awaitingRows.length} booking{awaitingRows.length !== 1 ? 's' : ''} cancelled with a card refund, but no refund is on record. Check the payment in Square.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -163,29 +200,40 @@ export default async function RefundsReport(props: any) {
         ) : (
           <table style={tableStyle}>
             <thead><tr>
-              {['Date Cancelled', 'Attendee', 'Course', 'Session', 'Amount Refunded', 'Square Order'].map(h => (
+              {['Date Cancelled', 'Attendee', 'Course', 'Session', 'Paid', 'Refunded', 'No Refund Recorded', 'Square Order'].map(h => (
                 <th key={h} style={thStyle}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
-              {cancellations.map((b, i) => (
-                <tr key={i} className="rpt-row">
-                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDate(b.updatedAt)}</td>
-                  <td style={tdStyle}>{getAttendeeName(b)}</td>
-                  <td style={tdStyle}>{getCourseName(b)}</td>
-                  <td style={tdStyle}>{getSessionLabel(b)}</td>
-                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: (b.squarePaymentId || b.manualRefundAmountCents) ? '#b91c1c' : 'var(--theme-elevation-500)' }}>
-                    {b.squarePaymentId
-                      ? formatCents(b.amountPaidCents)
-                      : b.manualRefundAmountCents
-                        ? formatCents(b.manualRefundAmountCents)
-                        : '—'}
-                  </td>
-                  <td style={{ ...tdStyle, fontSize: '11px', color: 'var(--theme-elevation-500)' }}>
-                    {b.squareOrderId ?? '—'}
-                  </td>
-                </tr>
-              ))}
+              {cancellations.map((b, i) => {
+                const sq       = squareRefundedCents(b)
+                const manual   = manualRefundedCents(b)
+                const refunded = refundedCents(b)
+                const awaiting = isAwaitingSquareRefund(b)
+                const none     = noRefundRecordedCents(b)
+                return (
+                  <tr key={i} className="rpt-row">
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDate(cancelledDate(b))}</td>
+                    <td style={tdStyle}>{getAttendeeName(b)}</td>
+                    <td style={tdStyle}>{getCourseName(b)}</td>
+                    <td style={tdStyle}>{getSessionLabel(b)}</td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatCents(b.amountPaidCents)}</td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: refunded > 0 ? '#b91c1c' : 'var(--theme-elevation-500)' }}>
+                      {awaiting
+                        ? 'Not confirmed — check Square'
+                        : refunded > 0
+                          ? `${formatCents(refunded)}${sq > 0 && manual > 0 ? ' (Square + another way)' : manual > 0 ? ' (another way)' : ''}`
+                          : '—'}
+                    </td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: none > 0 ? 'var(--theme-text)' : 'var(--theme-elevation-500)' }}>
+                      {none > 0 ? formatCents(none) : '—'}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: '11px', color: 'var(--theme-elevation-500)' }}>
+                      {b.squareOrderId ?? '—'}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}

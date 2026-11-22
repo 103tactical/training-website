@@ -27,7 +27,7 @@ import {
   getCourseScheduleById,
   findBookingBySquareOrderId,
   createBookingRecord,
-  updateBookingStatus,
+  recordBookingRefund,
   findAttendeeByEmail,
   createAttendee,
   updateAttendee,
@@ -50,6 +50,7 @@ import {
   sendAdminBookingFailureAlert,
   sendAdminDuplicatePaymentAlert,
   sendAdminUnmatchedPaymentAlert,
+  sendAdminRefundFailedAlert,
   sendAdminCancellationAlert,
 } from "~/lib/email.server";
 import { createCmsNotification } from "~/lib/cms-notify.server";
@@ -130,6 +131,8 @@ function parseCardholderName(name: string): { firstName: string; lastName: strin
 // instance). Worst case after a restart: one repeated alert — never a missed one.
 const alertedUnmatchedOrders = new Set<string>();
 const UNMATCHED_ALERT_MEMORY = 500;
+// Same idea for refunds Square reports as failed (see handleRefundNotCompleted).
+const alertedFailedRefunds = new Set<string>();
 
 // ── Payment handler ────────────────────────────────────────────────────────────
 
@@ -684,24 +687,101 @@ async function handleLegacyPayment(args: {
   console.log(`[webhook] Legacy booking created — schedule=${scheduleId} order=${orderId}`);
 }
 
+// ── Refund that did not go through ─────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleRefundNotCompleted(paymentId: string, refund: Record<string, any>) {
+  if (!squareClient) return;
+  let orderId: string | undefined;
+  let refundedCents = 0;
+  try {
+    const paymentResponse = await squareClient.payments.get({ paymentId });
+    orderId = paymentResponse.payment?.orderId ?? undefined;
+    refundedCents = Number(paymentResponse.payment?.refundedMoney?.amount ?? 0);
+  } catch (err) {
+    console.warn("[webhook] Could not retrieve payment for failed refund:", err);
+    return;
+  }
+  if (!orderId) return;
+
+  const booking = await findBookingBySquareOrderId(orderId);
+  if (!booking) {
+    console.log(`[webhook] No booking found for failed refund on order ${orderId}`);
+    return;
+  }
+  // Only a CANCELLED booking is affected: that is the case where the CMS recorded
+  // a refund that then failed. A failed refund attempt on a booking that is still
+  // active changed nothing here (the booking stands, no refund is on record).
+  if (booking.status !== "cancelled") {
+    console.log(`[webhook] Refund ${refund.status} on order ${orderId}; booking ${booking.id} is still ${booking.status} — nothing to correct`);
+    return;
+  }
+
+  // Square may deliver the same failed-refund event more than once: record the
+  // truth every time (harmless), but alert only once per refund.
+  const refundId: string = refund.id ?? `${paymentId}:${refund.created_at ?? ""}`;
+  const alreadyAlerted = alertedFailedRefunds.has(refundId);
+  if (alertedFailedRefunds.size >= UNMATCHED_ALERT_MEMORY) alertedFailedRefunds.clear();
+  alertedFailedRefunds.add(refundId);
+
+  // Store what Square says is actually refunded on the payment (usually nothing).
+  await recordBookingRefund(booking.id, {
+    squareRefundedCents: refundedCents,
+    squareRefundedAt: refund.updated_at ?? refund.created_at ?? new Date().toISOString(),
+  });
+
+  if (alreadyAlerted) return;
+
+  const attendee = booking.attendee as { firstName?: string; lastName?: string; email?: string } | null | undefined;
+  const attendeeName = [attendee?.firstName, attendee?.lastName].filter(Boolean).join(" ") || attendee?.email || "a customer";
+  const amountDollars = formatCents(Number(refund.amount_money?.amount ?? 0));
+
+  await sendAdminRefundFailedAlert({ bookingId: booking.id, attendeeName, amountDollars, orderId }).catch((err) =>
+    console.error("[webhook] Refund-failed alert could not be sent:", err),
+  );
+  await createCmsNotification({
+    whatHappened: `A refund of ${amountDollars} to ${attendeeName} did not go through at Square. Their booking is cancelled, but they have not been paid back.`,
+    whatToDo: `Find the payment in Square under Transactions and refund it there. If you return the money another way, enter it in Manual Refund Amount on the booking.`,
+    link: `/admin/collections/bookings/${booking.id}`,
+    linkLabel: "Open their booking",
+  });
+  console.warn(`[webhook] Refund ${refund.status} for booking ${booking.id} (order ${orderId}) — admin alerted`);
+}
+
 // ── Refund handler ─────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleRefundUpdated(event: Record<string, any>) {
   const refund = event?.data?.object?.refund;
-  if (!refund || refund.status !== "COMPLETED") return;
+  if (!refund) return;
 
   const paymentId: string = refund.payment_id;
   if (!paymentId || !squareClient) return;
 
+  // A refund Square could NOT complete. The CMS recorded it as refunded the
+  // moment Square accepted it, so correct the record to what Square now says was
+  // really refunded and tell the admin — the customer has not been paid back.
+  if (refund.status === "FAILED" || refund.status === "REJECTED") {
+    await handleRefundNotCompleted(paymentId, refund);
+    return;
+  }
+  if (refund.status !== "COMPLETED") return;
+
   let orderId: string | undefined;
+  // What Square says has been refunded on this payment IN TOTAL (all refunds).
+  // This is the figure the CMS stores and every report reads.
+  let refundedCents = 0;
   try {
     const paymentResponse = await squareClient.payments.get({ paymentId });
     orderId = paymentResponse.payment?.orderId ?? undefined;
+    refundedCents = Number(paymentResponse.payment?.refundedMoney?.amount ?? 0);
   } catch (err) {
     console.warn("[webhook] Could not retrieve payment for refund:", err);
     return;
   }
+  // Fall back to this refund's own amount if the payment total was not readable.
+  if (!refundedCents) refundedCents = Number(refund.amount_money?.amount ?? 0);
+  const refundedAt: string = refund.updated_at ?? refund.created_at ?? new Date().toISOString();
 
   if (!orderId) return;
 
@@ -711,11 +791,21 @@ async function handleRefundUpdated(event: Record<string, any>) {
     return;
   }
   if (booking.status === "cancelled") {
-    console.log(`[webhook] Booking ${booking.id} already cancelled — skipping`);
+    // The normal case: the admin cancelled with a refund in the CMS, and this is
+    // Square confirming the money went back. Record the confirmed amount — the
+    // booking is already cancelled, so no status change and no emails.
+    await recordBookingRefund(booking.id, { squareRefundedCents: refundedCents, squareRefundedAt: refundedAt });
+    console.log(`[webhook] Booking ${booking.id} already cancelled — recorded ${refundedCents} cents refunded by Square`);
     return;
   }
 
-  await updateBookingStatus(booking.id, "cancelled");
+  // Refund was made directly in Square: cancel the booking and record the
+  // confirmed amount in one write.
+  await recordBookingRefund(booking.id, {
+    status: "cancelled",
+    squareRefundedCents: refundedCents,
+    squareRefundedAt: refundedAt,
+  });
   console.log(`[webhook] Booking ${booking.id} cancelled via Square refund on order ${orderId}`);
 
   // ── Cancellation email to attendee ──────────────────────────────────────────
@@ -725,7 +815,11 @@ async function handleRefundUpdated(event: Record<string, any>) {
   const attendeeFirstName = attendee?.firstName ?? "";
   const attendeeName      = [attendeeFirstName, attendee?.lastName].filter(Boolean).join(" ");
   const courseTitle       = course?.title ?? "your course";
-  const amountDollars     = booking.amountPaidCents ? formatCents(booking.amountPaidCents) : "";
+  // The amount Square actually refunded (a partial refund used to be emailed as
+  // the full amount paid); fall back to the amount paid only if unknown.
+  const amountDollars     = refundedCents
+    ? formatCents(refundedCents)
+    : booking.amountPaidCents ? formatCents(booking.amountPaidCents) : "";
 
   if (attendeeEmail) {
     try {

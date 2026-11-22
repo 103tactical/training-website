@@ -1,5 +1,8 @@
 import { APIError } from 'payload'
+import { sql } from '@payloadcms/db-postgres'
+import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import type {
+  Payload,
   CollectionConfig,
   CollectionAfterChangeHook,
   CollectionBeforeDeleteHook,
@@ -24,12 +27,18 @@ function getSquareClient() {
 /**
  * Issue a full refund via Square when an admin cancels a booking
  * that was originally paid through Square checkout.
+ *
+ * Returns the number of cents that are refunded on the payment as far as we
+ * KNOW (the amount Square just accepted, or the amount it already carried), or
+ * null when no refund is known to exist (Square unavailable, or the call
+ * failed). The caller stores that fact on the booking — reports read the stored
+ * fact and never assume a cancellation was refunded.
  */
-async function issueSquareRefund(paymentId: string, amountCents: number): Promise<void> {
+async function issueSquareRefund(paymentId: string, amountCents: number): Promise<number | null> {
   const client = getSquareClient()
   if (!client) {
     console.warn('[Bookings] SQUARE_ACCESS_TOKEN not set — skipping refund')
-    return
+    return null
   }
   // Never refund a payment that already carries a refund. This covers a booking
   // cancelled, reactivated and cancelled again, and a cancellation that arrives
@@ -45,7 +54,7 @@ async function issueSquareRefund(paymentId: string, amountCents: number): Promis
       console.warn(
         `[Bookings] Payment ${paymentId} already has ${alreadyRefunded} cents refunded — not refunding again`,
       )
-      return
+      return alreadyRefunded
     }
   } catch (err) {
     console.warn('[Bookings] Could not check existing refunds before refunding:', err)
@@ -62,10 +71,36 @@ async function issueSquareRefund(paymentId: string, amountCents: number): Promis
       reason: 'Cancelled by admin via 103 Tactical CMS',
     })
     console.log(`[Bookings] Refund issued for payment ${paymentId}`)
+    return amountCents
   } catch (err) {
     // Log but do not throw — seat adjustment still runs even if refund fails
     console.error('[Bookings] Square refund error:', err)
+    return null
   }
+}
+
+/**
+ * Store on the booking what Square has refunded. Called right after Square
+ * accepts a refund, so the reports are correct immediately (Square can take
+ * days to mark a refund "completed"; its webhook later confirms the figure).
+ *
+ * Deliberately NOT awaited by the caller and NOT part of the request's
+ * transaction: that transaction still holds this booking's row, so an awaited
+ * write on another connection would wait on it forever (the 2026-08-05
+ * deadlock). Fired without waiting, this statement simply queues behind the
+ * row lock and lands the moment the cancellation commits. It is one raw UPDATE
+ * of exactly two columns — it runs no hooks and cannot overwrite the status or
+ * anything else with stale data. If it fails, the report shows the refund as
+ * "not confirmed" until Square's webhook records it; nothing is lost.
+ */
+function recordSquareRefundFact(payload: Payload, bookingId: number | string, cents: number): void {
+  const db = (payload.db as unknown as PostgresAdapter).drizzle
+  db.execute(
+    sql`UPDATE "bookings" SET "square_refunded_cents" = ${cents}, "square_refunded_at" = now() WHERE "id" = ${Number(bookingId)}`,
+  ).then(
+    () => console.log(`[Bookings] Recorded ${cents} cents refunded on booking ${bookingId}`),
+    (err: unknown) => console.error(`[Bookings] Could not record refund on booking ${bookingId}:`, err),
+  )
 }
 
 /** Statuses that count against a schedule's seat inventory */
@@ -456,6 +491,25 @@ const syncBookingTitle: CollectionBeforeChangeHook = async ({ data, originalDoc,
   return data
 }
 
+/**
+ * Record WHEN a booking was cancelled. Reports used to show `updatedAt` as the
+ * cancellation date, which silently changes whenever the record is touched for
+ * any other reason. Stamped once on the transition into 'cancelled'; cleared if
+ * the booking is made active again. Never overwrites a date that is already set.
+ */
+const stampCancelledAt: CollectionBeforeChangeHook = async ({ data, originalDoc }) => {
+  const newStatus: string | undefined = data.status ?? originalDoc?.status
+  const prevStatus: string | undefined = originalDoc?.status
+  if (newStatus === 'cancelled') {
+    if (prevStatus !== 'cancelled' && !data.cancelledAt) {
+      data.cancelledAt = new Date().toISOString()
+    }
+  } else if (prevStatus === 'cancelled') {
+    data.cancelledAt = null
+  }
+  return data
+}
+
 const afterChangeHook: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
   const { payload } = req
 
@@ -506,7 +560,9 @@ const afterChangeHook: CollectionAfterChangeHook = async ({ doc, previousDoc, op
     ACTIVE_STATUSES.includes(previousDoc?.status ?? '')
 
   if (wasCancelled && doc.squarePaymentId && doc.amountPaidCents && !doc.skipRefund) {
-    await issueSquareRefund(doc.squarePaymentId, doc.amountPaidCents)
+    const refundedCents = await issueSquareRefund(doc.squarePaymentId, doc.amountPaidCents)
+    // Store the fact (not awaited on purpose — see recordSquareRefundFact).
+    if (refundedCents != null) recordSquareRefundFact(payload, doc.id, refundedCents)
   }
 
   return doc
@@ -595,7 +651,7 @@ export const Bookings: CollectionConfig = {
     update: allowAccess,
   },
   hooks: {
-    beforeChange: [validateBookingRules, recordTransfer, syncBookingTitle],
+    beforeChange: [validateBookingRules, recordTransfer, syncBookingTitle, stampCancelledAt],
     afterChange: [afterChangeHook],
     beforeDelete: [beforeDeleteHook],
     // Deleting a booking dismisses any notification that deep-links to it
@@ -825,6 +881,57 @@ export const Bookings: CollectionConfig = {
         components: {
           Field: './components/DollarsField',
         },
+      },
+    },
+    // ── Refund FACTS (added 2026-11-22) ───────────────────────────────────────
+    // Until this date nothing recorded what was actually refunded: the reports
+    // GUESSED "cancelled + paid by card = refunded in full", which was wrong for
+    // a booking cancelled without a refund, for a refund Square rejected, and for
+    // a partial refund. These three fields store what really happened, and the
+    // reports read ONLY these (plus manualRefundAmountCents) — never the status.
+    {
+      name: 'squareRefundedCents',
+      type: 'number',
+      label: 'Refunded Through Square',
+      min: 0,
+      // Written only by the system (the refund step above, and the website's
+      // Square webhook via the bearer token). A logged-in admin can never change
+      // it — Payload strips it from anything the admin form submits, so re-saving
+      // a booking cannot blank out a recorded refund.
+      access: { update: ({ req }) => !req.user },
+      admin: {
+        readOnly: true,
+        description:
+          'Filled in automatically when a refund is sent through Square for this payment. ' +
+          'Empty means no Square refund is on record for it.',
+        condition: (data) => data.status === 'cancelled' || data.squareRefundedCents != null,
+        components: {
+          Field: './components/DollarsField',
+        },
+      },
+    },
+    {
+      name: 'squareRefundedAt',
+      type: 'date',
+      label: 'Square Refund Recorded On',
+      access: { update: ({ req }) => !req.user },
+      admin: {
+        readOnly: true,
+        date: { pickerAppearance: 'dayAndTime' },
+        condition: (data) => data.squareRefundedAt != null,
+      },
+    },
+    {
+      name: 'cancelledAt',
+      type: 'date',
+      label: 'Cancelled On',
+      // Set only by the stampCancelledAt hook (hooks run after this check).
+      access: { update: ({ req }) => !req.user },
+      admin: {
+        readOnly: true,
+        date: { pickerAppearance: 'dayAndTime' },
+        description: 'Set automatically at the moment the booking is cancelled.',
+        condition: (data) => data.cancelledAt != null,
       },
     },
     {

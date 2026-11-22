@@ -3,7 +3,7 @@ import { DefaultTemplate } from '@payloadcms/next/templates'
 import { SetStepNav } from '@payloadcms/ui'
 import DashboardCharts from './DashboardCharts'
 import type { RevenueMonth, CourseStat } from './DashboardCharts'
-import { formatCents, formatDate, getCourseName, getAttendeeName } from './shared'
+import { formatCents, formatDate, getCourseName, getAttendeeName, refundedCents, noRefundRecordedCents } from './shared'
 import type { RawBooking } from './shared'
 
 // ── Stat card ──────────────────────────────────────────────────────────────
@@ -124,10 +124,11 @@ export default async function Dashboard(props: any) {
                                      .reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
   const yearRevenue       = confirmed.filter(b => new Date(b.createdAt) >= yearStart)
                                      .reduce((s, b) => s + (b.amountPaidCents ?? 0), 0)
-  const totalRefunded     = cancelled.reduce((s, b) => {
-    if (b.squarePaymentId) return s + (b.amountPaidCents ?? 0)
-    return s + (b.manualRefundAmountCents ?? 0)
-  }, 0)
+  // Refund figures come from facts stored on the booking, never inferred from
+  // status (see the note in shared.ts).
+  const totalRefunded     = cancelled.reduce((s, b) => s + refundedCents(b), 0)
+  const totalNoRefund     = cancelled.reduce((s, b) => s + noRefundRecordedCents(b), 0)
+  const noRefundCount     = cancelled.filter(b => noRefundRecordedCents(b) > 0).length
   const totalDiscounts    = confirmed.reduce((s, b) => s + (b.discountCents ?? 0), 0)
   const avgBooking        = confirmed.length > 0
     ? Math.round(totalRevenue / confirmed.length)
@@ -245,7 +246,10 @@ export default async function Dashboard(props: any) {
         <StatCard label="Total Revenue"     value={formatCents(totalRevenue)} sub="Money collected — all confirmed bookings" />
         <StatCard label="This Month"        value={formatCents(monthRevenue)} sub="Collected this month" />
         <StatCard label="This Year"         value={formatCents(yearRevenue)} sub="Collected this year" />
-        <StatCard label="Total Refunded"    value={formatCents(totalRefunded)} sub="Returned to customers (Square + manual)" accent />
+        <StatCard label="Total Refunded"    value={formatCents(totalRefunded)} sub="Confirmed by Square, plus refunds entered by hand" accent />
+        {totalNoRefund > 0 && (
+          <StatCard label="Cancelled, No Refund Recorded" value={formatCents(totalNoRefund)} sub={`${noRefundCount} cancelled booking${noRefundCount !== 1 ? 's' : ''} — see Refunds & Cancellations`} />
+        )}
         <StatCard label="Discounts Given"   value={formatCents(totalDiscounts)} sub="Taken off course prices by discount codes" />
       </div>
 

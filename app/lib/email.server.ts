@@ -526,6 +526,43 @@ export async function sendAdminBookingNotification(args: {
 // ── 5. Admin — booking failure alert ──────────────────────────────────────────
 
 /**
+ * Square reported that a refund could not be completed. The booking is already
+ * cancelled, but the customer has not been paid back.
+ */
+export async function sendAdminRefundFailedAlert(args: {
+  bookingId: number | string;
+  attendeeName: string;
+  amountDollars: string;
+  orderId: string;
+}): Promise<void> {
+  const { bookingId, attendeeName, amountDollars, orderId } = args;
+  const cmsBase = process.env.PAYLOAD_API_URL ?? "https://training-cms.onrender.com";
+  const cmsLink = `${cmsBase}/admin/collections/bookings/${bookingId}`;
+
+  await sendAdminEmail(
+    `⚠️ Refund Did Not Go Through — ${attendeeName}`,
+    [
+      `<strong style="color:#c00;">Square could not complete a refund of ${escapeHtml(amountDollars)} to ${escapeHtml(attendeeName)}.</strong>`,
+      `Their booking is cancelled, but they have <strong>not</strong> been paid back.`,
+      `<strong>What to do:</strong> find the payment in Square under Transactions and refund it there. If you return the money another way, enter it in Manual Refund Amount on the booking.`,
+      `<strong>Square order:</strong> ${escapeHtml(orderId)}`,
+      `<a href="${cmsLink}" style="color:#ea580c;">Open the booking in the CMS</a>`,
+    ],
+    [
+      `⚠️ Refund Did Not Go Through`,
+      ``,
+      `Square could not complete a refund of ${amountDollars} to ${attendeeName}.`,
+      `Their booking is cancelled, but they have NOT been paid back.`,
+      ``,
+      `Find the payment in Square under Transactions and refund it there. If you return the money another way, enter it in Manual Refund Amount on the booking.`,
+      `Square order: ${orderId}`,
+      `Open: ${cmsLink}`,
+    ],
+    { issue: true },
+  );
+}
+
+/**
  * A completed payment arrived on one of our payment links, but the pending
  * record it belongs to no longer exists (cancelled link Square failed to
  * disable, record deleted by hand, or a replaced checkout token). Nothing can
