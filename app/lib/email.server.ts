@@ -526,6 +526,47 @@ export async function sendAdminBookingNotification(args: {
 // ── 5. Admin — booking failure alert ──────────────────────────────────────────
 
 /**
+ * A completed payment arrived on one of our payment links, but the pending
+ * record it belongs to no longer exists (cancelled link Square failed to
+ * disable, record deleted by hand, or a replaced checkout token). Nothing can
+ * be created automatically — the admin must refund it or add the person.
+ */
+export async function sendAdminUnmatchedPaymentAlert(args: {
+  payerEmail: string;
+  amountDollars: string;
+  what: string;
+  orderId: string;
+  paymentId: string;
+}): Promise<void> {
+  const { payerEmail, amountDollars, what, orderId, paymentId } = args;
+
+  await sendAdminEmail(
+    `⚠️ Payment Received With No Booking — ${payerEmail}`,
+    [
+      `<strong style="color:#c00;">A payment came in on a payment link that is no longer on file. No booking was created.</strong>`,
+      `<strong>Paid by:</strong> ${escapeHtml(payerEmail)} — ${escapeHtml(amountDollars)}`,
+      `<strong>For:</strong> ${escapeHtml(what)}`,
+      `This happens when a payment link was cancelled or its record was removed, and the person paid it anyway.`,
+      `<strong>What to do:</strong> find the payment in Square under Transactions. Then either <strong>refund</strong> it there, or <strong>add the person</strong> to the class yourself with Add New on the session roster.`,
+      `<strong>Square order:</strong> ${escapeHtml(orderId)}<br><strong>Square payment:</strong> ${escapeHtml(paymentId)}`,
+    ],
+    [
+      `⚠️ Payment Received With No Booking`,
+      ``,
+      `Paid by: ${payerEmail} — ${amountDollars}`,
+      `For: ${what}`,
+      ``,
+      `A payment came in on a payment link that is no longer on file. No booking was created.`,
+      `Find the payment in Square under Transactions. Then either refund it there, or add the person to the class yourself with Add New on the session roster.`,
+      ``,
+      `Square order: ${orderId}`,
+      `Square payment: ${paymentId}`,
+    ],
+    { issue: true },
+  );
+}
+
+/**
  * A payment arrived under an email that already holds a seat in the session
  * (double payment, or a second person sharing an address). No booking was
  * created; the admin must refund it or seat the person from the CMS.

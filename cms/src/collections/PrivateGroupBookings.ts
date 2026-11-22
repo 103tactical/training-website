@@ -608,6 +608,13 @@ async function processHandler(req: PayloadRequest): Promise<Response> {
       } else {
         // ── payment-links ──────────────────────────────────────────────────
 
+        // Skip attendees who have already paid, or were booked by hand —
+        // re-running must never send them a new link to pay again.
+        if (attendee.paymentStatus === 'paid' || attendee.paymentStatus === 'manual') {
+          results.push({ attendeeRowId, email: attendee.email, success: true, skipped: true, checkoutUrl: attendee.paymentLink ?? undefined })
+          continue
+        }
+
         // Skip attendees already sent a link
         if (attendee.paymentStatus === 'link-sent' && attendee.paymentLink) {
           results.push({ attendeeRowId, email: attendee.email, success: true, skipped: true, checkoutUrl: attendee.paymentLink })

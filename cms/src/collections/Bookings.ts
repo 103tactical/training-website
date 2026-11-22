@@ -31,6 +31,25 @@ async function issueSquareRefund(paymentId: string, amountCents: number): Promis
     console.warn('[Bookings] SQUARE_ACCESS_TOKEN not set — skipping refund')
     return
   }
+  // Never refund a payment that already carries a refund. This covers a booking
+  // cancelled, reactivated and cancelled again, and a cancellation that arrives
+  // BECAUSE the payment was refunded inside Square (the website webhook sets the
+  // booking to cancelled, which lands here). Square would reject a refund larger
+  // than what remains anyway; checking first keeps the outcome deliberate and the
+  // logs clean. If the check itself fails, fall through to the refund attempt as
+  // before — a lookup hiccup must not silently swallow a refund the admin asked for.
+  try {
+    const existing = await client.payments.get({ paymentId })
+    const alreadyRefunded = Number(existing.payment?.refundedMoney?.amount ?? 0)
+    if (alreadyRefunded > 0) {
+      console.warn(
+        `[Bookings] Payment ${paymentId} already has ${alreadyRefunded} cents refunded — not refunding again`,
+      )
+      return
+    }
+  } catch (err) {
+    console.warn('[Bookings] Could not check existing refunds before refunding:', err)
+  }
   try {
     const idempotencyKey = `refund-${paymentId}-${Date.now()}`
     await client.refunds.refundPayment({

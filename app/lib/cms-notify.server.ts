@@ -4,7 +4,8 @@
  *
  * Deliberately curated — only events that require the admin to DO
  * something get a notification (contact message received, paid-but-
- * waitlisted, booking-creation failure). Informational events stay
+ * waitlisted, booking-creation failure, duplicate payment, payment on a
+ * link with no record). Informational events stay
  * email-only.
  *
  * Always non-fatal: a notification is a reminder, never worth failing

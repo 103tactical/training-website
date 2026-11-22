@@ -49,6 +49,7 @@ import {
   sendAdminBookingNotification,
   sendAdminBookingFailureAlert,
   sendAdminDuplicatePaymentAlert,
+  sendAdminUnmatchedPaymentAlert,
   sendAdminCancellationAlert,
 } from "~/lib/email.server";
 import { createCmsNotification } from "~/lib/cms-notify.server";
@@ -122,6 +123,14 @@ function parseCardholderName(name: string): { firstName: string; lastName: strin
   };
 }
 
+// ── Unmatched-payment alert dedupe ─────────────────────────────────────────────
+// Square re-delivers payment.updated several times per payment. A payment that
+// matches no PendingBooking has no record to mark as "already flagged", so the
+// order ids we have alerted on are remembered in memory (single website
+// instance). Worst case after a restart: one repeated alert — never a missed one.
+const alertedUnmatchedOrders = new Set<string>();
+const UNMATCHED_ALERT_MEMORY = 500;
+
 // ── Payment handler ────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,9 +161,14 @@ async function handlePaymentUpdated(event: Record<string, any>) {
   }
 
   let orderRef: string | undefined;
+  // Kept for the unmatched-payment alert below (course / dates / attendee email).
+  let orderMeta: Record<string, string | null | undefined> = {};
+  let orderItemName = "";
   try {
     const orderResp = await squareClient.orders.get({ orderId });
     orderRef = orderResp.order?.referenceId ?? undefined;
+    orderMeta = orderResp.order?.metadata ?? {};
+    orderItemName = orderResp.order?.lineItems?.[0]?.name ?? "";
   } catch (err) {
     console.warn(`[webhook] Could not retrieve Square order ${orderId}:`, err);
     return;
@@ -179,6 +193,46 @@ async function handlePaymentUpdated(event: Record<string, any>) {
 
   if (!pending) {
     console.warn(`[webhook] No PendingBooking found for token "${orderRef}" (order ${orderId})`);
+
+    // Money was taken on one of OUR payment links (every link this system
+    // creates carries a 32-char hex token) but its record is gone — a link that
+    // was cancelled while Square failed to disable it, a pending record deleted
+    // by hand, or a checkout whose token was replaced by a newer attempt. No
+    // booking can be created automatically, so tell the admin: until 2026-11-22
+    // this payment was dropped without a word. Anything that is not one of our
+    // tokens (e.g. an in-store sale with its own reference) stays ignored.
+    //
+    // Two cases are NOT "a payment just came in" and must stay quiet: Square also
+    // sends payment.updated when an existing payment is later refunded, and for
+    // other late changes to old payments. A payment that already carries a refund
+    // needs no decision, and an update to a payment made more than a day ago is
+    // not a new arrival (e.g. refunding an old test charge whose records were
+    // deliberately removed).
+    const refundedCents = Number(payment.refunded_money?.amount ?? 0);
+    const createdMs = Date.parse(payment.created_at ?? "");
+    const isFresh = Number.isNaN(createdMs) || Date.now() - createdMs < 24 * 60 * 60 * 1000;
+    if (
+      /^[a-f0-9]{32}$/i.test(orderRef) &&
+      refundedCents === 0 &&
+      isFresh &&
+      !alertedUnmatchedOrders.has(orderId)
+    ) {
+      if (alertedUnmatchedOrders.size >= UNMATCHED_ALERT_MEMORY) alertedUnmatchedOrders.clear();
+      alertedUnmatchedOrders.add(orderId);
+
+      const amountDollars = `$${(amountCents / 100).toFixed(2)}`;
+      const payerEmail: string = orderMeta.attendeeEmail || payment.buyer_email_address || "unknown email";
+      const what =
+        [orderMeta.courseTitle || orderItemName, orderMeta.sessionDates].filter(Boolean).join(" — ") || "a class";
+
+      await sendAdminUnmatchedPaymentAlert({ payerEmail, amountDollars, what, orderId, paymentId }).catch((err) =>
+        console.error("[webhook] Unmatched-payment alert failed:", err),
+      );
+      await createCmsNotification({
+        whatHappened: `A payment of ${amountDollars} from ${payerEmail} came in on a payment link that is no longer on file (${what}). No booking was created.`,
+        whatToDo: `Find the payment in Square under Transactions. Then either refund it there, or add the person to the class yourself with Add New on the session roster.`,
+      });
+    }
     return;
   }
 
