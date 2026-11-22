@@ -64,9 +64,8 @@ export const ContactSubmissions: CollectionConfig = {
   // NOTE (2026-08-08): the new/read status field and its three coordinated
   // hooks were removed when dashboard Notifications took over the
   // "needs attention" role — this collection is now a plain archive. The
-  // old `status` DB column is intentionally LEFT in place so a deploy
-  // rollback (old code querying status) can never break; drop it in a
-  // future migration once this has been stable for a while.
+  // leftover `status` DB column was dropped on 2026-11-22
+  // (migration 20261122_drop_contact_submissions_status).
   fields: [
     {
       name: "name",
