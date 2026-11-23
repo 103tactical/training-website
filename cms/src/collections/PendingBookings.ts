@@ -545,7 +545,11 @@ async function sendPostBookingEmails(
         }
         await sendEmail({
           to: email,
-          subject: `Your Enrollment Forms — ${course.title}`,
+          // Same wording as the website's sendEnrollmentEmail: "Forms" only
+          // when a document is attached.
+          subject: attachments.length > 0
+            ? `Your Enrollment Forms — ${course.title}`
+            : `Your Class Information — ${course.title}`,
           message:
             `Hi ${firstName},\n\n` +
             `Thank you for enrolling in ${course.title}. Please review the following information before your course date.\n\n` +

@@ -230,7 +230,11 @@ export async function sendEnrollmentEmail(args: {
 }): Promise<void> {
   const { to, firstName, courseTitle, message, attachmentUrl, attachmentFilename } = args;
   const q = await questionsLine();
-  const subject = `Your Enrollment Forms — ${courseTitle}`;
+  // "Forms" only when a document is actually attached. A course with a message
+  // and no document (New Jersey CCW, 2026-11-22) gets a subject that fits.
+  const subject = attachmentUrl
+    ? `Your Enrollment Forms — ${courseTitle}`
+    : `Your Class Information — ${courseTitle}`;
 
   const bodyHtml = escapeHtml(message).replace(/\n/g, "<br>");
 
